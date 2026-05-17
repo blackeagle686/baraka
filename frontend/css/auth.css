@@ -138,39 +138,49 @@ body[dir="ltr"] .auth-card.mode-register .switcher-slider {
 
 /* Form Slider Animation Setup */
 .forms-viewport {
+    position: relative;
     width: 100%;
-    overflow: hidden;
-}
-
-.form-container {
-    display: flex;
-    width: 200%;
-    align-items: flex-start;
-    transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .auth-form-wrapper {
-    width: 50%;
-    padding: 0 8px;
-    transition: opacity 0.3s ease, transform 0.3s ease;
+    width: 100%;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Slide viewport depending on the mode in RTL */
-body[dir="rtl"] .auth-card.mode-login .form-container {
+/* Login Form state */
+.auth-card.mode-login #loginFormWrapper {
+    position: relative;
+    opacity: 1;
     transform: translateX(0);
+    pointer-events: auto;
 }
 
-body[dir="rtl"] .auth-card.mode-register .form-container {
-    transform: translateX(50%);
+.auth-card.mode-login #registerFormWrapper {
+    position: absolute;
+    top: 0;
+    right: 0;
+    opacity: 0;
+    transform: translateX(-30px);
+    pointer-events: none;
+    visibility: hidden;
 }
 
-/* Slide viewport in LTR */
-body[dir="ltr"] .auth-card.mode-login .form-container {
+/* Register Form state */
+.auth-card.mode-register #registerFormWrapper {
+    position: relative;
+    opacity: 1;
     transform: translateX(0);
+    pointer-events: auto;
 }
 
-body[dir="ltr"] .auth-card.mode-register .form-container {
-    transform: translateX(-50%);
+.auth-card.mode-register #loginFormWrapper {
+    position: absolute;
+    top: 0;
+    right: 0;
+    opacity: 0;
+    transform: translateX(30px);
+    pointer-events: none;
+    visibility: hidden;
 }
 
 /* Custom premium input decorations */

@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>السلة وطلباتي - منصة بركة</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/main_style.css">
+    <link rel="stylesheet" href="/css/shops.css">
+    <link rel="stylesheet" href="/css/profile.css">
+    <style>
+        .cart-header-banner {
+            background: linear-gradient(135deg, var(--color-espresso) 0%, var(--color-mesa) 100%);
+            padding: 6.5rem 0 3rem;
+            color: white;
+            border-bottom: 1px solid rgba(201, 153, 151, 0.15);
+            text-align: center;
+        }
+        .cart-nav-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: -1.75rem;
+            position: relative;
+            z-index: 10;
+        }
+        .cart-nav-btn {
+            background: white;
+            border: 1px solid rgba(201, 153, 151, 0.15);
+            padding: 0.85rem 2rem;
+            border-radius: 100px;
+            font-weight: 800;
+            color: var(--color-espresso);
+            box-shadow: var(--shadow-md);
+            transition: var(--transition-base);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .cart-nav-btn:hover {
+            transform: translateY(-2px);
+            border-color: var(--color-marigold);
+        }
+        .cart-nav-btn.active {
+            background: var(--color-marigold);
+            color: white;
+            border-color: var(--color-marigold);
+        }
+        .cart-item-card {
+            background: white;
+            border: 1px solid rgba(201, 153, 151, 0.1);
+            border-radius: 16px;
+            padding: 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            box-shadow: var(--shadow-sm);
+            transition: var(--transition-base);
+        }
+        .cart-item-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+        .cart-item-img {
+            width: 70px;
+            height: 70px;
+            border-radius: 12px;
+            object-fit: cover;
+            background-color: var(--color-dune-light);
+            border: 1px solid rgba(201, 153, 151, 0.08);
+        }
+        .cart-qty-control {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--color-dune);
+            border-radius: 100px;
+            padding: 0.25rem 0.75rem;
+            border: 1px solid rgba(201, 153, 151, 0.12);
+        }
+        .cart-qty-btn {
+            border: none;
+            background: none;
+            color: var(--color-espresso);
+            font-weight: 800;
+            font-size: 1.1rem;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--transition-base);
+        }
+        .cart-qty-btn:hover {
+            color: var(--color-marigold);
+            transform: scale(1.2);
+        }
+    </style>
+</head>
+<body class="bg-dune">
+    <!-- Header Placeholder -->
+    <div id="header-placeholder"></div>
+
+    <!-- Cart Header Banner -->
+    <section class="cart-header-banner">
+        <div class="container animate-up">
+            <h1 class="fw-bold mb-2">سلة مشترياتك وطلباتك 📦</h1>
+            <p class="mb-0 opacity-75 fs-5">تتبع طلبات الفريش وخلص مشترياتك بكل سهولة وأمان</p>
+        </div>
+    </section>
+
+    <!-- Navigation Tabs -->
+    <div class="container">
+        <div class="cart-nav-tabs">
+            <button class="cart-nav-btn active" id="btnTabCart" onclick="switchCartTab('active-cart')">
+                <i class="bi bi-cart3"></i>
+                <span>السلة الحالية 🛒</span>
+                <span class="badge bg-danger rounded-pill" id="cartTabBadge" style="display: none;">0</span>
+            </button>
+            <button class="cart-nav-btn" id="btnTabOrders" onclick="switchCartTab('order-tracking')">
+                <i class="bi bi-truck"></i>
+                <span>طلباتي ومتابعة التوصيل 🚚</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Panels Section -->
+    <section class="py-5">
+        <div class="container">
+            <!-- ================= TAB 1: ACTIVE CART & CHECKOUT ================= -->
+            <div class="cart-panel" id="panelActiveCart">
+                <div class="row g-4">
+                    <!-- Left Column: Cart Items -->
+                    <div class="col-lg-8">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h3 class="fw-bold text-espresso mb-0">🛒 حاجات في سلتك</h3>
+                            <button onclick="clearCurrentCart()" class="btn btn-sm btn-outline-danger rounded-pill px-3 fw-bold">
+                                <i class="bi bi-trash3 me-1"></i>تفريغ السلة بالكامل
+                            </button>
+                        </div>
+                        <div id="activeCartItemsList">
+                            <!-- Dynamically loaded -->
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Checkout Summary -->
+                    <div class="col-lg-4">
+                        <div class="checkout-sidebar-card animate-up" style="position: static !important; box-shadow: var(--shadow-lg);">
+                            <div class="checkout-sidebar-title">
+                                <i class="bi bi-credit-card-2-front text-marigold"></i> حساب الطلب النهائي
+                            </div>
+                            <div class="checkout-sidebar-summary" style="border-top: none; padding-top: 0;">
+                                <div class="checkout-sidebar-summary-row fs-6">
+                                    <span>الإجمالي الفرعي للمنتجات</span>
+                                    <span id="cartSubtotal">0.00 ج.م</span>
+                                </div>
+                                <div class="checkout-sidebar-summary-row fs-6">
+                                    <span>خدمة توصيل دليفري القرية</span>
+                                    <span>15.00 ج.م</span>
+                                </div>
+                                <div class="checkout-sidebar-summary-total fs-4">
+                                    <span>المجموع الكلي</span>
+                                    <span class="text-marigold" id="cartTotalSum">0.00 ج.م</span>
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label text-espresso fw-bold mb-1" style="font-size: 0.95rem;">
+                                    <i class="bi bi-geo-alt-fill text-marigold me-1"></i>عنوان التوصيل بالتفصيل في قريتنا
+                                </label>
+                                <input type="text" class="form-control rounded-pill px-3 py-3" id="cartOrderAddress" placeholder="مثال: بحري البلد، جنب الجامع الكبير، بيت الحج أحمد...">
+                                <small class="text-muted mt-1 d-block" style="font-size: 0.78rem;">تأكد من كتابة العنوان بدقة ليصلك المندوب بأقصى سرعة.</small>
+                            </div>
+
+                            <button onclick="submitCartCheckout()" class="btn btn-marigold checkout-sidebar-btn text-white fw-bold py-3 fs-5" id="cartCheckoutBtn">
+                                <i class="bi bi-check-all me-1"></i>تأكيد الطلب ودليفري فوري!
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================= TAB 2: ORDER TRACKING & HISTORY ================= -->
+            <div class="cart-panel d-none" id="panelOrderTracking">
+                <!-- Filter Tabs & Auto Refresh Indicator -->
+                <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+                    <!-- Filter Tags -->
+                    <div class="d-flex gap-2 flex-wrap" id="ordersFilterList">
+                        <button class="btn btn-sm btn-outline-mesa rounded-pill fw-bold px-3 py-2 active" onclick="filterCartOrders('all', this)">
+                            <i class="bi bi-grid me-1"></i>الكل
+                        </button>
+                        <button class="btn btn-sm btn-outline-mesa rounded-pill fw-bold px-3 py-2" onclick="filterCartOrders('active', this)">
+                            <i class="bi bi-lightning me-1"></i>النشطة والتحضير 🚚
+                        </button>
+                        <button class="btn btn-sm btn-outline-mesa rounded-pill fw-bold px-3 py-2" onclick="filterCartOrders('delivered', this)">
+                            <i class="bi bi-check2-all me-1"></i>المكتملة ✅
+                        </button>
+                        <button class="btn btn-sm btn-outline-mesa rounded-pill fw-bold px-3 py-2" onclick="filterCartOrders('cancelled', this)">
+                            <i class="bi bi-x-circle me-1"></i>الملغية ❌
+                        </button>
+                    </div>
+
+                    <!-- Auto-refresh Countdown -->
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="d-flex align-items-center text-mesa small fw-bold" id="cartAutoRefreshIndicator" style="display: none;">
+                            <div class="live-dot me-2"></div>
+                            تحديث تلقائي خلال <span id="cartRefreshCountdown" class="ms-1 text-marigold">30</span>ث
+                        </div>
+                        <button class="btn btn-outline-mesa rounded-pill btn-sm fw-bold px-3" onclick="manualRefreshCartOrders()">
+                            <i class="bi bi-arrow-clockwise me-1" id="cartRefreshIcon"></i>تحديث دلوقتي
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Orders Log List -->
+                <div id="cartOrdersLogList">
+                    <div class="text-center text-mesa py-5">
+                        <div class="spinner-border text-marigold mb-3" role="status"></div>
+                        <p class="fw-bold">بنحملك سجل طلباتك...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer Placeholder -->
+    <div id="footer-placeholder"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/main.js"></script>
+    <script src="/js/cart.js"></script>
+</body>
+</html>

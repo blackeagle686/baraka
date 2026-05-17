@@ -434,37 +434,37 @@ window.acceptDeliveryTrip = async function(orderId) {
 
     try {
         await api.orders.acceptDelivery(token, orderId, deliveryPrice);
-        alert('تم قبول الرحلة وتعيينك طياراً للتوصيل بنجاح!');
+        await showBarakaAlert('تم قبول الرحلة وتعيينك طياراً للتوصيل بنجاح!', 'info', 'تم القبول ✅');
         loadDriverOrders();
     } catch (error) {
-        alert('حدث خطأ أثناء قبول الرحلة: ' + (error.detail || JSON.stringify(error)));
+        await showBarakaAlert('حدث خطأ أثناء قبول الرحلة: ' + (error.detail || JSON.stringify(error)), 'warning', 'خطأ في القبول ⚠️');
     }
 }
 
 window.completeDeliveryTrip = async function(orderId) {
     const token = localStorage.getItem('access_token');
-    const customerOtp = prompt('برجاء إدخال رمز التحقق المستلم من العميل (المكون من 4 أرقام) لتأكيد تسليم الطلب واستلام الكاش:');
+    const customerOtp = await showBarakaPrompt('برجاء إدخال رمز التحقق المستلم من العميل (المكون من 4 أرقام) لتأكيد تسليم الطلب واستلام الكاش:', 'مثال: 1234', 'تأكيد التسليم للعميل 📦');
     if (!customerOtp) return;
     
     try {
         await api.orders.updateStatus(token, orderId, 'DELIVERED', { customer_otp: customerOtp });
-        alert('تم التحقق من رمز العميل وتأكيد التوصيل بنجاح!');
+        await showBarakaAlert('تم التحقق من رمز العميل وتأكيد التوصيل بنجاح!', 'info', 'تم التوصيل 🎉');
         loadDriverOrders();
     } catch (error) {
-        alert('حدث خطأ أثناء إكمال التوصيل: ' + (error.detail || JSON.stringify(error)));
+        await showBarakaAlert('حدث خطأ أثناء إكمال التوصيل: ' + (error.detail || JSON.stringify(error)), 'warning', 'خطأ في التوصيل ⚠️');
     }
 }
 
 window.raiseDriverDispute = async function(orderId) {
     const token = localStorage.getItem('access_token');
-    const reason = prompt('يرجى كتابة سبب تقديم الشكوى بالتفصيل (مثل: قمت بسداد المبلغ ولكن صاحب المحل يرفض التصفية، إلخ):');
+    const reason = await showBarakaPrompt('يرجى كتابة سبب تقديم الشكوى بالتفصيل (مثل: قمت بسداد المبلغ ولكن صاحب المحل يرفض التصفية، إلخ):', 'اكتب سبب النزاع هنا...', 'تقديم شكوى / نزاع ⚖️');
     if (!reason) return;
     
     try {
         await api.orders.raiseDispute(token, orderId, reason);
-        alert('تم تقديم الشكوى للإدارة بنجاح! جاري المراجعة للفصل بالنزاع.');
+        await showBarakaAlert('تم تقديم الشكوى للإدارة بنجاح! جاري المراجعة للفصل بالنزاع.', 'info', 'تم تسجيل النزاع ⚖️');
         loadDriverOrders();
     } catch (error) {
-        alert('فشل تقديم الشكوى: ' + JSON.stringify(error));
+        await showBarakaAlert('فشل تقديم الشكوى: ' + JSON.stringify(error), 'warning', 'خطأ ⚠️');
     }
 }

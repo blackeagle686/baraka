@@ -86,3 +86,126 @@ window.logout = function() {
     localStorage.removeItem('user_role');
     window.location.reload();
 }
+
+// ==========================================
+// Baraka Premium Custom Alert & Prompt Modals
+// ==========================================
+window.showBarakaAlert = function(message, type = 'info', title = 'تنبيه') {
+    return new Promise((resolve) => {
+        // Create modal overlay
+        const overlay = document.createElement('div');
+        overlay.className = 'baraka-modal-overlay';
+        
+        const iconHtml = type === 'warning' 
+            ? `<div class="baraka-modal-icon warning"><i class="bi bi-exclamation-triangle-fill"></i></div>`
+            : `<div class="baraka-modal-icon info"><i class="bi bi-info-circle-fill"></i></div>`;
+            
+        overlay.innerHTML = `
+            <div class="baraka-modal-box">
+                ${iconHtml}
+                <div class="baraka-modal-title">${title}</div>
+                <div class="baraka-modal-text">${message}</div>
+                <div class="baraka-modal-footer">
+                    <button class="btn btn-primary baraka-modal-btn px-4" id="barakaAlertOkBtn">موافق</button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(overlay);
+        
+        // Trigger active animations
+        setTimeout(() => overlay.classList.add('active'), 50);
+        
+        const closeAlert = () => {
+            overlay.classList.remove('active');
+            setTimeout(() => {
+                overlay.remove();
+                resolve(true);
+            }, 300);
+        };
+        
+        document.getElementById('barakaAlertOkBtn').addEventListener('click', closeAlert);
+        
+        // Keyboard support (Enter closes alert)
+        const handleKeyDown = (e) => {
+            if (e.key === 'Enter') {
+                closeAlert();
+                document.removeEventListener('keydown', handleKeyDown);
+            }
+        };
+        document.addEventListener('keydown', handleKeyDown);
+    });
+};
+
+window.showBarakaPrompt = function(message, placeholder = '', title = 'إدخال مطلوب', isRequired = true) {
+    return new Promise((resolve) => {
+        const overlay = document.createElement('div');
+        overlay.className = 'baraka-modal-overlay';
+        
+        overlay.innerHTML = `
+            <div class="baraka-modal-box">
+                <div class="baraka-modal-icon info"><i class="bi bi-shield-lock-fill"></i></div>
+                <div class="baraka-modal-title">${title}</div>
+                <div class="baraka-modal-text">${message}</div>
+                <div class="baraka-modal-input-wrapper">
+                    <input type="text" class="form-control baraka-modal-input" id="barakaPromptInput" placeholder="${placeholder}" autocomplete="off">
+                    <div class="text-danger small mt-1 d-none" id="barakaPromptError">هذا الحقل مطلوب!</div>
+                </div>
+                <div class="baraka-modal-footer">
+                    <button class="btn btn-primary baraka-modal-btn" id="barakaPromptSubmitBtn">تأكيد</button>
+                    <button class="btn btn-outline-mesa baraka-modal-btn" id="barakaPromptCancelBtn">إلغاء</button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(overlay);
+        
+        const input = document.getElementById('barakaPromptInput');
+        const submitBtn = document.getElementById('barakaPromptSubmitBtn');
+        const cancelBtn = document.getElementById('barakaPromptCancelBtn');
+        const errorEl = document.getElementById('barakaPromptError');
+        
+        // Focus input immediately
+        setTimeout(() => {
+            overlay.classList.add('active');
+            input.focus();
+        }, 50);
+        
+        const closePrompt = (val) => {
+            overlay.classList.remove('active');
+            setTimeout(() => {
+                overlay.remove();
+                resolve(val);
+            }, 300);
+        };
+        
+        submitBtn.addEventListener('click', () => {
+            const val = input.value.trim();
+            if (isRequired && !val) {
+                errorEl.classList.remove('d-none');
+                input.classList.add('is-invalid');
+                return;
+            }
+            closePrompt(val);
+        });
+        
+        cancelBtn.addEventListener('click', () => {
+            closePrompt(null);
+        });
+        
+        // Handle input events to clear errors
+        input.addEventListener('input', () => {
+            errorEl.classList.add('d-none');
+            input.classList.remove('is-invalid');
+        });
+        
+        // Keyboard support
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                submitBtn.click();
+            } else if (e.key === 'Escape') {
+                cancelBtn.click();
+            }
+        });
+    });
+};

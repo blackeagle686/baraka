@@ -583,6 +583,10 @@
 
 /* Adjust layout on smaller screens to be stackable */
 @media (max-width: 768px) {
+    body.overflow-hidden {
+        overflow: auto !important;
+    }
+    
     .shops-split-container {
         flex-direction: column-reverse;
         height: auto;
@@ -594,6 +598,13 @@
         height: auto;
         border-left: none;
         border-top: 1px solid rgba(201, 153, 151, 0.15);
+        overflow: visible;
+    }
+    
+    .shops-list-scroll {
+        overflow-y: visible !important;
+        height: auto;
+        min-height: auto;
     }
     
     .shops-map-wrapper {

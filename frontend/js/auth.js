@@ -55,6 +55,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     window.location.href = '/html/index.html';
                 }
             } catch (error) {
+                let displayError = 'بيانات الدخول غير صحيحة أو الحساب محظور.';
+                if (error && error.detail) {
+                    displayError = 'بيانات الدخول غير صحيحة.'; // simplejwt default
+                }
+                errorMsg.innerHTML = `<i class="bi bi-exclamation-triangle me-1"></i>${displayError}`;
                 errorMsg.classList.remove('d-none');
                 
                 // Shake animation
@@ -114,7 +119,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     window.location.href = '/html/index.html';
                 }
             } catch (error) {
-                errorMsg.innerText = "خطأ: " + JSON.stringify(error);
+                let displayError = 'حدث خطأ أثناء التسجيل. يرجى المحاولة مرة أخرى.';
+                if (error && error.phone) {
+                    displayError = 'هذا الرقم مسجل بالفعل في النظام.';
+                } else if (error && error.detail) {
+                    displayError = error.detail;
+                }
+                
+                errorMsg.innerHTML = `<i class="bi bi-exclamation-triangle me-1"></i>${displayError}`;
                 errorMsg.classList.remove('d-none');
                 
                 // Shake animation

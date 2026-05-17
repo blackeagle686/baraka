@@ -289,6 +289,7 @@ function renderShopProductsManagement(products) {
                             <div class="card-body py-2 pe-3 ps-1 d-flex flex-column h-100">
                                 <h6 class="fw-bold text-espresso mb-1">${product.name}</h6>
                                 <p class="product-price mb-1">${product.price} ج.م</p>
+                                <p class="mb-1 text-mesa small" style="font-size: 0.8rem;"><i class="bi bi-boxes text-marigold me-1"></i>الكمية بالمخزن: <strong>${product.quantity}</strong> قطع</p>
                                 <span class="badge ${product.available ? 'bg-success' : 'bg-danger'} mb-2 w-fit-content rounded-pill">
                                     <i class="bi ${product.available ? 'bi-check-circle' : 'bi-x-circle'} me-1"></i>
                                     ${product.available ? 'متوفر' : 'غير متوفر'}
@@ -319,6 +320,7 @@ window.openEditModal = function(id) {
     document.getElementById('editProdId').value = product.id;
     document.getElementById('editProdName').value = product.name;
     document.getElementById('editProdPrice').value = product.price;
+    document.getElementById('editProdQuantity').value = product.quantity;
     document.getElementById('editProdDesc').value = product.description || '';
     document.getElementById('editProdAvailable').checked = product.available;
     newEditProdImageFile = null;
@@ -340,6 +342,7 @@ async function handleProductEditSubmit() {
     const formData = new FormData();
     formData.append('name', document.getElementById('editProdName').value);
     formData.append('price', document.getElementById('editProdPrice').value);
+    formData.append('quantity', document.getElementById('editProdQuantity').value);
     formData.append('description', document.getElementById('editProdDesc').value);
     formData.append('available', document.getElementById('editProdAvailable').checked);
 

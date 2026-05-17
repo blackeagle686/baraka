@@ -16,6 +16,13 @@ class UserSerializer(serializers.ModelSerializer):
             'is_active': {'read_only': True},
         }
 
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        # If the user is a Django superuser/staff, ensure their frontend role is ADMIN
+        if instance.is_staff or instance.is_superuser:
+            data['role'] = 'ADMIN'
+        return data
+
     def create(self, validated_data):
         role = validated_data.get('role', 'CUSTOMER')
         # Shop owners and drivers need admin approval

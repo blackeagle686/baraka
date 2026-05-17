@@ -39,12 +39,16 @@
     box-sizing: border-box;
 }
 
+html {
+    font-size: 90% !important;
+}
+
 body {
     font-family: 'Cairo', sans-serif;
     background-color: var(--color-dune-light);
     color: var(--color-espresso);
     overflow-x: hidden;
-    line-height: 1.7;
+    line-height: 1.55;
     -webkit-font-smoothing: antialiased;
 }
 

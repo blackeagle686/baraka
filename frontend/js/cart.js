@@ -278,20 +278,39 @@ window.submitCartCheckout = async function() {
     const checkoutBtn = document.getElementById('cartCheckoutBtn');
     if (checkoutBtn) {
         checkoutBtn.disabled = true;
-        checkoutBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-2" role="status"></span>جاري تأكيد طلبك...`;
+        checkoutBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-2" role="status"></span>جاري تأكيد طلباتك...`;
     }
     
-    const shopId = cart[0].shop; // Self-describing shop attached during addToCart
-    const orderData = {
-        shop: parseInt(shopId),
-        address: address,
-        items: cart.map(it => ({ product: it.product, quantity: it.quantity }))
-    };
+    // Group items by shop ID
+    const grouped = {};
+    cart.forEach(item => {
+        const sid = item.shop || 9999;
+        if (!grouped[sid]) {
+            grouped[sid] = [];
+        }
+        grouped[sid].push(item);
+    });
+    
+    const shopIds = Object.keys(grouped);
+    let successCount = 0;
     
     try {
-        await api.orders.create(token, orderData);
+        // Place an order for each shop in parallel
+        await Promise.all(shopIds.map(async (sid) => {
+            const items = grouped[sid];
+            const orderData = {
+                shop: parseInt(sid),
+                address: address,
+                items: items.map(it => ({ product: it.product, quantity: it.quantity }))
+            };
+            await api.orders.create(token, orderData);
+            successCount++;
+        }));
+        
         if (window.showBarakaToast) {
-            window.showBarakaToast('يا فرج الله! تم تأكيد طلبك بنجاح وسيوصلك المندوب فوري!', 'success', 'bi-check-all');
+            window.showBarakaToast(`يا فرج الله! تم تأكيد ${successCount} طلب بنجاح وسيوصلك المندوبين فوراً!`, 'success', 'bi-check-all');
+        } else {
+            alert(`تم تأكيد ${successCount} طلب بنجاح!`);
         }
         
         // Clear local cart
@@ -302,11 +321,13 @@ window.submitCartCheckout = async function() {
         // Switch automatically to tracking tab to watch progress live!
         switchCartTab('order-tracking');
     } catch (error) {
-        alert('حدث خطأ أثناء إرسال الطلب: ' + JSON.stringify(error));
+        alert('حدث خطأ أثناء إرسال بعض الطلبات: ' + JSON.stringify(error));
+        // Reload cart to reflect remaining items
+        loadLocalCart();
     } finally {
         if (checkoutBtn) {
             checkoutBtn.disabled = false;
-            checkoutBtn.innerHTML = `<i class="bi bi-check-all me-1"></i>تأكيد الطلب ودليفري فوري!`;
+            checkoutBtn.innerHTML = `<i class="bi bi-check-all me-1"></i>تأكيد الطلبات ودليفري فوري!`;
         }
     }
 }

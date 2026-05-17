@@ -106,5 +106,46 @@ const api = {
             if (!res.ok) throw await res.json();
             return true;
         }
+    },
+    orders: {
+        getAll: async (token) => {
+            const res = await fetch(`${API_BASE}/orders/`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!res.ok) throw await res.json();
+            return await res.json();
+        },
+        create: async (token, data) => {
+            const res = await fetch(`${API_BASE}/orders/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(data)
+            });
+            if (!res.ok) throw await res.json();
+            return await res.json();
+        },
+        updateStatus: async (token, orderId, status) => {
+            const res = await fetch(`${API_BASE}/orders/${orderId}/update_status/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ status })
+            });
+            if (!res.ok) throw await res.json();
+            return await res.json();
+        },
+        acceptDelivery: async (token, orderId) => {
+            const res = await fetch(`${API_BASE}/orders/${orderId}/accept_delivery/`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!res.ok) throw await res.json();
+            return await res.json();
+        }
     }
 };

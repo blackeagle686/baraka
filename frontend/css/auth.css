@@ -10,8 +10,9 @@
     background: url('/images/auth_background.png') no-repeat center center;
     background-size: cover;
     position: relative;
-    overflow: hidden;
-    padding: 2rem 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 3rem 1rem;
 }
 
 /* Semi-transparent Glassmorphism Container Card */

@@ -374,22 +374,13 @@ window.addToCart = function(id, name, price, image = '') {
     
     const params = new URLSearchParams(window.location.search);
     const shopId = parseInt(params.get('id'));
-    
-    // Enforce single-shop cart rule with a gorgeous native prompt
-    if (cart.length > 0 && cart[0].shop !== shopId) {
-        const confirmClear = confirm('سلتك فيها طلبات من محل تاني في قريتنا. تحب نفضيها ونبدأ نشتري من المحل الجديد ده؟');
-        if (confirmClear) {
-            cart = [];
-        } else {
-            return;
-        }
-    }
+    const currentShopName = localStorage.getItem('current_shop_name') || 'محل بركة';
     
     const existing = cart.find(it => it.product === id);
     if (existing) {
         existing.quantity += 1;
     } else {
-        cart.push({ product: id, name: name, price: price, quantity: 1, image: image, shop: shopId });
+        cart.push({ product: id, name: name, price: price, quantity: 1, image: image, shop: shopId, shopName: currentShopName });
     }
     updateCartUI();
     

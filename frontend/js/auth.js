@@ -7,6 +7,17 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             const phone = document.getElementById('phone').value;
             const password = document.getElementById('password').value;
+            const password = document.getElementById('password').value;
+            const btn = document.getElementById('loginBtn');
+            const btnText = btn.querySelector('.btn-text');
+            const spinner = btn.querySelector('.spinner-border');
+            const errorMsg = document.getElementById('errorMsg');
+            
+            // Set loading state
+            btn.disabled = true;
+            btnText.classList.add('invisible');
+            spinner.classList.remove('d-none');
+            errorMsg.classList.add('d-none');
             
             try {
                 const data = await api.auth.login(phone, password);
@@ -26,8 +37,20 @@ document.addEventListener('DOMContentLoaded', () => {
                     window.location.href = '/html/index.html';
                 }
             } catch (error) {
-                document.getElementById('errorMsg').classList.remove('d-none');
+                errorMsg.classList.remove('d-none');
+                
+                // Shake animation
+                const card = document.querySelector('.auth-card');
+                card.classList.remove('shake');
+                void card.offsetWidth; // trigger reflow
+                card.classList.add('shake');
+                
                 console.error("Login failed:", error);
+            } finally {
+                // Reset loading state
+                btn.disabled = false;
+                btnText.classList.remove('invisible');
+                spinner.classList.add('d-none');
             }
         });
     }
@@ -40,6 +63,17 @@ document.addEventListener('DOMContentLoaded', () => {
             const location = document.getElementById('location').value;
             const role = document.getElementById('role').value;
             const password = document.getElementById('password').value;
+            const password = document.getElementById('password').value;
+            const btn = document.getElementById('registerBtn');
+            const btnText = btn.querySelector('.btn-text');
+            const spinner = btn.querySelector('.spinner-border');
+            const errorMsg = document.getElementById('errorMsg');
+            
+            // Set loading state
+            btn.disabled = true;
+            btnText.classList.add('invisible');
+            spinner.classList.remove('d-none');
+            errorMsg.classList.add('d-none');
             
             try {
                 await api.auth.register({ name, phone, location, role, password });
@@ -60,11 +94,38 @@ document.addEventListener('DOMContentLoaded', () => {
                     window.location.href = '/html/index.html';
                 }
             } catch (error) {
-                const errorMsg = document.getElementById('errorMsg');
                 errorMsg.innerText = "خطأ: " + JSON.stringify(error);
                 errorMsg.classList.remove('d-none');
+                
+                // Shake animation
+                const card = document.querySelector('.auth-card');
+                card.classList.remove('shake');
+                void card.offsetWidth; // trigger reflow
+                card.classList.add('shake');
+                
                 console.error("Registration failed:", error);
+            } finally {
+                // Reset loading state
+                btn.disabled = false;
+                btnText.classList.remove('invisible');
+                spinner.classList.add('d-none');
             }
         });
     }
 });
+
+// Password visibility toggle
+window.togglePassword = function(inputId, button) {
+    const input = document.getElementById(inputId);
+    const icon = button.querySelector('i');
+    
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.remove('bi-eye');
+        icon.classList.add('bi-eye-slash');
+    } else {
+        input.type = 'password';
+        icon.classList.remove('bi-eye-slash');
+        icon.classList.add('bi-eye');
+    }
+};

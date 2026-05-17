@@ -138,8 +138,11 @@ function populateShopForm(shop) {
         document.getElementById('shopImagePreview').innerHTML = `<img src="${shop.image}" class="w-100 h-100 object-fit-cover">`;
     } else {
         const initialsEl = document.getElementById('shopInitials');
-        if (initialsEl) initialsEl.innerText = shop.name.charAt(0);
+        if (initialsEl) initialsEl.innerText = shop.name ? shop.name.charAt(0) : 'ص';
     }
+
+    // Initialize Map with current shop coordinates
+    initShopMap(shop.latitude, shop.longitude);
 }
 
 async function handleShopSubmit() {

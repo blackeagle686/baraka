@@ -13,41 +13,50 @@
 <body>
     <div class="auth-wrapper">
         <div class="auth-card auth-card-wide animate-up">
-            <div class="text-center mb-4">
+            <div class="text-center mb-4 position-relative">
+                <div class="auth-illustration mb-2 animate-up delay-1">
+                    <span style="font-size: 3rem; text-shadow: 0 10px 20px rgba(194, 146, 64, 0.2);">✨</span>
+                </div>
                 <a href="/html/index.html" class="text-decoration-none">
-                    <div class="auth-logo">بركة</div>
+                    <div class="auth-logo animate-up delay-2">بركة</div>
                 </a>
-                <p class="auth-subtitle">انضم إلينا واطلب اللي تحتاجه</p>
+                <p class="auth-subtitle animate-up delay-3">انضم إلينا واطلب اللي تحتاجه</p>
             </div>
-            <form id="registerForm">
+            <form id="registerForm" class="animate-up delay-4">
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         <label class="form-label text-espresso fw-bold"><i class="bi bi-person me-1"></i>الاسم</label>
-                        <input type="text" class="form-control rounded-pill px-4 py-2" id="name" placeholder="الاسم بالكامل" required>
+                        <input type="text" class="form-control rounded-pill px-4 py-2 fs-6 text-center" id="name" placeholder="الاسم بالكامل" required>
                     </div>
                     <div class="col-md-6 mb-3">
                         <label class="form-label text-espresso fw-bold"><i class="bi bi-phone me-1"></i>رقم الهاتف</label>
-                        <input type="text" class="form-control rounded-pill px-4 py-2" id="phone" placeholder="01xxxxxxxxx" required>
+                        <input type="text" class="form-control rounded-pill px-4 py-2 fs-6 text-center" id="phone" placeholder="01xxxxxxxxx" required>
                     </div>
                 </div>
                 <div class="mb-3">
                     <label class="form-label text-espresso fw-bold"><i class="bi bi-geo-alt me-1"></i>العنوان (المكان)</label>
-                    <input type="text" class="form-control rounded-pill px-4 py-2" id="location" placeholder="مثال: الشارع الرئيسي، قريتك">
+                    <input type="text" class="form-control rounded-pill px-4 py-2 fs-6 text-center" id="location" placeholder="مثال: الشارع الرئيسي، قريتك">
                 </div>
                 <div class="mb-3">
                     <label class="form-label text-espresso fw-bold"><i class="bi bi-person-badge me-1"></i>نوع الحساب</label>
-                    <select class="form-select rounded-pill px-4 py-2" id="role">
-                        <option value="CUSTOMER">مشتري</option>
-                        <option value="SHOP_OWNER">صاحب محل</option>
-                        <option value="DRIVER">طيار (مندوب توصيل)</option>
+                    <select class="form-select rounded-pill px-4 py-2 fs-6 text-center" id="role">
+                        <option value="CUSTOMER" title="حساب لشراء المنتجات وطلبها للمنزل">مشتري 🛍️</option>
+                        <option value="SHOP_OWNER" title="حساب لعرض منتجاتك واستقبال الطلبات">صاحب محل 🏪</option>
+                        <option value="DRIVER" title="حساب لتوصيل الطلبات وكسب المال">طيار (مندوب توصيل) 🛵</option>
                     </select>
                 </div>
                 <div class="mb-4">
                     <label class="form-label text-espresso fw-bold"><i class="bi bi-lock me-1"></i>كلمة المرور</label>
-                    <input type="password" class="form-control rounded-pill px-4 py-2" id="password" placeholder="••••••••" required>
+                    <div class="position-relative">
+                        <input type="password" class="form-control rounded-pill px-4 py-2 fs-6 text-center" id="password" placeholder="••••••••" required>
+                        <button type="button" class="btn btn-link position-absolute top-50 start-0 translate-middle-y text-mesa text-decoration-none password-toggle" onclick="togglePassword('password', this)" style="padding-left: 1rem;">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                    </div>
                 </div>
-                <button type="submit" class="btn btn-primary rounded-pill w-100 py-2 fw-bold mb-3">
-                    <i class="bi bi-person-plus me-1"></i>إنشاء حساب
+                <button type="submit" id="registerBtn" class="btn btn-primary rounded-pill w-100 py-3 fw-bold mb-3 fs-5 position-relative overflow-hidden">
+                    <span class="btn-text"><i class="bi bi-person-plus me-1"></i>إنشاء حساب</span>
+                    <span class="spinner-border spinner-border-sm position-absolute top-50 start-50 translate-middle d-none" role="status" aria-hidden="true"></span>
                 </button>
                 <div id="errorMsg" class="alert alert-danger text-center py-2 rounded-pill d-none small">
                     <i class="bi bi-exclamation-triangle me-1"></i>حدث خطأ أثناء التسجيل.

@@ -1,0 +1,58 @@
+const API_BASE = 'http://127.0.0.1:8000/api';
+
+const api = {
+    auth: {
+        login: async (phone, password) => {
+            const res = await fetch(`${API_BASE}/auth/login/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ phone, password })
+            });
+            if (!res.ok) throw await res.json();
+            return await res.json();
+        },
+        register: async (data) => {
+            const res = await fetch(`${API_BASE}/auth/register/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            if (!res.ok) throw await res.json();
+            return await res.json();
+        },
+        getProfile: async (token) => {
+            const res = await fetch(`${API_BASE}/auth/profile/`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.status === 401) throw new Error('Unauthorized');
+            if (!res.ok) throw await res.json();
+            return await res.json();
+        },
+        updateProfile: async (token, formData) => {
+            const res = await fetch(`${API_BASE}/auth/profile/`, {
+                method: 'PATCH',
+                headers: { 'Authorization': `Bearer ${token}` },
+                body: formData
+            });
+            if (!res.ok) throw await res.json();
+            return await res.json();
+        }
+    },
+    shops: {
+        getAll: async () => {
+            const res = await fetch(`${API_BASE}/shops/`);
+            if (!res.ok) throw await res.json();
+            return await res.json();
+        },
+        getById: async (id) => {
+            const res = await fetch(`${API_BASE}/shops/${id}/`);
+            if (!res.ok) throw await res.json();
+            return await res.json();
+        },
+        getProducts: async (shopId) => {
+            const res = await fetch(`${API_BASE}/products/?shop_id=${shopId}`);
+            if (!res.ok) throw await res.json();
+            return await res.json();
+        }
+    }
+};

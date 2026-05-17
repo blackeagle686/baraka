@@ -8,5 +8,5 @@ class IsAdminUserRole(permissions.BasePermission):
         return (
             request.user
             and request.user.is_authenticated
-            and request.user.role == 'ADMIN'
+            and (request.user.role == 'ADMIN' or request.user.is_staff or request.user.is_superuser)
         )

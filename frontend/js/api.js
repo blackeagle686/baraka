@@ -127,14 +127,14 @@ const api = {
             if (!res.ok) throw await res.json();
             return await res.json();
         },
-        updateStatus: async (token, orderId, status) => {
+        updateStatus: async (token, orderId, status, extraData = {}) => {
             const res = await fetch(`${API_BASE}/orders/${orderId}/update_status/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify({ status })
+                body: JSON.stringify({ status, ...extraData })
             });
             if (!res.ok) throw await res.json();
             return await res.json();
@@ -151,13 +151,26 @@ const api = {
             if (!res.ok) throw await res.json();
             return await res.json();
         },
-        confirmPaymentReceived: async (token, orderId) => {
+        confirmPaymentReceived: async (token, orderId, driverOtp) => {
             const res = await fetch(`${API_BASE}/orders/${orderId}/confirm_payment_received/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
-                }
+                },
+                body: JSON.stringify({ driver_otp: driverOtp })
+            });
+            if (!res.ok) throw await res.json();
+            return await res.json();
+        },
+        raiseDispute: async (token, orderId, reason) => {
+            const res = await fetch(`${API_BASE}/orders/${orderId}/raise_dispute/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ reason })
             });
             if (!res.ok) throw await res.json();
             return await res.json();

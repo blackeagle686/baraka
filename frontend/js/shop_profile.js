@@ -508,13 +508,24 @@ function renderShopOrders(orders) {
                 <span class="text-muted small"><i class="bi bi-truck me-1"></i>المندوب: ${order.driver_details ? order.driver_details.name : 'جاري التحديد'}</span>
             `;
         } else if (order.status === 'DELIVERED') {
-            if (!order.is_paid_to_shop) {
+            if (order.dispute_status === 'PENDING') {
                 actionsHtml = `
-                    <div class="d-flex flex-column gap-1 mt-2">
-                        <span class="text-danger small fw-bold mb-1"><i class="bi bi-exclamation-circle-fill me-1"></i>الطيار استلم المبلغ ولم يقم بتصفيته معك بعد!</span>
-                        <button onclick="confirmShopPaymentReceived(${order.id}, ${order.total_price})" class="btn btn-sm btn-success rounded-pill px-3 fw-bold text-white shadow-sm">
-                            <i class="bi bi-cash me-1"></i>تأكيد استلام المبلغ (${order.total_price} ج.م)
-                        </button>
+                    <div class="alert alert-danger py-2 rounded-3 small mb-0 border-0 fw-bold mt-2">
+                        <i class="bi bi-exclamation-octagon me-1"></i>الطلب قيد النزاع والمراجعة بواسطة إدارة بركة للفصل بين الطرفين.
+                    </div>
+                `;
+            } else if (!order.is_paid_to_shop) {
+                actionsHtml = `
+                    <div class="d-flex flex-column gap-2 mt-2">
+                        <span class="text-danger small fw-bold"><i class="bi bi-exclamation-circle-fill me-1"></i>الطيار استلم المبلغ ولم يقم بتصفيته معك بعد!</span>
+                        <div class="d-flex gap-2">
+                            <button onclick="confirmShopPaymentReceived(${order.id}, ${order.total_price})" class="btn btn-sm btn-success rounded-pill px-3 fw-bold text-white shadow-sm flex-grow-1">
+                                <i class="bi bi-cash me-1"></i>تأكيد وتصفية الحساب
+                            </button>
+                            <button onclick="raiseOrderDispute(${order.id})" class="btn btn-sm btn-outline-danger rounded-pill px-2">
+                                <i class="bi bi-exclamation-octagon"></i>نزاع
+                            </button>
+                        </div>
                     </div>
                 `;
             } else {
@@ -673,15 +684,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
 window.confirmShopPaymentReceived = async function(orderId, totalPrice) {
     const token = localStorage.getItem('access_token');
-    if (!confirm(`هل أنت متأكد من استلام مبلغ (${totalPrice} ج.م) بالكامل من طيار التوصيل؟`)) {
-        return;
-    }
+    const driverOtp = prompt(`برجاء إدخال رمز تصفية الحساب المكون من 4 أرقام الموضح على شاشة الطيار لتأكيد استلام مبلغ (${totalPrice} ج.م) والتحقق من المعاملة:`);
+    if (!driverOtp) return;
     
     try {
-        await api.orders.confirmPaymentReceived(token, orderId);
-        alert('تم تأكيد استلام وتصفية المبلغ بنجاح!');
+        await api.orders.confirmPaymentReceived(token, orderId, driverOtp);
+        alert('تم التحقق وتصفية الحساب بنجاح!');
         loadShopOrders(); // Reload orders list
     } catch (error) {
-        alert('حدث خطأ أثناء تأكيد استلام المبلغ: ' + JSON.stringify(error));
+        alert('فشل تصفية الحساب: ' + (error.detail || JSON.stringify(error)));
+    }
+}
+
+window.raiseOrderDispute = async function(orderId) {
+    const token = localStorage.getItem('access_token');
+    const reason = prompt('يرجى كتابة سبب تقديم الشكوى بالتفصيل (مثل: الطيار يرفض الدفع، العميل لم يستلم المنتجات، إلخ):');
+    if (!reason) return;
+    
+    try {
+        await api.orders.raiseDispute(token, orderId, reason);
+        alert('تم تسجيل الشكوى وإرسالها للإدارة بنجاح! سيتم التواصل معك قريباً للفصل بالنزاع.');
+        loadShopOrders();
+    } catch (error) {
+        alert('فشل تقديم الشكوى: ' + JSON.stringify(error));
     }
 }

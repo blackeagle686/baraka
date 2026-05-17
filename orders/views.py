@@ -93,6 +93,11 @@ class OrderViewSet(viewsets.ModelViewSet):
         if is_driver and not is_shop_owner and not request.user.is_staff:
             if new_status != 'DELIVERED':
                 return Response({"detail": "Drivers are only authorized to mark orders as DELIVERED."}, status=status.HTTP_403_FORBIDDEN)
+            
+            # Enforce Customer OTP code verification for drivers marking delivered
+            customer_otp = request.data.get('customer_otp')
+            if not customer_otp or customer_otp != order.customer_otp:
+                return Response({"detail": "رمز التوصيل غير صحيح! يرجى إدخال الرمز المكون من 4 أرقام المستلم من العميل لتأكيد التوصيل."}, status=status.HTTP_400_BAD_REQUEST)
         
         if is_shop_owner and not is_driver and not request.user.is_staff:
             if new_status == 'DELIVERED':
@@ -130,6 +135,31 @@ class OrderViewSet(viewsets.ModelViewSet):
         if order.shop.owner != request.user and not request.user.is_staff:
             return Response({"detail": "Not authorized to settle this order's cash."}, status=status.HTTP_403_FORBIDDEN)
             
+        # Enforce Driver OTP code verification for shop owners confirming receipt of money
+        driver_otp = request.data.get('driver_otp')
+        if not driver_otp or driver_otp != order.driver_otp:
+            return Response({"detail": "رمز تصفية الحساب غير صحيح! يرجى إدخال الرمز المكون من 4 أرقام الموضح على شاشة الطيار لتأكيد التصفية."}, status=status.HTTP_400_BAD_REQUEST)
+
         order.is_paid_to_shop = True
+        order.save()
+        return Response(self.get_serializer(order).data)
+
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
+    def raise_dispute(self, request, pk=None):
+        order = self.get_object()
+        is_customer = (order.customer == request.user)
+        is_shop_owner = (order.shop.owner == request.user)
+        is_driver = (order.driver == request.user)
+        
+        if not (is_customer or is_shop_owner or is_driver or request.user.is_staff):
+            return Response({"detail": "Not authorized to dispute this order."}, status=status.HTTP_403_FORBIDDEN)
+            
+        reason = request.data.get('reason')
+        if not reason:
+            return Response({"detail": "Please provide a reason for the dispute."}, status=status.HTTP_400_BAD_REQUEST)
+            
+        order.dispute_status = 'PENDING'
+        order.dispute_reason = reason
+        order.disputed_by = request.user
         order.save()
         return Response(self.get_serializer(order).data)

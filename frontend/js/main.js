@@ -93,30 +93,71 @@ function renderFooter() {
     if (!footerPlaceholder) return;
 
     footerPlaceholder.innerHTML = `
-    <footer class="py-4 mt-5 border-top" style="background-color: var(--color-dune-light); border-color: rgba(201, 153, 151, 0.15) !important; direction: rtl;">
-        <div class="container">
-            <div class="row g-4 align-items-center">
-                <!-- Branding and info -->
-                <div class="col-md-6 text-center text-md-start">
-                    <h5 class="fw-bold text-espresso d-flex align-items-center gap-2 justify-content-center justify-content-md-start mb-2">
-                        <i class="bi bi-shop text-success fs-4"></i>
-                        <span>سوق بركة الموحد</span>
-                    </h5>
-                    <p class="text-mesa small mb-0">منصة رقمية متكاملة لربط محلات القرية، المشتريين، والطيارين لدعم الاقتصاد المحلي وتسهيل حياة أهالينا.</p>
-                </div>
-                <!-- Navigation links and credits -->
-                <div class="col-md-6 text-center text-md-end">
-                    <div class="d-flex flex-wrap gap-3 justify-content-center justify-content-md-end mb-2">
-                        <a href="/html/index.html" class="text-espresso text-decoration-none small fw-bold" style="transition: var(--transition-base);">الرئيسية</a>
-                        <a href="/html/shops/list.html" class="text-espresso text-decoration-none small fw-bold" style="transition: var(--transition-base);">لف في المحلات</a>
-                        <a href="/html/cart.html" class="text-espresso text-decoration-none small fw-bold" style="transition: var(--transition-base);">سلة الطلبات</a>
-                    </div>
-                    <p class="text-muted small mb-0" style="font-size: 0.8rem;">
-                        صُنع بكل حب لدعم القرية المصرية 🌾 <span class="text-marigold font-monospace">© ٢٠٢٦ منصة بركة</span>
+    <footer class="mt-auto" style="background: linear-gradient(to top, var(--color-espresso) 0%, #461414 100%); color: var(--color-dune-light); direction: rtl; border-top: 4px solid var(--color-marigold); position: relative; overflow: hidden;">
+        <!-- Decorative Glow -->
+        <div style="position: absolute; top: -50px; right: -50px; width: 150px; height: 150px; background: var(--color-marigold); filter: blur(80px); opacity: 0.2; border-radius: 50%;"></div>
+        
+        <div class="container py-5 position-relative z-1">
+            <div class="row g-5">
+                <!-- Brand Section -->
+                <div class="col-lg-5 col-md-6 text-center text-md-start">
+                    <a href="/html/index.html" class="d-inline-flex align-items-center gap-2 text-decoration-none mb-3">
+                        <div class="d-flex align-items-center justify-content-center bg-marigold text-espresso rounded-circle" style="width: 48px; height: 48px;">
+                            <i class="bi bi-shop fs-4"></i>
+                        </div>
+                        <span class="fs-3 fw-bold text-white">منصة بركة</span>
+                    </a>
+                    <p class="text-white-50 lh-lg pe-lg-4" style="font-size: 0.95rem;">
+                        أول منصة رقمية متكاملة لربط محلات القرية، المشتريين، والطيارين في نظام بيئي واحد لدعم الاقتصاد المحلي وتسهيل حياة أهالينا.
                     </p>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="col-lg-3 col-md-6 text-center text-md-start">
+                    <h5 class="fw-bold mb-4" style="color: var(--color-marigold);">روابط سريعة</h5>
+                    <ul class="list-unstyled d-flex flex-column gap-3 mb-0">
+                        <li><a href="/html/index.html" class="text-white-50 text-decoration-none footer-link-hover"><i class="bi bi-chevron-left small me-2 text-marigold"></i>الرئيسية</a></li>
+                        <li><a href="/html/shops/list.html" class="text-white-50 text-decoration-none footer-link-hover"><i class="bi bi-chevron-left small me-2 text-marigold"></i>لف في المحلات</a></li>
+                        <li><a href="/html/cart.html" class="text-white-50 text-decoration-none footer-link-hover"><i class="bi bi-chevron-left small me-2 text-marigold"></i>سلة الطلبات</a></li>
+                    </ul>
+                </div>
+
+                <!-- Contact & Social -->
+                <div class="col-lg-4 col-md-12 text-center text-md-start">
+                    <h5 class="fw-bold mb-4" style="color: var(--color-marigold);">تواصل معنا</h5>
+                    <div class="d-flex flex-column gap-3 mb-4">
+                        <div class="d-flex align-items-center justify-content-center justify-content-md-start gap-3 text-white-50">
+                            <i class="bi bi-geo-alt fs-5 text-marigold"></i>
+                            <span>القرية الذكية، مصر</span>
+                        </div>
+                        <div class="d-flex align-items-center justify-content-center justify-content-md-start gap-3 text-white-50">
+                            <i class="bi bi-envelope fs-5 text-marigold"></i>
+                            <span dir="ltr">support@baraka.eg</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="mt-5 mb-4 border-secondary opacity-25">
+
+            <div class="row align-items-center">
+                <div class="col-md-6 text-center text-md-start mb-3 mb-md-0">
+                    <p class="mb-0 text-white-50" style="font-size: 0.9rem;">
+                        صُنع بكل حب لدعم القرية المصرية 🌾 <span class="text-marigold fw-bold ms-1">© ٢٠٢٦ منصة بركة</span>
+                    </p>
+                </div>
+                <div class="col-md-6 text-center text-md-end">
+                    <a href="#" class="text-white-50 text-decoration-none small me-3 footer-link-hover">الشروط والأحكام</a>
+                    <a href="#" class="text-white-50 text-decoration-none small footer-link-hover">سياسة الخصوصية</a>
                 </div>
             </div>
         </div>
+        
+        <style>
+            .bg-marigold { background-color: var(--color-marigold) !important; }
+            .footer-link-hover { transition: all 0.3s ease; }
+            .footer-link-hover:hover { color: var(--color-dune-light) !important; transform: translateX(-5px); display: inline-block; }
+        </style>
     </footer>
     `;
 }

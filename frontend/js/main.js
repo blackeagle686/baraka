@@ -35,17 +35,22 @@ function renderHeader() {
 
     if (token) {
         let roleBadge = '';
+        let profileLink = '/html/profile/user.html';
+
         if (userRole === 'SHOP_OWNER') {
             roleBadge = `<a href="/html/profile/shop.html" class="btn btn-marigold btn-sm rounded-pill fw-bold text-white px-3 py-1 me-2" style="font-size: 0.8rem;"><i class="bi bi-shop-window me-1"></i>إدارة محلي</a>`;
         } else if (userRole === 'DRIVER') {
             roleBadge = `<a href="/html/profile/driver.html" class="btn btn-success btn-sm rounded-pill fw-bold text-white px-3 py-1 me-2" style="font-size: 0.8rem;"><i class="bi bi-bicycle me-1"></i>لوحة الطيار</a>`;
+        } else if (userRole === 'ADMIN') {
+            roleBadge = `<a href="/html/admin/dashboard.html" class="btn btn-danger btn-sm rounded-pill fw-bold text-white px-3 py-1 me-2" style="font-size: 0.8rem;"><i class="bi bi-shield-lock me-1"></i>لوحة التحكم</a>`;
+            profileLink = '/html/admin/dashboard.html';
         }
 
         rightSideHtml += `
             <div class="d-flex align-items-center gap-2">
                 ${roleBadge}
                 <div class="vr mx-2 text-muted opacity-25 d-none d-lg-block"></div>
-                <a href="/html/profile/user.html" class="nav-link d-flex align-items-center gap-2 fw-bold text-espresso me-2" style="font-size: 0.95rem; color: var(--color-espresso) !important;">
+                <a href="${profileLink}" class="nav-link d-flex align-items-center gap-2 fw-bold text-espresso me-2" style="font-size: 0.95rem; color: var(--color-espresso) !important;">
                     <i class="bi bi-person fs-5 text-mesa"></i>
                     <span>${userName}</span>
                 </a>

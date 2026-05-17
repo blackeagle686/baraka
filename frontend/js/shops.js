@@ -38,7 +38,7 @@ function renderAllShops(shops) {
                     </div>
                     <div class="card-body text-center">
                         <h5 class="card-title fw-bold text-espresso">${shop.name}</h5>
-                        <a href="details.html?id=${shop.id}" class="btn btn-outline-primary rounded-pill w-100 mt-3 btn-sm">عرض المنتجات</a>
+                        <a href="/html/shops/details.html?id=${shop.id}" class="btn btn-outline-primary rounded-pill w-100 mt-3 btn-sm">عرض المنتجات</a>
                     </div>
                 </div>
             </div>

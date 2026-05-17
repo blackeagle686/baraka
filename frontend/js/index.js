@@ -28,7 +28,7 @@ function renderShops(shops) {
                     <div class="card-body text-center">
                         <h5 class="card-title fw-bold text-espresso">${shop.name}</h5>
                         <p class="card-text text-mesa">${shop.description || 'أفضل المنتجات وأسرع توصيل'}</p>
-                        <a href="html/shops/details.html?id=${shop.id}" class="btn btn-outline-primary rounded-pill w-100 mt-2">تسوق الآن</a>
+                        <a href="/html/shops/details.html?id=${shop.id}" class="btn btn-outline-primary rounded-pill w-100 mt-2">تسوق الآن</a>
                     </div>
                 </div>
             </div>

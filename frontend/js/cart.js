@@ -416,11 +416,38 @@ function buildVisualStepper(currentStatus) {
         if (isCurrent) circleClass = 'stepper-current';
         
         html += `
-            <div class="stepper-step ${isCurrent ? 'stepper-step-active' : ''}">
-                <div class="stepper-circle ${circleClass}" style="${isCurrent ? 'background:' + step.color + '; border-color:' + step.color + ';' : isDone ? 'background:#22c55e; border-color:#22c55e;' : ''}">
-                    <i class="bi ${isDone ? 'bi-check-lg' : step.icon}" style="font-size: ${isCurrent ? '1rem' : '0.8rem'};"></i>
-                </div>
-                <div class="stepper-label ${isCurrent ? 'fw-bold' : ''}" style="${isCurrent ? 'color:' + step.color + ';' : ''}">${step.label}</let currentCartOrdersPage = 1;
+                <div class="stepper-label ${isCurrent ? 'fw-bold' : ''}" style="${isCurrent ? 'color:' + step.color + ';' : ''}">${step.label}</div>
+            </div>
+        `;
+        
+        if (i < ORDER_STEPS.length - 1) {
+            html += `<div class="stepper-connector ${isDone ? 'stepper-line-done' : ''}"></div>`;
+        }
+    });
+    
+    html += `</div>`;
+    return html;
+}
+
+async function loadCartOrders() {
+    const token = localStorage.getItem('access_token');
+    if (!token) return;
+    
+    try {
+        const orders = await api.orders.getAll(token);
+        customerOrders = orders;
+        
+        // Filter and render
+        renderCartOrdersList();
+        
+        // Start auto-refresh
+        startAutoRefreshCart();
+    } catch (error) {
+        console.error("Failed to fetch customer orders:", error);
+    }
+}
+
+let currentCartOrdersPage = 1;
 const CART_ORDERS_PAGE_SIZE = 3;
 
 window.changeCartOrdersPage = function(page) {

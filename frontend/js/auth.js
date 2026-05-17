@@ -26,6 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Fetch user profile to get the role
                 const profile = await api.auth.getProfile(data.access);
                 localStorage.setItem('user_role', profile.role);
+                localStorage.setItem('user_name', profile.name || 'مستخدم بركة');
                 
                 // Role-based smart routing for best UX
                 if (profile.role === 'DRIVER') {

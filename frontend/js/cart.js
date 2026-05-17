@@ -654,36 +654,6 @@ window.filterCartOrders = function(filter, btn) {
     if (btn) btn.classList.add('active');
     
     renderCartOrdersList();
-}confirmation
-    filtered.forEach(order => {
-        const isCompleted = ['DELIVERED', 'CANCELLED'].includes(order.status);
-        if (!isCompleted && order.customer_otp) {
-            const qrContainer = document.getElementById(`qrcode-cart-${order.id}`);
-            if (qrContainer && typeof QRCode !== 'undefined') {
-                qrContainer.innerHTML = '';
-                new QRCode(qrContainer, {
-                    text: order.customer_otp,
-                    width: 140,
-                    height: 140,
-                    colorDark : "#320404",
-                    colorLight : "#ffffff",
-                    correctLevel : QRCode.CorrectLevel.H
-                });
-            }
-        }
-    });
-}
-
-window.filterCartOrders = function(filter, btn) {
-    ordersFilter = filter;
-    
-    // Manage active state of filter tags
-    document.querySelectorAll('#ordersFilterList button').forEach(b => {
-        b.classList.remove('active');
-    });
-    if (btn) btn.classList.add('active');
-    
-    renderCartOrdersList();
 }
 
 // ==========================================

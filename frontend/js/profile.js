@@ -1,4 +1,9 @@
+// ==========================================
+// Baraka Customer Profile - Premium Dashboard
+// ==========================================
+
 let newImageFile = null;
+let allCustomerOrders = [];
 
 document.addEventListener('DOMContentLoaded', () => {
     fetchProfile();
@@ -26,7 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const statusMsg = document.getElementById('statusMsg');
             
             saveBtn.disabled = true;
-            saveBtn.innerText = 'جاري الحفظ...';
+            saveBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-1" role="status"></span>جاري الحفظ...`;
 
             const formData = new FormData();
             formData.append('name', document.getElementById('name').value);
@@ -43,17 +48,22 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             try {
-                await api.auth.updateProfile(token, formData);
+                const updated = await api.auth.updateProfile(token, formData);
                 statusMsg.className = 'text-success text-center fw-bold mt-2';
-                statusMsg.innerText = 'تم حفظ التعديلات بنجاح!';
+                statusMsg.innerText = '✅ تم حفظ التعديلات بنجاح!';
+                statusMsg.style.fontSize = '1.05rem';
                 statusMsg.classList.remove('d-none');
+
+                // Update sidebar name
+                const sidebarName = document.getElementById('sidebarUserName');
+                if (sidebarName) sidebarName.innerText = updated.name || updated.phone;
             } catch (error) {
                 statusMsg.className = 'text-danger text-center fw-bold mt-2';
-                statusMsg.innerText = 'خطأ: ' + JSON.stringify(error);
+                statusMsg.innerText = '❌ خطأ: ' + JSON.stringify(error);
                 statusMsg.classList.remove('d-none');
             } finally {
                 saveBtn.disabled = false;
-                saveBtn.innerText = 'حفظ التعديلات';
+                saveBtn.innerHTML = `<i class="bi bi-check2-circle me-1"></i>حفظ التعديلات`;
                 setTimeout(() => statusMsg.classList.add('d-none'), 5000);
             }
         });
@@ -84,12 +94,13 @@ async function fetchProfile() {
         };
         document.getElementById('role').value = roleMap[data.role] || data.role;
 
+        // Update sidebar
+        const sidebarName = document.getElementById('sidebarUserName');
+        if (sidebarName) sidebarName.innerText = data.name || data.phone || 'عميل بركة';
+
+        // Load orders for any role that sees orders (customer primarily)
         if (data.role === 'CUSTOMER') {
-            const customerOrdersContainer = document.getElementById('customerOrdersContainer');
-            if (customerOrdersContainer) {
-                customerOrdersContainer.style.display = 'block';
-                loadCustomerOrders();
-            }
+            loadCustomerOrders();
         }
 
         if (data.image) {
@@ -109,144 +120,304 @@ async function fetchProfile() {
     }
 }
 
+// ==========================================
+// Order Status Step Mapping
+// ==========================================
+const ORDER_STEPS = [
+    { key: 'PENDING',     icon: 'bi-hourglass-split', label: 'بانتظار الموافقة',  color: '#f59e0b' },
+    { key: 'ACCEPTED',    icon: 'bi-hand-thumbs-up-fill', label: 'تم القبول',      color: '#3b82f6' },
+    { key: 'PREPARING',   icon: 'bi-box-seam-fill',   label: 'جاري التحضير',       color: '#8b5cf6' },
+    { key: 'ON_DELIVERY', icon: 'bi-truck',           label: 'في الطريق إليك',     color: '#c29240' },
+    { key: 'DELIVERED',   icon: 'bi-check-circle-fill', label: 'تم التوصيل ✅',   color: '#22c55e' }
+];
+
+function getStepIndex(status) {
+    const idx = ORDER_STEPS.findIndex(s => s.key === status);
+    return idx >= 0 ? idx : -1;
+}
+
+function buildVisualStepper(currentStatus) {
+    if (currentStatus === 'CANCELLED') {
+        return `
+            <div class="d-flex align-items-center justify-content-center py-3 gap-2">
+                <i class="bi bi-x-octagon-fill text-danger" style="font-size: 2rem;"></i>
+                <span class="fw-bold text-danger" style="font-size: 1.15rem;">تم إلغاء الطلب</span>
+            </div>
+        `;
+    }
+
+    const currentIdx = getStepIndex(currentStatus);
+    let html = `<div class="baraka-stepper">`;
+    
+    ORDER_STEPS.forEach((step, i) => {
+        const isDone = i < currentIdx;
+        const isCurrent = i === currentIdx;
+        const isPending = i > currentIdx;
+        
+        let circleClass = 'stepper-pending';
+        let lineClass = 'stepper-line-pending';
+        if (isDone) { circleClass = 'stepper-done'; lineClass = 'stepper-line-done'; }
+        if (isCurrent) { circleClass = 'stepper-current'; }
+        
+        html += `
+            <div class="stepper-step ${isCurrent ? 'stepper-step-active' : ''}">
+                <div class="stepper-circle ${circleClass}" style="${isCurrent ? 'background:' + step.color + '; border-color:' + step.color + ';' : isDone ? 'background:#22c55e; border-color:#22c55e;' : ''}">
+                    <i class="bi ${isDone ? 'bi-check-lg' : step.icon}" style="font-size: ${isCurrent ? '1.1rem' : '0.85rem'};"></i>
+                </div>
+                <div class="stepper-label ${isCurrent ? 'fw-bold' : ''}" style="${isCurrent ? 'color:' + step.color + ';' : ''}">${step.label}</div>
+            </div>
+        `;
+        
+        // Connecting line (not after last)
+        if (i < ORDER_STEPS.length - 1) {
+            html += `<div class="stepper-connector ${isDone ? 'stepper-line-done' : ''}"></div>`;
+        }
+    });
+    
+    html += `</div>`;
+    return html;
+}
+
+// ==========================================
+// Load and Render Customer Orders
+// ==========================================
 async function loadCustomerOrders() {
     const token = localStorage.getItem('access_token');
     try {
         const orders = await api.orders.getAll(token);
-        const container = document.getElementById('customerOrdersList');
-        const badge = document.getElementById('ordersCountBadge');
+        allCustomerOrders = orders;
         
-        if (badge) badge.innerText = `${orders.length} طلب`;
-        if (!container) return;
+        // Update sidebar badge
+        const badge = document.getElementById('sidebarOrdersBadge');
+        if (badge) badge.innerText = orders.length;
+
+        // Update stats
+        const delivered = orders.filter(o => o.status === 'DELIVERED').length;
+        const active = orders.filter(o => ['ON_DELIVERY', 'PREPARING', 'ACCEPTED'].includes(o.status)).length;
+        const pending = orders.filter(o => o.status === 'PENDING').length;
         
-        container.innerHTML = '';
-        if (orders.length === 0) {
-            container.innerHTML = `
-                <div class="text-center py-5 text-muted animate-up">
-                    <i class="bi bi-cart-x fs-1 mb-2" style="color: var(--color-mesa);"></i>
-                    <p class="mb-0">لم تقم بإرسال أي طلبات بعد!</p>
-                </div>
-            `;
-            return;
-        }
-        
-        const statusMap = {
-            'PENDING': { text: 'بانتظار موافقة المحل', class: 'bg-warning text-dark' },
-            'ACCEPTED': { text: 'تم القبول', class: 'bg-info text-white' },
-            'PREPARING': { text: 'جاري التجهيز', class: 'bg-primary text-white' },
-            'ON_DELIVERY': { text: 'مع المندوب للتوصيل', class: 'bg-marigold text-white' },
-            'DELIVERED': { text: 'تم التوصيل بنجاح', class: 'bg-success text-white' },
-            'CANCELLED': { text: 'ملغي', class: 'bg-danger text-white' }
-        };
-        
-        let allHtml = '';
-        
-        orders.forEach((order, i) => {
-            const dateFormatted = new Date(order.created_at).toLocaleString('ar-EG', {
-                hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short'
-            });
-            
-            const isCompleted = ['DELIVERED', 'CANCELLED'].includes(order.status);
-            const statusConfig = statusMap[order.status] || { text: order.status, class: 'bg-secondary text-white' };
-            
-            let statusBadge = `<span class="badge ${statusConfig.class} rounded-pill px-2 py-1">${statusConfig.text}</span>`;
-            if (order.dispute_status === 'PENDING') {
-                statusBadge = `<span class="badge bg-danger text-white rounded-pill px-2 py-1">قيد النزاع ⚠️</span>`;
-            }
-            
-            const itemsList = order.items.map(it => `
-                <div class="d-flex justify-content-between text-muted small py-1">
-                    <span>- ${it.product_details ? it.product_details.name : 'منتج'} (x${it.quantity})</span>
-                    <span>${it.price} ج.م</span>
-                </div>
-            `).join('');
-            
-        let otpBlockHtml = '';
-        if (!isCompleted && order.customer_otp) {
-            otpBlockHtml = `
-                <div class="bg-marigold bg-opacity-10 border border-marigold border-dashed rounded-3 p-3 text-center mt-3" style="border-style: dashed !important;">
-                    <span class="small text-espresso d-block mb-1 fw-bold"><i class="bi bi-shield-lock-fill me-1"></i>رمز التوصيل السري (OTP):</span>
-                    <strong class="fs-4 text-marigold tracking-wide" style="font-family: monospace; letter-spacing: 4px;">${order.customer_otp}</strong>
-                    <div id="qrcode-customer-${order.id}" class="d-flex justify-content-center my-2"></div>
-                    <span class="d-block text-muted small mt-1" style="font-size: 0.75rem;">قم بإعطاء هذا الرمز أو إظهار رمز QR للمندوب عند استلام طلبك ودفع المبلغ لتأكيد المعاملة.</span>
-                </div>
-            `;
-        } else if (order.status === 'DELIVERED' && !order.is_paid_to_shop) {
-                otpBlockHtml = `
-                    <div class="alert alert-warning py-2 rounded-3 small mb-0 border-0 fw-bold mt-3 text-espresso">
-                        <i class="bi bi-clock-history me-1"></i>تم التوصيل بنجاح. بانتظار تصفية المندوب للمبلغ مع المحل.
-                    </div>
-                `;
-            }
-            
-            if (order.dispute_status === 'PENDING') {
-                otpBlockHtml = `
-                    <div class="alert alert-danger py-2 rounded-3 small mb-0 border-0 fw-bold mt-3">
-                        <i class="bi bi-exclamation-octagon me-1"></i>الطلب قيد النزاع والتحقيق للفصل بين الأطراف بواسطة إدارة بركة.
-                    </div>
-                `;
-            }
-            
-            let disputeActionHtml = '';
-            if (order.dispute_status === 'NONE' && ['ON_DELIVERY', 'DELIVERED'].includes(order.status)) {
-                disputeActionHtml = `
-                    <button onclick="raiseCustomerDispute(${order.id})" class="btn btn-sm btn-outline-danger rounded-pill w-100 mt-2 fw-bold small py-1">
-                        <i class="bi bi-exclamation-octagon me-1"></i>تقديم شكوى بخصوص هذا الطلب
-                    </button>
-                `;
-            }
-            
-            const html = `
-                <div class="card mb-3 border p-3" style="background-color: rgba(255,255,255,0.7); border-color: rgba(201,153,151,0.12) !important;">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <span class="fw-bold text-espresso">طلب #${order.id}</span>
-                        ${statusBadge}
-                    </div>
-                    <div class="mb-2">
-                        <div class="text-muted small"><i class="bi bi-shop me-1"></i>المحل: <strong class="text-espresso">${order.shop_details ? order.shop_details.name : 'محل بركة'}</strong></div>
-                        <div class="text-muted small"><i class="bi bi-clock me-1"></i>التاريخ: ${dateFormatted}</div>
-                        ${order.driver_details ? `<div class="text-muted small"><i class="bi bi-truck me-1"></i>المندوب: <strong class="text-espresso">${order.driver_details.name}</strong> (${order.driver_details.phone})</div>` : ''}
-                    </div>
-                    <div class="bg-white rounded-3 p-2 mb-2" style="border: 1px solid rgba(201,153,151,0.08);">
-                        <div class="text-muted small mb-1 border-bottom pb-1 fw-bold">المنتجات:</div>
-                        ${itemsList}
-                        <div class="d-flex justify-content-between align-items-center mt-2 fw-bold text-espresso pt-1 border-top" style="border-color: rgba(201,153,151,0.05) !important;">
-                            <span>الإجمالي المطلوب:</span>
-                            <span class="text-marigold">${(parseFloat(order.total_price) + (order.driver ? parseFloat(order.delivery_price) : 0)).toFixed(2)} ج.م</span>
-                        </div>
-                    </div>
-                    ${otpBlockHtml}
-                    ${disputeActionHtml}
-                </div>
-            `;
-            allHtml += html;
-        });
-        
-        container.innerHTML = allHtml;
-        
-        // Generate QR Codes
-        orders.forEach((order) => {
-            const isCompleted = ['DELIVERED', 'CANCELLED'].includes(order.status);
-            if (!isCompleted && order.customer_otp) {
-                const qrContainer = document.getElementById(`qrcode-customer-${order.id}`);
-                if (qrContainer && typeof QRCode !== 'undefined') {
-                    qrContainer.innerHTML = ''; // Clear previous
-                    new QRCode(qrContainer, {
-                        text: order.customer_otp,
-                        width: 160,
-                        height: 160,
-                        colorDark : "#320404", // espresso
-                        colorLight : "#ffffff",
-                        correctLevel : QRCode.CorrectLevel.H
-                    });
-                }
-            }
-        });
+        document.getElementById('statTotalOrders').innerText = orders.length;
+        document.getElementById('statDelivered').innerText = delivered;
+        document.getElementById('statActive').innerText = active;
+        document.getElementById('statPending').innerText = pending;
+
+        // Render with current filter
+        renderOrders(orders);
     } catch (error) {
         console.error("Failed to load customer orders:", error);
     }
 }
 
+function renderOrders(orders) {
+    const container = document.getElementById('customerOrdersList');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    if (orders.length === 0) {
+        container.innerHTML = `
+            <div class="text-center py-5 animate-up">
+                <div style="font-size: 4rem; opacity: 0.3; margin-bottom: 1rem;">📦</div>
+                <p class="fw-bold text-espresso" style="font-size: 1.2rem;">لا توجد طلبات هنا</p>
+                <p class="text-mesa" style="font-size: 1rem;">ابدأ بالتسوق من محلات القرية الآن!</p>
+                <a href="/html/shops/list.html" class="btn btn-primary rounded-pill px-4 py-2 fw-bold mt-2" style="font-size: 1.05rem;">
+                    <i class="bi bi-shop me-1"></i>تصفح المحلات
+                </a>
+            </div>
+        `;
+        return;
+    }
+    
+    let allHtml = '';
+    
+    orders.forEach((order, i) => {
+        const dateFormatted = new Date(order.created_at).toLocaleString('ar-EG', {
+            hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'long', year: 'numeric'
+        });
+        
+        const isCompleted = ['DELIVERED', 'CANCELLED'].includes(order.status);
+        
+        // Items list
+        const itemsList = order.items.map(it => `
+            <div class="d-flex justify-content-between align-items-center py-2 border-bottom" style="border-color: rgba(201,153,151,0.06) !important;">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-marigold bg-opacity-15 text-marigold rounded-pill px-2" style="font-size: 0.8rem;">x${it.quantity}</span>
+                    <span class="text-espresso fw-bold" style="font-size: 0.98rem;">${it.product_details ? it.product_details.name : 'منتج'}</span>
+                </div>
+                <span class="text-marigold fw-bold" style="font-size: 0.95rem;">${it.price} ج.م</span>
+            </div>
+        `).join('');
+        
+        // Visual Order Stepper
+        const stepperHtml = buildVisualStepper(order.status);
+        
+        // OTP Block
+        let otpBlockHtml = '';
+        if (!isCompleted && order.customer_otp) {
+            otpBlockHtml = `
+                <div class="mt-3 p-3 rounded-4 text-center" style="background: linear-gradient(135deg, rgba(194, 146, 64, 0.08), rgba(194, 146, 64, 0.03)); border: 2px dashed rgba(194, 146, 64, 0.25);">
+                    <div class="mb-2">
+                        <i class="bi bi-shield-lock-fill text-marigold" style="font-size: 1.5rem;"></i>
+                    </div>
+                    <div class="fw-bold text-espresso mb-1" style="font-size: 1.05rem;">رمز التسليم السري</div>
+                    <div class="text-mesa small mb-2">أظهر هذا الرمز للمندوب عند الاستلام والدفع</div>
+                    <div class="d-inline-block bg-white rounded-pill px-4 py-2 shadow-sm mb-2" style="border: 2px solid rgba(194, 146, 64, 0.2);">
+                        <strong class="text-marigold" style="font-family: monospace; font-size: 2rem; letter-spacing: 8px;">${order.customer_otp}</strong>
+                    </div>
+                    <div id="qrcode-customer-${order.id}" class="d-flex justify-content-center my-2"></div>
+                    <div class="text-mesa small mt-1" style="font-size: 0.82rem;">
+                        <i class="bi bi-qr-code me-1"></i>أو اعرض رمز QR للمندوب ليمسحه بالكاميرا
+                    </div>
+                </div>
+            `;
+        } else if (order.status === 'DELIVERED' && !order.is_paid_to_shop) {
+            otpBlockHtml = `
+                <div class="alert alert-warning py-3 rounded-4 small mb-0 border-0 fw-bold mt-3 text-espresso text-center" style="font-size: 1rem;">
+                    <i class="bi bi-clock-history me-1" style="font-size: 1.2rem;"></i><br>
+                    تم التوصيل بنجاح!<br>
+                    <span class="text-mesa fw-normal" style="font-size: 0.88rem;">بانتظار تصفية المندوب للمبلغ مع المحل.</span>
+                </div>
+            `;
+        }
+        
+        // Dispute area
+        if (order.dispute_status === 'PENDING') {
+            otpBlockHtml = `
+                <div class="alert alert-danger py-3 rounded-4 small mb-0 border-0 fw-bold mt-3 text-center" style="font-size: 1rem;">
+                    <i class="bi bi-exclamation-octagon-fill me-1" style="font-size: 1.3rem;"></i><br>
+                    الطلب قيد النزاع والتحقيق<br>
+                    <span class="fw-normal" style="font-size: 0.88rem;">إدارة بركة تقوم بالفصل بين الأطراف.</span>
+                </div>
+            `;
+        }
+        
+        let disputeActionHtml = '';
+        if (order.dispute_status === 'NONE' && ['ON_DELIVERY', 'DELIVERED'].includes(order.status)) {
+            disputeActionHtml = `
+                <button onclick="raiseCustomerDispute(${order.id})" class="btn btn-outline-danger rounded-pill w-100 mt-3 fw-bold py-2" style="font-size: 0.95rem;">
+                    <i class="bi bi-exclamation-octagon me-1"></i>تقديم شكوى بخصوص هذا الطلب
+                </button>
+            `;
+        }
+
+        // Total price calculation
+        const totalPrice = (parseFloat(order.total_price) + (order.driver ? parseFloat(order.delivery_price) : 0)).toFixed(2);
+        
+        const html = `
+            <div class="dashboard-card mb-4 animate-up order-card" 
+                 data-status="${order.status}"
+                 style="animation-delay: ${i * 0.06}s; border-right: 4px solid ${order.status === 'CANCELLED' ? '#ef4444' : order.status === 'DELIVERED' ? '#22c55e' : '#c29240'};">
+                
+                <!-- Order Header -->
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 42px; height: 42px; background: linear-gradient(135deg, rgba(194,146,64,0.12), rgba(194,146,64,0.04));">
+                            <i class="bi bi-receipt text-marigold" style="font-size: 1.2rem;"></i>
+                        </div>
+                        <div>
+                            <span class="fw-bold text-espresso" style="font-size: 1.1rem;">طلب #${order.id}</span>
+                            <div class="text-mesa small">${dateFormatted}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Visual Order Stepper -->
+                ${stepperHtml}
+
+                <!-- Shop & Driver Info -->
+                <div class="mt-3 p-3 rounded-3" style="background: rgba(253, 245, 241, 0.5);">
+                    <div class="d-flex align-items-center gap-2 mb-2" style="font-size: 1rem;">
+                        <i class="bi bi-shop text-marigold" style="font-size: 1.2rem;"></i>
+                        <span class="text-espresso fw-bold">${order.shop_details ? order.shop_details.name : 'محل بركة'}</span>
+                    </div>
+                    ${order.driver_details ? `
+                    <div class="d-flex align-items-center gap-2" style="font-size: 1rem;">
+                        <i class="bi bi-bicycle text-success" style="font-size: 1.2rem;"></i>
+                        <span class="text-espresso">المندوب: <strong>${order.driver_details.name}</strong></span>
+                        <a href="tel:${order.driver_details.phone}" class="btn btn-sm btn-outline-success rounded-pill px-2 py-0 ms-auto" style="font-size: 0.82rem;">
+                            <i class="bi bi-telephone-fill me-1"></i>${order.driver_details.phone}
+                        </a>
+                    </div>
+                    ` : ''}
+                </div>
+
+                <!-- Items List -->
+                <div class="mt-3 p-3 bg-white rounded-3" style="border: 1px solid rgba(201,153,151,0.08);">
+                    <div class="text-espresso fw-bold mb-2 pb-2 border-bottom d-flex align-items-center gap-2" style="font-size: 1rem; border-color: rgba(201,153,151,0.08) !important;">
+                        <i class="bi bi-basket2-fill text-marigold"></i>
+                        المنتجات المطلوبة
+                    </div>
+                    ${itemsList}
+                    <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top" style="border-color: rgba(201,153,151,0.1) !important;">
+                        <span class="fw-bold text-espresso" style="font-size: 1.1rem;">💰 الإجمالي المطلوب</span>
+                        <span class="fw-bold text-marigold" style="font-size: 1.3rem;">${totalPrice} ج.م</span>
+                    </div>
+                    ${order.driver ? `
+                    <div class="d-flex justify-content-between align-items-center mt-1 text-mesa small">
+                        <span>(شامل رسوم التوصيل: ${order.delivery_price} ج.م)</span>
+                    </div>` : ''}
+                </div>
+
+                <!-- OTP Block -->
+                ${otpBlockHtml}
+
+                <!-- Dispute Action -->
+                ${disputeActionHtml}
+            </div>
+        `;
+        allHtml += html;
+    });
+    
+    container.innerHTML = allHtml;
+    
+    // Generate QR Codes
+    orders.forEach((order) => {
+        const isCompleted = ['DELIVERED', 'CANCELLED'].includes(order.status);
+        if (!isCompleted && order.customer_otp) {
+            const qrContainer = document.getElementById(`qrcode-customer-${order.id}`);
+            if (qrContainer && typeof QRCode !== 'undefined') {
+                qrContainer.innerHTML = '';
+                new QRCode(qrContainer, {
+                    text: order.customer_otp,
+                    width: 160,
+                    height: 160,
+                    colorDark : "#320404",
+                    colorLight : "#ffffff",
+                    correctLevel : QRCode.CorrectLevel.H
+                });
+            }
+        }
+    });
+}
+
+// ==========================================
+// Filter Orders
+// ==========================================
+window.filterOrders = function(filter, btnElement) {
+    // Update active button style
+    document.querySelectorAll('#orderFilterTabs button').forEach(btn => {
+        btn.classList.remove('active');
+        btn.style.background = '';
+        btn.style.color = '';
+    });
+    if (btnElement) {
+        btnElement.classList.add('active');
+    }
+    
+    let filtered = allCustomerOrders;
+    if (filter === 'active') {
+        filtered = allCustomerOrders.filter(o => ['PENDING', 'ACCEPTED', 'PREPARING', 'ON_DELIVERY'].includes(o.status));
+    } else if (filter === 'delivered') {
+        filtered = allCustomerOrders.filter(o => o.status === 'DELIVERED');
+    } else if (filter === 'cancelled') {
+        filtered = allCustomerOrders.filter(o => o.status === 'CANCELLED');
+    }
+    
+    renderOrders(filtered);
+};
+
+// ==========================================
+// Dispute Reporting
+// ==========================================
 window.raiseCustomerDispute = async function(orderId) {
     const token = localStorage.getItem('access_token');
     const reason = await showBarakaPrompt('يرجى كتابة سبب تقديم الشكوى بالتفصيل (مثلاً: لم أستلم الطلب، المندوب أخذ مبلغاً إضافياً، إلخ):', 'اكتب سبب الشكوى هنا...', 'تقديم شكوى بخصوص الطلب ⚖️');

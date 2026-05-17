@@ -5,12 +5,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (loginForm) {
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const phone = document.getElementById('phone').value;
-            const password = document.getElementById('password').value;
+            const phone = document.getElementById('loginPhone').value;
+            const password = document.getElementById('loginPassword').value;
             const btn = document.getElementById('loginBtn');
             const btnText = btn.querySelector('.btn-text');
             const spinner = btn.querySelector('.spinner-border');
-            const errorMsg = document.getElementById('errorMsg');
+            const errorMsg = document.getElementById('loginErrorMsg');
             
             // Set loading state
             btn.disabled = true;
@@ -58,15 +58,15 @@ document.addEventListener('DOMContentLoaded', () => {
     if (registerForm) {
         registerForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const name = document.getElementById('name').value;
-            const phone = document.getElementById('phone').value;
-            const location = document.getElementById('location').value;
-            const role = document.getElementById('role').value;
-            const password = document.getElementById('password').value;
+            const name = document.getElementById('regName').value;
+            const phone = document.getElementById('regPhone').value;
+            const location = document.getElementById('regLocation').value;
+            const role = document.getElementById('regRole').value;
+            const password = document.getElementById('regPassword').value;
             const btn = document.getElementById('registerBtn');
             const btnText = btn.querySelector('.btn-text');
             const spinner = btn.querySelector('.spinner-border');
-            const errorMsg = document.getElementById('errorMsg');
+            const errorMsg = document.getElementById('regErrorMsg');
             
             // Set loading state
             btn.disabled = true;

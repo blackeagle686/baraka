@@ -8,14 +8,42 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+let allFetchedShops = [];
+
 async function initShopsList() {
     try {
         const shops = await api.shops.getAll();
+        allFetchedShops = shops;
         renderAllShops(shops);
         renderShopsMap(shops);
+        setupFilters();
     } catch (error) {
         console.error("Error fetching shops:", error);
     }
+}
+
+function setupFilters() {
+    const searchInput = document.getElementById('shopSearchInput');
+    const openNowFilter = document.getElementById('openNowFilter');
+    
+    if(!searchInput || !openNowFilter) return;
+
+    const applyFilters = () => {
+        const searchTerm = searchInput.value.toLowerCase();
+        const isOpenOnly = openNowFilter.checked;
+
+        const filtered = allFetchedShops.filter(shop => {
+            const matchesSearch = shop.name.toLowerCase().includes(searchTerm) || 
+                                  (shop.description && shop.description.toLowerCase().includes(searchTerm));
+            const matchesOpen = isOpenOnly ? shop.is_open : true;
+            return matchesSearch && matchesOpen;
+        });
+
+        renderAllShops(filtered);
+    };
+
+    searchInput.addEventListener('input', applyFilters);
+    openNowFilter.addEventListener('change', applyFilters);
 }
 
 function renderAllShops(shops) {
@@ -163,14 +191,22 @@ let cart = [];
 window.addToCart = function(id, name, price) {
     const token = localStorage.getItem('access_token');
     if (!token) {
-        alert('يرجى تسجيل الدخول أولاً لتتمكن من الطلب.');
-        window.location.href = '/html/auth/login.html';
+        if(window.showBarakaToast) {
+            window.showBarakaToast('يرجى تسجيل الدخول أولاً لتتمكن من الطلب.', 'error', 'bi-exclamation-circle');
+        } else {
+            alert('يرجى تسجيل الدخول أولاً لتتمكن من الطلب.');
+        }
+        setTimeout(() => window.location.href = '/html/auth/login.html', 1500);
         return;
     }
     
     const role = localStorage.getItem('user_role');
     if (role && role !== 'CUSTOMER') {
-        alert('عذراً، الحسابات التجارية (أصحاب المحلات والطيارين) لا يمكنها تقديم طلبات شراء من المتجر. يرجى استخدام حساب مشتري.');
+        if(window.showBarakaToast) {
+            window.showBarakaToast('عذراً، الحسابات التجارية لا يمكنها الشراء.', 'warning', 'bi-exclamation-triangle');
+        } else {
+            alert('عذراً، الحسابات التجارية (أصحاب المحلات والطيارين) لا يمكنها تقديم طلبات شراء من المتجر. يرجى استخدام حساب مشتري.');
+        }
         return;
     }
     
@@ -182,7 +218,12 @@ window.addToCart = function(id, name, price) {
     }
     updateCartUI();
     
-    // Visual indicator of item added
+    // Visual indicator of item added using Premium Toast
+    if(window.showBarakaToast) {
+        window.showBarakaToast(`تم إضافة "${name}" للسلة بنجاح!`, 'success', 'bi-cart-check');
+    }
+    
+    // Also keep the button visual cue for immediate feedback
     const btn = document.querySelector(`[onclick*="addToCart(${id}"]`);
     if (btn) {
         const originalHtml = btn.innerHTML;

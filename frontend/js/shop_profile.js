@@ -111,6 +111,8 @@ async function initShopProfile() {
 function populateShopForm(shop) {
     document.getElementById('shopName').value = shop.name || '';
     document.getElementById('shopAddress').value = shop.address || '';
+    document.getElementById('shopLatitude').value = shop.latitude || '';
+    document.getElementById('shopLongitude').value = shop.longitude || '';
     document.getElementById('shopDesc').value = shop.description || '';
     document.getElementById('shopIsOpen').checked = shop.is_open;
     
@@ -151,6 +153,12 @@ async function handleShopSubmit() {
     const formData = new FormData();
     formData.append('name', document.getElementById('shopName').value);
     formData.append('address', document.getElementById('shopAddress').value);
+    
+    const lat = document.getElementById('shopLatitude').value;
+    const lon = document.getElementById('shopLongitude').value;
+    if (lat) formData.append('latitude', lat);
+    if (lon) formData.append('longitude', lon);
+
     formData.append('description', document.getElementById('shopDesc').value);
     formData.append('is_open', document.getElementById('shopIsOpen').checked);
     if (newShopImageFile) {

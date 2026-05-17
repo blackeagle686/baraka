@@ -84,6 +84,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 const profile = await api.auth.getProfile(data.access);
                 localStorage.setItem('user_role', profile.role);
+                localStorage.setItem('user_name', profile.name || name || 'مستخدم بركة');
                 
                 if (profile.role === 'DRIVER') {
                     window.location.href = '/html/profile/driver.html';

@@ -90,9 +90,126 @@ window.logout = function() {
 // ==========================================
 // Baraka Premium Custom Alert & Prompt Modals
 // ==========================================
+function applyBarakaModalStyles(overlay) {
+    overlay.style.cssText = `
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        background: rgba(50, 4, 4, 0.45) !important;
+        backdrop-filter: blur(12px) saturate(1.6) !important;
+        -webkit-backdrop-filter: blur(12px) saturate(1.6) !important;
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        z-index: 9999999 !important;
+        opacity: 0 !important;
+        transition: opacity 0.3s ease-out !important;
+    `;
+    
+    const box = overlay.querySelector('.baraka-modal-box');
+    if (box) {
+        box.style.cssText = `
+            background: rgba(255, 255, 255, 0.95) !important;
+            border: 1px solid rgba(201, 153, 151, 0.25) !important;
+            border-radius: 24px !important;
+            width: 92% !important;
+            max-width: 440px !important;
+            padding: 2.2rem !important;
+            text-align: center !important;
+            box-shadow: 0 20px 60px rgba(50, 4, 4, 0.25) !important;
+            transform: translateY(35px) scale(0.95) !important;
+            transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+            direction: rtl !important;
+        `;
+    }
+    
+    overlay.querySelectorAll('.baraka-modal-icon').forEach(icon => {
+        icon.style.cssText = `
+            width: 64px !important;
+            height: 64px !important;
+            border-radius: 50% !important;
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
+            margin: 0 auto 1.2rem !important;
+            font-size: 1.8rem !important;
+        `;
+        if (icon.classList.contains('warning')) {
+            icon.style.background = 'rgba(201, 153, 151, 0.12)';
+            icon.style.color = '#b8574c';
+            icon.style.border = '1.5px solid rgba(201, 153, 151, 0.25)';
+        } else {
+            icon.style.background = 'rgba(194, 146, 64, 0.12)';
+            icon.style.color = '#c29240';
+            icon.style.border = '1.5px solid rgba(194, 146, 64, 0.25)';
+        }
+    });
+    
+    overlay.querySelectorAll('.baraka-modal-title').forEach(t => {
+        t.style.cssText = `
+            font-size: 1.3rem !important;
+            font-weight: 700 !important;
+            color: #320404 !important;
+            margin-bottom: 0.6rem !important;
+            font-family: 'Cairo', sans-serif !important;
+        `;
+    });
+    
+    overlay.querySelectorAll('.baraka-modal-text').forEach(t => {
+        t.style.cssText = `
+            font-size: 0.98rem !important;
+            color: #5e2c38 !important;
+            margin-bottom: 1.6rem !important;
+            line-height: 1.6 !important;
+            font-family: 'Cairo', sans-serif !important;
+        `;
+    });
+    
+    overlay.querySelectorAll('.baraka-modal-input-wrapper').forEach(w => {
+        w.style.cssText = `margin-bottom: 1.6rem !important;`;
+    });
+    
+    overlay.querySelectorAll('.baraka-modal-input').forEach(input => {
+        input.style.cssText = `
+            width: 100% !important;
+            padding: 0.75rem 1.2rem !important;
+            font-size: 1.1rem !important;
+            text-align: center !important;
+            font-weight: 700 !important;
+            letter-spacing: 1px !important;
+            border-radius: 100px !important;
+            background: rgba(253, 245, 241, 0.9) !important;
+            border: 1.5px solid rgba(201, 153, 151, 0.2) !important;
+            font-family: 'Cairo', sans-serif !important;
+        `;
+    });
+    
+    overlay.querySelectorAll('.baraka-modal-footer').forEach(f => {
+        f.style.cssText = `
+            display: flex !important;
+            gap: 0.8rem !important;
+            justify-content: center !important;
+        `;
+    });
+    
+    overlay.querySelectorAll('.baraka-modal-btn').forEach(btn => {
+        btn.style.cssText = `
+            padding: 0.6rem 1.8rem !important;
+            border-radius: 100px !important;
+            font-size: 0.92rem !important;
+            font-weight: 700 !important;
+            min-width: 110px !important;
+            font-family: 'Cairo', sans-serif !important;
+        `;
+    });
+}
+
 window.showBarakaAlert = function(message, type = 'info', title = 'تنبيه') {
     return new Promise((resolve) => {
-        // Create modal overlay
         const overlay = document.createElement('div');
         overlay.className = 'baraka-modal-overlay';
         
@@ -111,13 +228,20 @@ window.showBarakaAlert = function(message, type = 'info', title = 'تنبيه') 
             </div>
         `;
         
+        applyBarakaModalStyles(overlay);
         document.documentElement.appendChild(overlay);
         
-        // Trigger active animations
-        setTimeout(() => overlay.classList.add('active'), 50);
+        const box = overlay.querySelector('.baraka-modal-box');
+        
+        // Trigger active animations inline
+        setTimeout(() => {
+            overlay.style.opacity = '1';
+            if (box) box.style.transform = 'translateY(0) scale(1)';
+        }, 50);
         
         const closeAlert = () => {
-            overlay.classList.remove('active');
+            overlay.style.opacity = '0';
+            if (box) box.style.transform = 'translateY(35px) scale(0.95)';
             setTimeout(() => {
                 overlay.remove();
                 resolve(true);
@@ -126,7 +250,6 @@ window.showBarakaAlert = function(message, type = 'info', title = 'تنبيه') 
         
         document.getElementById('barakaAlertOkBtn').addEventListener('click', closeAlert);
         
-        // Keyboard support (Enter closes alert)
         const handleKeyDown = (e) => {
             if (e.key === 'Enter') {
                 closeAlert();
@@ -158,21 +281,25 @@ window.showBarakaPrompt = function(message, placeholder = '', title = 'إدخا�
             </div>
         `;
         
+        applyBarakaModalStyles(overlay);
         document.documentElement.appendChild(overlay);
         
         const input = document.getElementById('barakaPromptInput');
         const submitBtn = document.getElementById('barakaPromptSubmitBtn');
         const cancelBtn = document.getElementById('barakaPromptCancelBtn');
         const errorEl = document.getElementById('barakaPromptError');
+        const box = overlay.querySelector('.baraka-modal-box');
         
-        // Focus input immediately
+        // Focus and trigger active animations
         setTimeout(() => {
-            overlay.classList.add('active');
+            overlay.style.opacity = '1';
+            if (box) box.style.transform = 'translateY(0) scale(1)';
             input.focus();
         }, 50);
         
         const closePrompt = (val) => {
-            overlay.classList.remove('active');
+            overlay.style.opacity = '0';
+            if (box) box.style.transform = 'translateY(35px) scale(0.95)';
             setTimeout(() => {
                 overlay.remove();
                 resolve(val);
@@ -193,13 +320,11 @@ window.showBarakaPrompt = function(message, placeholder = '', title = 'إدخا�
             closePrompt(null);
         });
         
-        // Handle input events to clear errors
         input.addEventListener('input', () => {
             errorEl.classList.add('d-none');
             input.classList.remove('is-invalid');
         });
         
-        // Keyboard support
         input.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
                 submitBtn.click();

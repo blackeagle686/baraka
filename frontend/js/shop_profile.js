@@ -3,6 +3,7 @@ let newShopImageFile = null;
 let newProdImageFile = null;
 let newEditProdImageFile = null;
 let currentProducts = [];
+let allCategories = []; // Dynamic from DB
 
 document.addEventListener('DOMContentLoaded', () => {
     const token = localStorage.getItem('access_token');
@@ -93,6 +94,14 @@ document.addEventListener('DOMContentLoaded', () => {
 async function initShopProfile() {
     const token = localStorage.getItem('access_token');
     try {
+        // Fetch all categories first
+        try {
+            allCategories = await api.categories.getAll();
+            populateCategoryDropdowns();
+        } catch (catError) {
+            console.error("Error loading categories:", catError);
+        }
+
         const shop = await api.shops.getMyShop(token);
         if (shop) {
             currentShopId = shop.id;
@@ -119,6 +128,19 @@ async function initShopProfile() {
     } catch (error) {
         console.error("Error fetching shop profile:", error);
     }
+}
+
+function populateCategoryDropdowns() {
+    const addDropdown = document.getElementById('prodCategory');
+    const editDropdown = document.getElementById('editProdCategory');
+    
+    let optionsHtml = '<option value="" disabled selected>اختر قسم المنتج...</option>';
+    allCategories.forEach(cat => {
+        optionsHtml += `<option value="${cat.id}">${cat.name}</option>`;
+    });
+    
+    if (addDropdown) addDropdown.innerHTML = optionsHtml;
+    if (editDropdown) editDropdown.innerHTML = optionsHtml;
 }
 
 function populateShopForm(shop) {

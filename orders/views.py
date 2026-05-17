@@ -98,6 +98,16 @@ class OrderViewSet(viewsets.ModelViewSet):
         if order.driver:
             return Response({"detail": "Order already has an assigned driver."}, status=status.HTTP_400_BAD_REQUEST)
         
+        delivery_price = request.data.get('delivery_price')
+        if delivery_price is not None:
+            try:
+                order.delivery_price = float(delivery_price)
+            except ValueError:
+                return Response({"detail": "Invalid delivery price."}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            order.delivery_price = 15.00  # Default base delivery fee (15 ج.م)
+            
         order.driver = request.user
+        order.status = OrderStatus.ON_DELIVERY
         order.save()
         return Response(self.get_serializer(order).data)

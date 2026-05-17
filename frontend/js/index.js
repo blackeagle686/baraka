@@ -113,28 +113,31 @@ function initInteractiveNet() {
     window.addEventListener('resize', resize);
     
     // Mouse event listeners for particles and parallax
-    canvas.addEventListener('mousemove', (e) => {
-        const rect = canvas.getBoundingClientRect();
-        mouse.x = e.clientX - rect.left;
-        mouse.y = e.clientY - rect.top;
+    const heroSection = document.querySelector('.hero-section');
+    if (heroSection) {
+        heroSection.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            mouse.x = e.clientX - rect.left;
+            mouse.y = e.clientY - rect.top;
+            
+            // Parallax effect on giant text
+            if (giantText) {
+                const centerX = width / 2;
+                const centerY = height / 2;
+                const moveX = (mouse.x - centerX) * 0.03;
+                const moveY = (mouse.y - centerY) * 0.03;
+                giantText.style.transform = `translate(calc(-50% + ${moveX}px), calc(-50% + ${moveY}px)) scale(1.02)`;
+            }
+        });
         
-        // Parallax effect on giant text
-        if (giantText) {
-            const centerX = width / 2;
-            const centerY = height / 2;
-            const moveX = (mouse.x - centerX) * 0.03;
-            const moveY = (mouse.y - centerY) * 0.03;
-            giantText.style.transform = `translate(calc(-50% + ${moveX}px), calc(-50% + ${moveY}px)) scale(1.02)`;
-        }
-    });
-    
-    canvas.addEventListener('mouseleave', () => {
-        mouse.x = null;
-        mouse.y = null;
-        if (giantText) {
-            giantText.style.transform = `translate(-50%, -50%) scale(1)`;
-        }
-    });
+        heroSection.addEventListener('mouseleave', () => {
+            mouse.x = null;
+            mouse.y = null;
+            if (giantText) {
+                giantText.style.transform = `translate(-50%, -50%) scale(1)`;
+            }
+        });
+    }
     
     // Particle Class
     class Particle {

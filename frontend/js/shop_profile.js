@@ -307,7 +307,8 @@ async function handleProductSubmit() {
     formData.append('name', document.getElementById('prodName').value);
     formData.append('price', document.getElementById('prodPrice').value);
     formData.append('description', document.getElementById('prodDesc').value);
-    formData.append('shop', currentShopId); // Backend actually forces this based on user, but passing is fine
+    formData.append('available', document.getElementById('prodAvailable').checked);
+    formData.append('shop', currentShopId);
 
     if (newProdImageFile) {
         formData.append('image', newProdImageFile);

@@ -25,9 +25,11 @@
 
     <section class="py-4">
         <div class="container">
-            <div class="row justify-content-center">
-                <div class="col-md-7">
-                    <div class="dashboard-card animate-up">
+            <div class="row g-4 justify-content-center">
+                <!-- Profile Edit Card (Right) -->
+                <div class="col-lg-5 col-md-6 order-lg-2">
+                    <div class="dashboard-card animate-up mb-4">
+                        <h4 class="fw-bold text-espresso mb-4 pb-2 border-bottom"><i class="bi bi-person-gear me-2 text-marigold"></i>تعديل بيانات الحساب</h4>
                         <form id="profileForm" enctype="multipart/form-data">
                             <!-- Avatar -->
                             <div class="text-center mb-4">
@@ -43,28 +45,26 @@
                             </div>
 
                             <!-- Fields -->
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label text-espresso fw-bold"><i class="bi bi-person me-1"></i>الاسم</label>
-                                    <input type="text" class="form-control rounded-pill px-4 py-2" id="name" required>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label text-espresso fw-bold"><i class="bi bi-phone me-1"></i>رقم الهاتف</label>
-                                    <input type="text" class="form-control rounded-pill px-4 py-2" id="phone" required>
-                                </div>
+                            <div class="mb-3">
+                                <label class="form-label text-espresso fw-bold"><i class="bi bi-person me-1"></i>الاسم</label>
+                                <input type="text" class="form-control rounded-pill px-4 py-2" id="name" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-espresso fw-bold"><i class="bi bi-phone me-1"></i>رقم الهاتف</label>
+                                <input type="text" class="form-control rounded-pill px-4 py-2" id="phone" required>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label text-espresso fw-bold"><i class="bi bi-geo-alt me-1"></i>العنوان (المكان)</label>
                                 <input type="text" class="form-control rounded-pill px-4 py-2" id="location">
                             </div>
                             <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label text-espresso fw-bold"><i class="bi bi-compass me-1"></i>خط العرض (Latitude)</label>
-                                    <input type="number" step="0.000001" class="form-control rounded-pill px-4 py-2" id="latitude" placeholder="30.0444">
+                                <div class="col-6 mb-3">
+                                    <label class="form-label text-espresso fw-bold small"><i class="bi bi-compass me-1"></i>خط العرض</label>
+                                    <input type="number" step="0.000001" class="form-control rounded-pill px-3 py-2" id="latitude">
                                 </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label text-espresso fw-bold"><i class="bi bi-compass-fill me-1"></i>خط الطول (Longitude)</label>
-                                    <input type="number" step="0.000001" class="form-control rounded-pill px-4 py-2" id="longitude" placeholder="31.2357">
+                                <div class="col-6 mb-3">
+                                    <label class="form-label text-espresso fw-bold small"><i class="bi bi-compass-fill me-1"></i>خط الطول</label>
+                                    <input type="number" step="0.000001" class="form-control rounded-pill px-3 py-2" id="longitude">
                                 </div>
                             </div>
                             <div class="mb-4">
@@ -72,11 +72,24 @@
                                 <input type="text" class="form-control rounded-pill px-4 py-2 text-muted" id="role" disabled>
                             </div>
                             
-                            <button type="submit" class="btn btn-primary rounded-pill w-100 py-2 fw-bold mb-3" id="saveBtn">
+                            <button type="submit" class="btn btn-primary rounded-pill w-100 py-2 fw-bold mb-2" id="saveBtn">
                                 <i class="bi bi-check2-circle me-1"></i>حفظ التعديلات
                             </button>
                             <div id="statusMsg" class="text-center fw-bold d-none"></div>
                         </form>
+                    </div>
+                </div>
+
+                <!-- Recent Orders Tracker Card (Left) -->
+                <div class="col-lg-7 col-md-6 order-lg-1" id="customerOrdersContainer" style="display: none;">
+                    <div class="dashboard-card animate-up">
+                        <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+                            <h4 class="fw-bold text-espresso mb-0"><i class="bi bi-bag-check me-2 text-marigold"></i>طلباتي الأخيرة</h4>
+                            <span class="badge bg-espresso text-white rounded-pill px-3 py-1" id="ordersCountBadge">0 طلب</span>
+                        </div>
+                        <div id="customerOrdersList" style="max-height: 550px; overflow-y: auto; padding-right: 5px;">
+                            <!-- Dynamic customer orders will be populated here -->
+                        </div>
                     </div>
                 </div>
             </div>

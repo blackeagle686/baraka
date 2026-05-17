@@ -684,28 +684,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
 window.confirmShopPaymentReceived = async function(orderId, totalPrice) {
     const token = localStorage.getItem('access_token');
-    const driverOtp = prompt(`برجاء إدخال رمز تصفية الحساب المكون من 4 أرقام الموضح على شاشة الطيار لتأكيد استلام مبلغ (${totalPrice} ج.م) والتحقق من المعاملة:`);
+    const driverOtp = await showBarakaPrompt(`برجاء إدخال رمز تصفية الحساب المكون من 4 أرقام الموضح على شاشة الطيار لتأكيد استلام مبلغ (${totalPrice} ج.م) والتحقق من المعاملة:`, 'مثال: 5678', 'تأكيد تصفية الحساب مع الطيار 💰');
     if (!driverOtp) return;
     
     try {
         await api.orders.confirmPaymentReceived(token, orderId, driverOtp);
-        alert('تم التحقق وتصفية الحساب بنجاح!');
+        await showBarakaAlert('تم التحقق وتصفية الحساب بنجاح!', 'info', 'تمت التصفية بنجاح ✅');
         loadShopOrders(); // Reload orders list
     } catch (error) {
-        alert('فشل تصفية الحساب: ' + (error.detail || JSON.stringify(error)));
+        await showBarakaAlert('فشل تصفية الحساب: ' + (error.detail || JSON.stringify(error)), 'warning', 'خطأ في التصفية ⚠️');
     }
 }
 
 window.raiseOrderDispute = async function(orderId) {
     const token = localStorage.getItem('access_token');
-    const reason = prompt('يرجى كتابة سبب تقديم الشكوى بالتفصيل (مثل: الطيار يرفض الدفع، العميل لم يستلم المنتجات، إلخ):');
+    const reason = await showBarakaPrompt('يرجى كتابة سبب تقديم الشكوى بالتفصيل (مثل: الطيار يرفض الدفع، العميل لم يستلم المنتجات، إلخ):', 'اكتب سبب النزاع هنا...', 'تقديم شكوى / نزاع مع المندوب ⚖️');
     if (!reason) return;
     
     try {
         await api.orders.raiseDispute(token, orderId, reason);
-        alert('تم تسجيل الشكوى وإرسالها للإدارة بنجاح! سيتم التواصل معك قريباً للفصل بالنزاع.');
+        await showBarakaAlert('تم تسجيل الشكوى وإرسالها للإدارة بنجاح! سيتم التواصل معك قريباً للفصل بالنزاع.', 'info', 'تم تسجيل النزاع ⚖️');
         loadShopOrders();
     } catch (error) {
-        alert('فشل تقديم الشكوى: ' + JSON.stringify(error));
+        await showBarakaAlert('فشل تقديم الشكوى: ' + JSON.stringify(error), 'warning', 'خطأ ⚠️');
     }
 }

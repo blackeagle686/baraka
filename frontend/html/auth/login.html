@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تسجيل الدخول - بركة</title>
+    <title>بوابة بركة - تسجيل الدخول وإنشاء حساب</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -12,44 +12,147 @@
 </head>
 <body>
     <div class="auth-wrapper">
-        <div class="auth-card animate-up">
-            <div class="text-center mb-4 position-relative">
-                <div class="auth-illustration mb-2 animate-up delay-1">
-                    <span style="font-size: 3rem; text-shadow: 0 10px 20px rgba(194, 146, 64, 0.2);">✨</span>
+        <div class="auth-card animate-up mode-login" id="authCard">
+            <!-- Logo & Greeting -->
+            <div class="text-center mb-4">
+                <div class="auth-logo-icon mb-2">
+                    <span class="logo-emoji">🌾</span>
                 </div>
                 <a href="/html/index.html" class="text-decoration-none">
-                    <div class="auth-logo animate-up delay-2">بركة</div>
+                    <div class="auth-logo">بركة</div>
                 </a>
-                <p class="auth-subtitle animate-up delay-3">سجل دخولك للمتابعة</p>
+                <p class="auth-subtitle" id="authSubtitle">مرحباً بك في سوق قريتك الرقمي</p>
             </div>
-            <form id="loginForm" class="animate-up delay-4">
-                <div class="mb-3">
-                    <label class="form-label text-espresso fw-bold"><i class="bi bi-phone me-1"></i>رقم الهاتف</label>
-                    <input type="text" class="form-control rounded-pill px-4 py-3 fs-5 text-center" id="phone" placeholder="01xxxxxxxxx" required>
-                </div>
-                <div class="mb-4">
-                    <label class="form-label text-espresso fw-bold"><i class="bi bi-lock me-1"></i>كلمة المرور</label>
-                    <div class="position-relative">
-                        <input type="password" class="form-control rounded-pill px-4 py-3 fs-5 text-center" id="password" placeholder="••••••••" required>
-                        <button type="button" class="btn btn-link position-absolute top-50 start-0 translate-middle-y text-mesa text-decoration-none password-toggle" onclick="togglePassword('password', this)" style="padding-left: 1rem;">
-                            <i class="bi bi-eye"></i>
-                        </button>
+
+            <!-- Segmented Control Switcher -->
+            <div class="auth-switcher-wrapper">
+                <button type="button" id="switchToLogin" class="switcher-btn active" onclick="setAuthMode('login')">تسجيل الدخول</button>
+                <button type="button" id="switchToRegister" class="switcher-btn" onclick="setAuthMode('register')">حساب جديد</button>
+                <div class="switcher-slider"></div>
+            </div>
+
+            <!-- Forms Slider Viewport -->
+            <div class="forms-viewport">
+                <div class="form-container" id="formContainer">
+                    
+                    <!-- LOGIN FORM -->
+                    <div class="auth-form-wrapper">
+                        <form id="loginForm">
+                            <div class="mb-3">
+                                <label class="form-label text-espresso fw-bold"><i class="bi bi-phone me-1 text-marigold"></i>رقم الهاتف</label>
+                                <input type="text" class="form-control rounded-pill px-4 py-2.5 text-center fs-6" id="loginPhone" placeholder="01xxxxxxxxx" required>
+                            </div>
+                            <div class="mb-4">
+                                <label class="form-label text-espresso fw-bold"><i class="bi bi-lock me-1 text-marigold"></i>كلمة المرور</label>
+                                <div class="position-relative">
+                                    <input type="password" class="form-control rounded-pill px-4 py-2.5 text-center fs-6" id="loginPassword" placeholder="••••••••" required>
+                                    <button type="button" class="btn btn-link position-absolute top-50 start-0 translate-middle-y text-mesa text-decoration-none password-toggle" onclick="togglePassword('loginPassword', this)" style="padding-left: 1.2rem;">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <button type="submit" id="loginBtn" class="btn btn-primary rounded-pill w-100 py-2.5 fw-bold mb-3 fs-5 position-relative overflow-hidden btn-gradient">
+                                <span class="btn-text"><i class="bi bi-box-arrow-in-left me-1"></i>دخول</span>
+                                <span class="spinner-border spinner-border-sm position-absolute top-50 start-50 translate-middle d-none" role="status" aria-hidden="true"></span>
+                            </button>
+                            <div id="loginErrorMsg" class="alert alert-danger text-center py-2 rounded-pill d-none small">
+                                <i class="bi bi-exclamation-triangle me-1"></i>بيانات الدخول غير صحيحة
+                            </div>
+                        </form>
                     </div>
+
+                    <!-- REGISTER FORM -->
+                    <div class="auth-form-wrapper">
+                        <form id="registerForm">
+                            <div class="row">
+                                <div class="col-md-6 mb-2">
+                                    <label class="form-label text-espresso fw-bold"><i class="bi bi-person me-1 text-marigold"></i>الاسم بالكامل</label>
+                                    <input type="text" class="form-control rounded-pill px-4 py-2 text-center fs-6" id="regName" placeholder="الاسم ثلاثي" required>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <label class="form-label text-espresso fw-bold"><i class="bi bi-phone me-1 text-marigold"></i>رقم الهاتف</label>
+                                    <input type="text" class="form-control rounded-pill px-4 py-2 text-center fs-6" id="regPhone" placeholder="01xxxxxxxxx" required>
+                                </div>
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label text-espresso fw-bold"><i class="bi bi-geo-alt me-1 text-marigold"></i>العنوان في القرية</label>
+                                <input type="text" class="form-control rounded-pill px-4 py-2 text-center fs-6" id="regLocation" placeholder="مثال: بحري البلد، بجوار المدرسة">
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label text-espresso fw-bold"><i class="bi bi-person-badge me-1 text-marigold"></i>نوع الحساب</label>
+                                <select class="form-select rounded-pill px-4 py-2 text-center fs-6" id="regRole">
+                                    <option value="CUSTOMER">مشتري (طلب للمنزل) 🛍️</option>
+                                    <option value="SHOP_OWNER">صاحب محل (بيع وعرض) 🏪</option>
+                                    <option value="DRIVER">طيار دليفري (توصيل طلبات) 🛵</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-espresso fw-bold"><i class="bi bi-lock me-1 text-marigold"></i>كلمة المرور</label>
+                                <div class="position-relative">
+                                    <input type="password" class="form-control rounded-pill px-4 py-2 text-center fs-6" id="regPassword" placeholder="••••••••" required>
+                                    <button type="button" class="btn btn-link position-absolute top-50 start-0 translate-middle-y text-mesa text-decoration-none password-toggle" onclick="togglePassword('regPassword', this)" style="padding-left: 1.2rem;">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <button type="submit" id="registerBtn" class="btn btn-primary rounded-pill w-100 py-2.5 fw-bold mb-3 fs-5 position-relative overflow-hidden btn-gradient">
+                                <span class="btn-text"><i class="bi bi-person-plus me-1"></i>إنشاء الحساب الجديد</span>
+                                <span class="spinner-border spinner-border-sm position-absolute top-50 start-50 translate-middle d-none" role="status" aria-hidden="true"></span>
+                            </button>
+                            <div id="regErrorMsg" class="alert alert-danger text-center py-2 rounded-pill d-none small">
+                                <i class="bi bi-exclamation-triangle me-1"></i>حدث خطأ أثناء التسجيل.
+                            </div>
+                        </form>
+                    </div>
+
                 </div>
-                <button type="submit" id="loginBtn" class="btn btn-primary rounded-pill w-100 py-3 fw-bold mb-3 fs-5 position-relative overflow-hidden">
-                    <span class="btn-text"><i class="bi bi-box-arrow-in-left me-1"></i>دخول</span>
-                    <span class="spinner-border spinner-border-sm position-absolute top-50 start-50 translate-middle d-none" role="status" aria-hidden="true"></span>
-                </button>
-                <div id="errorMsg" class="alert alert-danger text-center py-2 rounded-pill d-none small">
-                    <i class="bi bi-exclamation-triangle me-1"></i>بيانات الدخول غير صحيحة
-                </div>
-                <div class="text-center auth-footer-link mt-3">
-                    <span class="text-mesa">ليس لديك حساب؟</span>
-                    <a href="/html/auth/register.html">حساب جديد</a>
-                </div>
-            </form>
+            </div>
+
         </div>
     </div>
+
+    <!-- Mode switching script -->
+    <script>
+        function setAuthMode(mode) {
+            const card = document.getElementById('authCard');
+            const subtitle = document.getElementById('authSubtitle');
+            const btnLogin = document.getElementById('switchToLogin');
+            const btnRegister = document.getElementById('switchToRegister');
+
+            if (mode === 'login') {
+                card.classList.remove('mode-register');
+                card.classList.add('mode-login');
+                btnLogin.classList.add('active');
+                btnRegister.classList.remove('active');
+                subtitle.innerText = 'سجل دخولك للمتابعة والتسوق';
+                
+                // Update URL parameter silently
+                const newurl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?mode=login';
+                window.history.pushState({path:newurl},'',newurl);
+            } else {
+                card.classList.remove('mode-login');
+                card.classList.add('mode-register');
+                btnRegister.classList.add('active');
+                btnLogin.classList.remove('active');
+                subtitle.innerText = 'انضم إلينا واطلب كل اللي تحتاجه طازة';
+                
+                // Update URL parameter silently
+                const newurl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?mode=register';
+                window.history.pushState({path:newurl},'',newurl);
+            }
+        }
+
+        // Initialize from URL params on load
+        window.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            const mode = params.get('mode');
+            if (mode === 'register') {
+                setAuthMode('register');
+            } else {
+                setAuthMode('login');
+            }
+        });
+    </script>
 
     <script src="/js/api.js"></script>
     <script src="/js/auth.js"></script>

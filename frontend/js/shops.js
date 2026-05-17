@@ -653,6 +653,11 @@ window.submitOrder = async function() {
             const modal = bootstrap.Modal.getInstance(modalEl);
             if (modal) modal.hide();
         }
+        
+        // Redirect to new Consolidated Cart & Tracking Dashboard
+        setTimeout(() => {
+            window.location.href = '/html/cart.html';
+        }, 1200);
     } catch (error) {
         if (window.showBarakaToast) {
             window.showBarakaToast('حدث خطأ أثناء إرسال الطلب.', 'error', 'bi-exclamation-triangle');

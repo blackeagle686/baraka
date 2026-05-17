@@ -1,0 +1,18 @@
+/* Shop Cards */
+.shop-card {
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+}
+
+.shop-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(94, 44, 56, 0.15);
+}
+
+.shop-img-placeholder {
+    background: linear-gradient(45deg, var(--color-terracotta), var(--color-mesa));
+}

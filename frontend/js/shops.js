@@ -388,27 +388,125 @@ window.addToCart = function(id, name, price, image = '') {
     const btn = document.querySelector(`[onclick*="addToCart(${id}"]`);
     if (btn) {
         const originalHtml = btn.innerHTML;
-        btn.innerHTML = `<i class="bi bi-check-circle-fill me-1"></i>تم!`;
-        btn.className = 'btn btn-success btn-sm rounded-pill px-3 fw-bold';
+        btn.innerHTML = `<i class="bi bi-check-lg"></i>`;
+        btn.style.backgroundColor = '#198754';
+        btn.style.color = '#ffffff';
+        btn.style.borderColor = '#198754';
         setTimeout(() => {
             btn.innerHTML = originalHtml;
-            btn.className = 'btn btn-marigold btn-sm rounded-pill px-3 fw-bold';
-        }, 1500);
+            btn.style.backgroundColor = '';
+            btn.style.color = '';
+            btn.style.borderColor = '';
+        }, 1200);
     }
 }
 
 function updateCartUI() {
+    // 1. Sync global cart items to window for navbar badge sync
+    window.cart = cart;
+    if (window.updateHeaderCartUI) {
+        window.updateHeaderCartUI();
+    }
+
+    // 2. Update global floating cart button (mobile)
     const floatingBtn = document.getElementById('floatingCartBtn');
     const badge = document.getElementById('cartCountBadge');
-    if (!floatingBtn || !badge) return;
     
     const totalQty = cart.reduce((sum, item) => sum + item.quantity, 0);
     
-    if (totalQty > 0) {
-        floatingBtn.classList.remove('d-none');
-        badge.innerText = totalQty;
-    } else {
-        floatingBtn.classList.add('d-none');
+    if (floatingBtn && badge) {
+        if (totalQty > 0) {
+            floatingBtn.classList.remove('d-none');
+            badge.innerText = totalQty;
+        } else {
+            floatingBtn.classList.add('d-none');
+        }
+    }
+
+    // 3. Render modern Checkout Sidebar Card
+    const sidebar = document.getElementById('checkoutSidebar');
+    if (!sidebar) return;
+    
+    if (cart.length === 0) {
+        sidebar.innerHTML = `
+            <div class="checkout-sidebar-title border-0 mb-0">
+                <i class="bi bi-cart3 text-marigold"></i> سلة طلباتك
+            </div>
+            <div class="text-center py-5 text-mesa">
+                <i class="bi bi-cart-x fs-1 text-mesa-light mb-3 d-block" style="opacity: 0.35;"></i>
+                <p class="fw-bold mb-1 fs-6">سلتك فاضية دلوقتي</p>
+                <p class="small mb-0 text-muted">ضيف حتة طماطم أو لبن طازة وابدأ طلبك!</p>
+            </div>
+        `;
+        return;
+    }
+    
+    let itemsHtml = '';
+    let subtotal = 0;
+    
+    cart.forEach(item => {
+        const itemTotal = item.price * item.quantity;
+        subtotal += itemTotal;
+        
+        itemsHtml += `
+            <div class="checkout-sidebar-item">
+                <div class="checkout-sidebar-item-info">
+                    <span class="checkout-sidebar-item-qty">${item.quantity}</span>
+                    <span class="checkout-sidebar-item-name">${item.name}</span>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="checkout-sidebar-item-price">${itemTotal.toFixed(2)} ج.م</span>
+                    <div class="d-flex gap-1">
+                        <button class="btn btn-sm btn-light p-0 border rounded d-flex align-items-center justify-content-center" style="width:20px;height:20px;font-size:0.75rem;font-weight:bold;" onclick="changeQuantity(${item.product}, -1)">-</button>
+                        <button class="btn btn-sm btn-light p-0 border rounded d-flex align-items-center justify-content-center" style="width:20px;height:20px;font-size:0.75rem;font-weight:bold;" onclick="changeQuantity(${item.product}, 1)">+</button>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    const deliveryFee = 15; // EGP village delivery
+    const total = subtotal + deliveryFee;
+    
+    sidebar.innerHTML = `
+        <div class="checkout-sidebar-title">
+            <i class="bi bi-cart3 text-marigold"></i> طلباتك الفريش (${cart.length})
+        </div>
+        <div class="checkout-sidebar-items-list">
+            ${itemsHtml}
+        </div>
+        <div class="checkout-sidebar-summary">
+            <div class="checkout-sidebar-summary-row">
+                <span>الإجمالي الفرعي</span>
+                <span>${subtotal.toFixed(2)} ج.م</span>
+            </div>
+            <div class="checkout-sidebar-summary-row">
+                <span>خدمة التوصيل (دليفري)</span>
+                <span>${deliveryFee.toFixed(2)} ج.م</span>
+            </div>
+            <div class="checkout-sidebar-summary-total">
+                <span>المجموع الكلي</span>
+                <span class="text-marigold">${total.toFixed(2)} ج.م</span>
+            </div>
+        </div>
+        <div class="mb-3">
+            <label class="form-label text-espresso fw-bold small mb-1"><i class="bi bi-geo-alt-fill text-marigold me-1"></i>عنوان التوصيل في القرية</label>
+            <input type="text" class="form-control rounded-pill px-3 py-2" id="orderAddress" style="font-size:0.85rem;" placeholder="مثال: بحري البلد، جنب الجامع الكبير...">
+        </div>
+        <button onclick="submitOrder()" class="btn btn-marigold checkout-sidebar-btn text-white fw-bold" id="submitOrderBtn">
+            <i class="bi bi-check-all me-1"></i>تأكيد الطلب ودليفري!
+        </button>
+    `;
+    
+    // Auto-populate address from profile if logged in
+    const token = localStorage.getItem('access_token');
+    if (token) {
+        api.auth.getProfile(token).then(profile => {
+            const addressInput = document.getElementById('orderAddress');
+            if (profile.location && addressInput && !addressInput.value.trim()) {
+                addressInput.value = profile.location;
+            }
+        }).catch(err => console.error("Error autofilling address:", err));
     }
 }
 

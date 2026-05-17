@@ -324,7 +324,7 @@ function viewOrderDetails(orderId) {
                 <div class="p-3 rounded" style="background: rgba(255,255,255,0.05);">
                     <h6 class="text-marigold mb-3"><i class="bi bi-shop"></i> المحل والطيار</h6>
                     <p class="mb-1"><strong>المحل:</strong> ${order.shop_details?.name || '—'}</p>
-                    <p class="mb-1"><strong>هاتف المحل:</strong> <span dir="ltr">${order.shop_details?.phone || '—'}</span></p>
+                    <p class="mb-1"><strong>هاتف المحل:</strong> <span dir="ltr">${order.shop_details?.phone || order.shop_details?.owner_phone || '—'}</span></p>
                     <p class="mb-1"><strong>الطيار:</strong> ${order.driver_details?.name || 'لم يُعيّن'}</p>
                     <p class="mb-1"><strong>هاتف الطيار:</strong> <span dir="ltr">${order.driver_details?.phone || '—'}</span></p>
                 </div>

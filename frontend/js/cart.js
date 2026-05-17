@@ -420,36 +420,13 @@ function buildVisualStepper(currentStatus) {
                 <div class="stepper-circle ${circleClass}" style="${isCurrent ? 'background:' + step.color + '; border-color:' + step.color + ';' : isDone ? 'background:#22c55e; border-color:#22c55e;' : ''}">
                     <i class="bi ${isDone ? 'bi-check-lg' : step.icon}" style="font-size: ${isCurrent ? '1rem' : '0.8rem'};"></i>
                 </div>
-                <div class="stepper-label ${isCurrent ? 'fw-bold' : ''}" style="${isCurrent ? 'color:' + step.color + ';' : ''}">${step.label}</div>
-            </div>
-        `;
-        
-        if (i < ORDER_STEPS.length - 1) {
-            html += `<div class="stepper-connector ${isDone ? 'stepper-line-done' : ''}"></div>`;
-        }
-    });
-    
-    html += `</div>`;
-    return html;
-}
+                <div class="stepper-label ${isCurrent ? 'fw-bold' : ''}" style="${isCurrent ? 'color:' + step.color + ';' : ''}">${step.label}</let currentCartOrdersPage = 1;
+const CART_ORDERS_PAGE_SIZE = 3;
 
-async function loadCartOrders() {
-    const token = localStorage.getItem('access_token');
-    if (!token) return;
-    
-    try {
-        const orders = await api.orders.getAll(token);
-        customerOrders = orders;
-        
-        // Filter and render
-        renderCartOrdersList();
-        
-        // Start auto-refresh
-        startAutoRefreshCart();
-    } catch (error) {
-        console.error("Failed to fetch customer orders:", error);
-    }
-}
+window.changeCartOrdersPage = function(page) {
+    currentCartOrdersPage = page;
+    renderCartOrdersList();
+};
 
 function renderCartOrdersList() {
     const listEl = document.getElementById('cartOrdersLogList');
@@ -470,12 +447,25 @@ function renderCartOrdersList() {
                 <p class="text-mesa">سجل طلباتك الفريش يظهر هنا لمتابعته فوريًا</p>
             </div>
         `;
+        const paginationContainer = document.getElementById('cartOrdersPagination');
+        if (paginationContainer) paginationContainer.innerHTML = '';
         return;
     }
     
+    // Calculate pagination slice
+    const totalItems = filtered.length;
+    const totalPages = Math.ceil(totalItems / CART_ORDERS_PAGE_SIZE);
+    if (currentCartOrdersPage > totalPages) {
+        currentCartOrdersPage = Math.max(1, totalPages);
+    }
+    
+    const startIndex = (currentCartOrdersPage - 1) * CART_ORDERS_PAGE_SIZE;
+    const endIndex = Math.min(startIndex + CART_ORDERS_PAGE_SIZE, totalItems);
+    const slicedOrders = filtered.slice(startIndex, endIndex);
+    
     let allHtml = '';
     
-    filtered.forEach((order, i) => {
+    slicedOrders.forEach((order, i) => {
         const dateFormatted = new Date(order.created_at).toLocaleString('ar-EG', {
             hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'long', year: 'numeric'
         });
@@ -514,7 +504,7 @@ function renderCartOrdersList() {
                 </div>
             `;
         }
-
+ 
         // Disputes Area
         let disputeActionHtml = '';
         if (order.dispute_status === 'PENDING') {
@@ -549,10 +539,10 @@ function renderCartOrdersList() {
                         </div>
                     </div>
                 </div>
-
+ 
                 <!-- Live Visual Progress Stepper -->
                 ${buildVisualStepper(order.status)}
-
+ 
                 <!-- Shop & Driver Delivery Details -->
                 <div class="mt-3 p-3 rounded-3" style="background: rgba(253, 245, 241, 0.45); border: 1px solid rgba(201,153,151,0.06);">
                     <div class="d-flex align-items-center gap-2 mb-2" style="font-size: 0.95rem;">
@@ -573,7 +563,7 @@ function renderCartOrdersList() {
                     </div>
                     `}
                 </div>
-
+ 
                 <!-- Products breakdown -->
                 <div class="mt-3 p-3 bg-white rounded-3" style="border: 1px solid rgba(201,153,151,0.06);">
                     <div class="text-espresso fw-bold mb-2 pb-2 border-bottom d-flex align-items-center gap-2" style="font-size: 0.95rem; border-color: rgba(201,153,151,0.08) !important;">
@@ -586,10 +576,10 @@ function renderCartOrdersList() {
                     </div>
                     ${order.driver ? `<div class="text-mesa small mt-1" style="font-size: 0.8rem;">(شامل خدمة توصيل دليفري القرية: ${order.delivery_price} ج.م)</div>` : ''}
                 </div>
-
+ 
                 <!-- Delivery Verification OTP block -->
                 ${otpHtml}
-
+ 
                 <!-- Dispute actions -->
                 ${disputeActionHtml}
             </div>
@@ -599,6 +589,41 @@ function renderCartOrdersList() {
     listEl.innerHTML = allHtml;
     
     // Generate QR codes for visual confirmation
+    slicedOrders.forEach(order => {
+        const isCompleted = ['DELIVERED', 'CANCELLED'].includes(order.status);
+        if (!isCompleted && order.customer_otp) {
+            const qrContainer = document.getElementById(`qrcode-cart-${order.id}`);
+            if (qrContainer && typeof QRCode !== 'undefined') {
+                qrContainer.innerHTML = '';
+                new QRCode(qrContainer, {
+                    text: order.customer_otp,
+                    width: 140,
+                    height: 140,
+                    colorDark : "#320404",
+                    colorLight : "#ffffff",
+                    correctLevel : QRCode.CorrectLevel.H
+                });
+            }
+        }
+    });
+
+    if (window.renderClientPagination) {
+        window.renderClientPagination('cartOrdersPagination', totalItems, currentCartOrdersPage, CART_ORDERS_PAGE_SIZE, 'window.changeCartOrdersPage');
+    }
+}
+ 
+window.filterCartOrders = function(filter, btn) {
+    ordersFilter = filter;
+    currentCartOrdersPage = 1; // Reset to page 1
+    
+    // Manage active state of filter tags
+    document.querySelectorAll('#ordersFilterList button').forEach(b => {
+        b.classList.remove('active');
+    });
+    if (btn) btn.classList.add('active');
+    
+    renderCartOrdersList();
+}confirmation
     filtered.forEach(order => {
         const isCompleted = ['DELIVERED', 'CANCELLED'].includes(order.status);
         if (!isCompleted && order.customer_otp) {

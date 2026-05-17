@@ -60,52 +60,52 @@ async function loadStats() {
 
         const grid = document.getElementById('statsGrid');
         grid.innerHTML = `
-            <div class="stat-card">
+            <div class="stat-card" style="cursor: pointer;" onclick="navToUsers('', '', '')">
                 <span class="stat-icon">👥</span>
                 <div class="stat-value">${stats.total_users}</div>
                 <div class="stat-label">إجمالي المستخدمين</div>
             </div>
-            <div class="stat-card">
+            <div class="stat-card" style="cursor: pointer;" onclick="navToUsers('CUSTOMER', '', '')">
                 <span class="stat-icon">🛍️</span>
                 <div class="stat-value">${stats.total_customers}</div>
                 <div class="stat-label">مشتريين</div>
             </div>
-            <div class="stat-card">
+            <div class="stat-card" style="cursor: pointer;" onclick="navToUsers('SHOP_OWNER', '', '')">
                 <span class="stat-icon">🏪</span>
                 <div class="stat-value">${stats.total_shop_owners}</div>
                 <div class="stat-label">أصحاب محلات</div>
             </div>
-            <div class="stat-card">
+            <div class="stat-card" style="cursor: pointer;" onclick="navToUsers('DRIVER', '', '')">
                 <span class="stat-icon">🛵</span>
                 <div class="stat-value">${stats.total_drivers}</div>
                 <div class="stat-label">طيارين</div>
             </div>
-            <div class="stat-card">
+            <div class="stat-card" style="cursor: pointer;" onclick="navToUsers('', 'false', '')">
                 <span class="stat-icon">⏳</span>
                 <div class="stat-value">${stats.pending_approvals}</div>
                 <div class="stat-label">في انتظار الموافقة</div>
             </div>
-            <div class="stat-card">
+            <div class="stat-card" style="cursor: pointer;" onclick="navToUsers('', '', 'false')">
                 <span class="stat-icon">🚫</span>
                 <div class="stat-value">${stats.blocked_users}</div>
                 <div class="stat-label">مستخدمين محظورين</div>
             </div>
-            <div class="stat-card">
+            <div class="stat-card" style="cursor: pointer;" onclick="navToOrders('')">
                 <span class="stat-icon">📦</span>
                 <div class="stat-value">${stats.total_orders}</div>
                 <div class="stat-label">إجمالي الطلبات</div>
             </div>
-            <div class="stat-card">
+            <div class="stat-card" style="cursor: pointer;" onclick="navToUsers('SHOP_OWNER', 'true', '')">
                 <span class="stat-icon">🏬</span>
                 <div class="stat-value">${stats.total_shops}</div>
-                <div class="stat-label">المحلات</div>
+                <div class="stat-label">المحلات (مُلاك)</div>
             </div>
-            <div class="stat-card">
+            <div class="stat-card" style="cursor: pointer;" onclick="navToReports('')">
                 <span class="stat-icon">📝</span>
                 <div class="stat-value">${stats.total_reports}</div>
                 <div class="stat-label">التقارير</div>
             </div>
-            <div class="stat-card">
+            <div class="stat-card" style="cursor: pointer;" onclick="navToReports('false')">
                 <span class="stat-icon">⚠️</span>
                 <div class="stat-value">${stats.unresolved_reports}</div>
                 <div class="stat-label">تقارير مفتوحة</div>
@@ -114,6 +114,24 @@ async function loadStats() {
     } catch (err) {
         console.error('Failed to load stats:', err);
     }
+}
+
+// Quick Navigation Handlers for Stat Cards
+function navToUsers(role, approved, active) {
+    document.getElementById('userRoleFilter').value = role;
+    document.getElementById('userApprovedFilter').value = approved;
+    document.getElementById('userActiveFilter').value = active;
+    switchSection('users');
+}
+
+function navToOrders(status) {
+    document.getElementById('orderStatusFilter').value = status;
+    switchSection('orders');
+}
+
+function navToReports(resolved) {
+    document.getElementById('reportResolvedFilter').value = resolved;
+    switchSection('reports');
 }
 
 // ==========================================

@@ -31,81 +31,79 @@
                 <div class="switcher-slider"></div>
             </div>
 
-            <!-- Forms Slider Viewport -->
+            <!-- Forms Viewport -->
             <div class="forms-viewport">
-                <div class="form-container" id="formContainer">
-                    
-                    <!-- LOGIN FORM -->
-                    <div class="auth-form-wrapper">
-                        <form id="loginForm">
-                            <div class="mb-3">
-                                <label class="form-label text-espresso fw-bold"><i class="bi bi-phone me-1 text-marigold"></i>رقم الهاتف</label>
-                                <input type="text" class="form-control rounded-pill px-4 py-2.5 text-center fs-6" id="loginPhone" placeholder="01xxxxxxxxx" required>
+                
+                <!-- LOGIN FORM -->
+                <div class="auth-form-wrapper" id="loginFormWrapper">
+                    <form id="loginForm">
+                        <div class="mb-3">
+                            <label class="form-label text-espresso fw-bold"><i class="bi bi-phone me-1 text-marigold"></i>رقم الهاتف</label>
+                            <input type="text" class="form-control rounded-pill px-4 py-2.5 text-center fs-6" id="loginPhone" placeholder="01xxxxxxxxx" required>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label text-espresso fw-bold"><i class="bi bi-lock me-1 text-marigold"></i>كلمة المرور</label>
+                            <div class="position-relative">
+                                <input type="password" class="form-control rounded-pill px-4 py-2.5 text-center fs-6" id="loginPassword" placeholder="••••••••" required>
+                                <button type="button" class="btn btn-link position-absolute top-50 start-0 translate-middle-y text-mesa text-decoration-none password-toggle" onclick="togglePassword('loginPassword', this)" style="padding-left: 1.2rem;">
+                                    <i class="bi bi-eye"></i>
+                                </button>
                             </div>
-                            <div class="mb-4">
-                                <label class="form-label text-espresso fw-bold"><i class="bi bi-lock me-1 text-marigold"></i>كلمة المرور</label>
-                                <div class="position-relative">
-                                    <input type="password" class="form-control rounded-pill px-4 py-2.5 text-center fs-6" id="loginPassword" placeholder="••••••••" required>
-                                    <button type="button" class="btn btn-link position-absolute top-50 start-0 translate-middle-y text-mesa text-decoration-none password-toggle" onclick="togglePassword('loginPassword', this)" style="padding-left: 1.2rem;">
-                                        <i class="bi bi-eye"></i>
-                                    </button>
-                                </div>
-                            </div>
-                            <button type="submit" id="loginBtn" class="btn btn-primary rounded-pill w-100 py-2.5 fw-bold mb-3 fs-5 position-relative overflow-hidden btn-gradient">
-                                <span class="btn-text"><i class="bi bi-box-arrow-in-left me-1"></i>دخول</span>
-                                <span class="spinner-border spinner-border-sm position-absolute top-50 start-50 translate-middle d-none" role="status" aria-hidden="true"></span>
-                            </button>
-                            <div id="loginErrorMsg" class="alert alert-danger text-center py-2 rounded-pill d-none small">
-                                <i class="bi bi-exclamation-triangle me-1"></i>بيانات الدخول غير صحيحة
-                            </div>
-                        </form>
-                    </div>
-
-                    <!-- REGISTER FORM -->
-                    <div class="auth-form-wrapper">
-                        <form id="registerForm">
-                            <div class="row">
-                                <div class="col-md-6 mb-2">
-                                    <label class="form-label text-espresso fw-bold"><i class="bi bi-person me-1 text-marigold"></i>الاسم بالكامل</label>
-                                    <input type="text" class="form-control rounded-pill px-4 py-2 text-center fs-6" id="regName" placeholder="الاسم ثلاثي" required>
-                                </div>
-                                <div class="col-md-6 mb-2">
-                                    <label class="form-label text-espresso fw-bold"><i class="bi bi-phone me-1 text-marigold"></i>رقم الهاتف</label>
-                                    <input type="text" class="form-control rounded-pill px-4 py-2 text-center fs-6" id="regPhone" placeholder="01xxxxxxxxx" required>
-                                </div>
-                            </div>
-                            <div class="mb-2">
-                                <label class="form-label text-espresso fw-bold"><i class="bi bi-geo-alt me-1 text-marigold"></i>العنوان في القرية</label>
-                                <input type="text" class="form-control rounded-pill px-4 py-2 text-center fs-6" id="regLocation" placeholder="مثال: بحري البلد، بجوار المدرسة">
-                            </div>
-                            <div class="mb-2">
-                                <label class="form-label text-espresso fw-bold"><i class="bi bi-person-badge me-1 text-marigold"></i>نوع الحساب</label>
-                                <select class="form-select rounded-pill px-4 py-2 text-center fs-6" id="regRole">
-                                    <option value="CUSTOMER">مشتري (طلب للمنزل) 🛍️</option>
-                                    <option value="SHOP_OWNER">صاحب محل (بيع وعرض) 🏪</option>
-                                    <option value="DRIVER">طيار دليفري (توصيل طلبات) 🛵</option>
-                                </select>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label text-espresso fw-bold"><i class="bi bi-lock me-1 text-marigold"></i>كلمة المرور</label>
-                                <div class="position-relative">
-                                    <input type="password" class="form-control rounded-pill px-4 py-2 text-center fs-6" id="regPassword" placeholder="••••••••" required>
-                                    <button type="button" class="btn btn-link position-absolute top-50 start-0 translate-middle-y text-mesa text-decoration-none password-toggle" onclick="togglePassword('regPassword', this)" style="padding-left: 1.2rem;">
-                                        <i class="bi bi-eye"></i>
-                                    </button>
-                                </div>
-                            </div>
-                            <button type="submit" id="registerBtn" class="btn btn-primary rounded-pill w-100 py-2.5 fw-bold mb-3 fs-5 position-relative overflow-hidden btn-gradient">
-                                <span class="btn-text"><i class="bi bi-person-plus me-1"></i>إنشاء الحساب الجديد</span>
-                                <span class="spinner-border spinner-border-sm position-absolute top-50 start-50 translate-middle d-none" role="status" aria-hidden="true"></span>
-                            </button>
-                            <div id="regErrorMsg" class="alert alert-danger text-center py-2 rounded-pill d-none small">
-                                <i class="bi bi-exclamation-triangle me-1"></i>حدث خطأ أثناء التسجيل.
-                            </div>
-                        </form>
-                    </div>
-
+                        </div>
+                        <button type="submit" id="loginBtn" class="btn btn-primary rounded-pill w-100 py-2.5 fw-bold mb-3 fs-5 position-relative overflow-hidden btn-gradient">
+                            <span class="btn-text"><i class="bi bi-box-arrow-in-left me-1"></i>دخول</span>
+                            <span class="spinner-border spinner-border-sm position-absolute top-50 start-50 translate-middle d-none" role="status" aria-hidden="true"></span>
+                        </button>
+                        <div id="loginErrorMsg" class="alert alert-danger text-center py-2 rounded-pill d-none small">
+                            <i class="bi bi-exclamation-triangle me-1"></i>بيانات الدخول غير صحيحة
+                        </div>
+                    </form>
                 </div>
+
+                <!-- REGISTER FORM -->
+                <div class="auth-form-wrapper" id="registerFormWrapper">
+                    <form id="registerForm">
+                        <div class="row">
+                            <div class="col-md-6 mb-2">
+                                <label class="form-label text-espresso fw-bold"><i class="bi bi-person me-1 text-marigold"></i>الاسم بالكامل</label>
+                                <input type="text" class="form-control rounded-pill px-4 py-2 text-center fs-6" id="regName" placeholder="الاسم ثلاثي" required>
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <label class="form-label text-espresso fw-bold"><i class="bi bi-phone me-1 text-marigold"></i>رقم الهاتف</label>
+                                <input type="text" class="form-control rounded-pill px-4 py-2 text-center fs-6" id="regPhone" placeholder="01xxxxxxxxx" required>
+                            </div>
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label text-espresso fw-bold"><i class="bi bi-geo-alt me-1 text-marigold"></i>العنوان في القرية</label>
+                            <input type="text" class="form-control rounded-pill px-4 py-2 text-center fs-6" id="regLocation" placeholder="مثال: بحري البلد، بجوار المدرسة">
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label text-espresso fw-bold"><i class="bi bi-person-badge me-1 text-marigold"></i>نوع الحساب</label>
+                            <select class="form-select rounded-pill px-4 py-2 text-center fs-6" id="regRole">
+                                <option value="CUSTOMER">مشتري (طلب للمنزل) 🛍️</option>
+                                <option value="SHOP_OWNER">صاحب محل (بيع وعرض) 🏪</option>
+                                <option value="DRIVER">طيار دليفري (توصيل طلبات) 🛵</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-espresso fw-bold"><i class="bi bi-lock me-1 text-marigold"></i>كلمة المرور</label>
+                            <div class="position-relative">
+                                <input type="password" class="form-control rounded-pill px-4 py-2 text-center fs-6" id="regPassword" placeholder="••••••••" required>
+                                <button type="button" class="btn btn-link position-absolute top-50 start-0 translate-middle-y text-mesa text-decoration-none password-toggle" onclick="togglePassword('regPassword', this)" style="padding-left: 1.2rem;">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <button type="submit" id="registerBtn" class="btn btn-primary rounded-pill w-100 py-2.5 fw-bold mb-3 fs-5 position-relative overflow-hidden btn-gradient">
+                            <span class="btn-text"><i class="bi bi-person-plus me-1"></i>إنشاء الحساب الجديد</span>
+                            <span class="spinner-border spinner-border-sm position-absolute top-50 start-50 translate-middle d-none" role="status" aria-hidden="true"></span>
+                        </button>
+                        <div id="regErrorMsg" class="alert alert-danger text-center py-2 rounded-pill d-none small">
+                            <i class="bi bi-exclamation-triangle me-1"></i>حدث خطأ أثناء التسجيل.
+                        </div>
+                    </form>
+                </div>
+
             </div>
 
         </div>

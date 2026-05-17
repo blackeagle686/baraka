@@ -312,10 +312,17 @@ function renderShopProductsManagement(products) {
                                 <h6 class="fw-bold text-espresso mb-1">${product.name}</h6>
                                 <p class="product-price mb-1">${product.price} ج.م</p>
                                 <p class="mb-1 text-mesa small" style="font-size: 0.8rem;"><i class="bi bi-boxes text-marigold me-1"></i>الكمية بالمخزن: <strong>${product.quantity}</strong> قطع</p>
-                                <span class="badge ${product.available ? 'bg-success' : 'bg-danger'} mb-2 w-fit-content rounded-pill">
-                                    <i class="bi ${product.available ? 'bi-check-circle' : 'bi-x-circle'} me-1"></i>
-                                    ${product.available ? 'متوفر' : 'غير متوفر'}
-                                </span>
+                                <div class="d-flex gap-2 flex-wrap mb-2">
+                                    <span class="badge ${product.available ? 'bg-success' : 'bg-danger'} w-fit-content rounded-pill">
+                                        <i class="bi ${product.available ? 'bi-check-circle' : 'bi-x-circle'} me-1"></i>
+                                        ${product.available ? 'متوفر' : 'غير متوفر'}
+                                    </span>
+                                    ${product.category_name ? `
+                                        <span class="badge bg-secondary-subtle text-mesa w-fit-content rounded-pill border border-light-subtle" style="font-size: 0.72rem;">
+                                            <i class="bi bi-tag-fill text-marigold me-1"></i>${product.category_name}
+                                        </span>
+                                    ` : ''}
+                                </div>
                                 <div class="d-flex gap-2 mt-auto">
                                     <button onclick="openEditModal(${product.id})" class="btn btn-sm btn-outline-mesa flex-grow-1 rounded-pill">
                                         <i class="bi bi-pencil me-1"></i>تعديل
@@ -343,6 +350,13 @@ window.openEditModal = function(id) {
     document.getElementById('editProdName').value = product.name;
     document.getElementById('editProdPrice').value = product.price;
     document.getElementById('editProdQuantity').value = product.quantity;
+    
+    // Pre-select current category
+    const editCatDropdown = document.getElementById('editProdCategory');
+    if (editCatDropdown) {
+        editCatDropdown.value = product.category || "";
+    }
+
     document.getElementById('editProdDesc').value = product.description || '';
     document.getElementById('editProdAvailable').checked = product.available;
     newEditProdImageFile = null;
@@ -365,6 +379,13 @@ async function handleProductEditSubmit() {
     formData.append('name', document.getElementById('editProdName').value);
     formData.append('price', document.getElementById('editProdPrice').value);
     formData.append('quantity', document.getElementById('editProdQuantity').value);
+    
+    // Add selected category ID
+    const catVal = document.getElementById('editProdCategory').value;
+    if (catVal) {
+        formData.append('category', catVal);
+    }
+
     formData.append('description', document.getElementById('editProdDesc').value);
     formData.append('available', document.getElementById('editProdAvailable').checked);
 
@@ -427,6 +448,13 @@ async function handleProductSubmit() {
 
     const formData = new FormData();
     formData.append('name', document.getElementById('prodName').value);
+    
+    // Add selected category ID
+    const catVal = document.getElementById('prodCategory').value;
+    if (catVal) {
+        formData.append('category', catVal);
+    }
+
     formData.append('price', document.getElementById('prodPrice').value);
     formData.append('quantity', document.getElementById('prodQuantity').value);
     formData.append('description', document.getElementById('prodDesc').value);

@@ -330,15 +330,20 @@ function renderActiveTrips(trips) {
             hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short'
         });
         
+        const isDisputed = (trip.dispute_status === 'PENDING');
         const isDeliveredUnpaid = (trip.status === 'DELIVERED' && !trip.is_paid_to_shop);
         
         let statusBadgeHtml = `<span class="badge bg-success-subtle text-success rounded-pill px-2 py-1">جاري التوصيل للعميل</span>`;
-        if (isDeliveredUnpaid) {
+        if (isDisputed) {
+            statusBadgeHtml = `<span class="badge bg-danger text-white rounded-pill px-2 py-1">قيد النزاع ⚠️</span>`;
+        } else if (isDeliveredUnpaid) {
             statusBadgeHtml = `<span class="badge bg-danger-subtle text-danger rounded-pill px-2 py-1">بانتظار سداد الحساب للمحل</span>`;
         }
 
         let cardTitle = `رحلة نشطة #${trip.id}`;
-        if (isDeliveredUnpaid) {
+        if (isDisputed) {
+            cardTitle = `رحلة متنازع عليها #${trip.id}`;
+        } else if (isDeliveredUnpaid) {
             cardTitle = `رحلة مكتملة بانتظار السداد #${trip.id}`;
         }
 
@@ -347,11 +352,24 @@ function renderActiveTrips(trips) {
                 <i class="bi bi-check2-all me-1"></i>تم التوصيل بنجاح للعميل
             </button>
         `;
-        if (isDeliveredUnpaid) {
+        if (isDisputed) {
             actionHtmlBlock = `
                 <div class="alert alert-danger text-center py-2 rounded-pill small mb-0 fw-bold border-0" style="background-color: rgba(220,53,69,0.08); color: var(--color-terracotta);">
-                    <i class="bi bi-exclamation-triangle-fill me-1"></i>يرجى سداد ${trip.total_price} ج.م لصاحب المحل لتصفية الحساب.
+                    <i class="bi bi-exclamation-circle me-1"></i>الطلب قيد النزاع والمراجعة. جاري التحقق للفصل بين الطرفين.
                 </div>
+            `;
+        } else if (isDeliveredUnpaid) {
+            actionHtmlBlock = `
+                <div class="alert alert-danger text-center py-3 rounded-4 mb-2 border-0 fw-bold shadow-sm" style="background-color: rgba(220,53,69,0.06); color: var(--color-terracotta);">
+                    <div class="mb-1"><i class="bi bi-exclamation-triangle-fill me-1"></i>يرجى سداد ${trip.total_price} ج.م للمحل لتصفية الحساب.</div>
+                    <div class="mt-2 p-2 bg-white rounded-3 border text-espresso text-center">
+                        <span class="small text-mesa d-block mb-1">اعطِ هذا الرمز لصاحب المحل بعد الدفع:</span>
+                        <strong class="fs-4 text-success tracking-wide" style="font-family: monospace; letter-spacing: 4px;">${trip.driver_otp || '----'}</strong>
+                    </div>
+                </div>
+                <button onclick="raiseDriverDispute(${trip.id})" class="btn btn-sm btn-outline-danger rounded-pill w-100 mt-1">
+                    <i class="bi bi-exclamation-octagon me-1"></i>تقديم شكوى / نزاع مع المحل
+                </button>
             `;
         }
 
@@ -419,11 +437,28 @@ window.acceptDeliveryTrip = async function(orderId) {
 
 window.completeDeliveryTrip = async function(orderId) {
     const token = localStorage.getItem('access_token');
+    const customerOtp = prompt('برجاء إدخال رمز التحقق المستلم من العميل (المكون من 4 أرقام) لتأكيد تسليم الطلب واستلام الكاش:');
+    if (!customerOtp) return;
+    
     try {
-        await api.orders.updateStatus(token, orderId, 'DELIVERED');
-        alert('ألف مبروك! تم إكمال رحلة التوصيل وتسجيل الحساب بنجاح.');
+        await api.orders.updateStatus(token, orderId, 'DELIVERED', { customer_otp: customerOtp });
+        alert('تم التحقق من رمز العميل وتأكيد التوصيل بنجاح!');
         loadDriverOrders();
     } catch (error) {
-        alert('حدث خطأ أثناء إكمال التوصيل: ' + JSON.stringify(error));
+        alert('حدث خطأ أثناء إكمال التوصيل: ' + (error.detail || JSON.stringify(error)));
+    }
+}
+
+window.raiseDriverDispute = async function(orderId) {
+    const token = localStorage.getItem('access_token');
+    const reason = prompt('يرجى كتابة سبب تقديم الشكوى بالتفصيل (مثل: قمت بسداد المبلغ ولكن صاحب المحل يرفض التصفية، إلخ):');
+    if (!reason) return;
+    
+    try {
+        await api.orders.raiseDispute(token, orderId, reason);
+        alert('تم تقديم الشكوى للإدارة بنجاح! جاري المراجعة للفصل بالنزاع.');
+        loadDriverOrders();
+    } catch (error) {
+        alert('فشل تقديم الشكوى: ' + JSON.stringify(error));
     }
 }

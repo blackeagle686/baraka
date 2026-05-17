@@ -113,15 +113,29 @@ function populateShopForm(shop) {
     document.getElementById('shopDesc').value = shop.description || '';
     document.getElementById('shopIsOpen').checked = shop.is_open;
     
+    // Update sidebar brand text
+    const sidebarShopName = document.getElementById('sidebarShopName');
+    if (sidebarShopName) {
+        sidebarShopName.innerText = shop.name || 'محلي';
+    }
+
+    // Update status stat card
+    const statShopStatus = document.getElementById('statShopStatus');
+    if (statShopStatus) {
+        statShopStatus.innerText = shop.is_open ? 'مفتوح' : 'مغلق';
+        statShopStatus.className = shop.is_open ? 'stat-value text-success' : 'stat-value text-danger';
+    }
+
     if (!shop.is_open) {
         const badge = document.getElementById('shopStatusBadge');
-        badge.classList.remove('d-none');
+        if (badge) badge.classList.remove('d-none');
     }
 
     if (shop.image) {
         document.getElementById('shopImagePreview').innerHTML = `<img src="${shop.image}" class="w-100 h-100 object-fit-cover">`;
     } else {
-        document.getElementById('shopInitials').innerText = shop.name.charAt(0);
+        const initialsEl = document.getElementById('shopInitials');
+        if (initialsEl) initialsEl.innerText = shop.name.charAt(0);
     }
 }
 
@@ -181,6 +195,17 @@ async function loadShopProducts(shopId) {
 
 function renderShopProductsManagement(products) {
     currentProducts = products;
+    
+    // Update dashboard statistics
+    const statProductCount = document.getElementById('statProductCount');
+    if (statProductCount) {
+        statProductCount.innerText = products.length;
+    }
+    const sidebarProductBadge = document.getElementById('sidebarProductBadge');
+    if (sidebarProductBadge) {
+        sidebarProductBadge.innerText = products.length;
+    }
+
     const container = document.getElementById('shopProductsList');
     container.innerHTML = '';
 

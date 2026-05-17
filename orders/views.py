@@ -58,6 +58,9 @@ class OrderViewSet(viewsets.ModelViewSet):
                 return Response({"detail": f"Product {it['product']} not found in this shop."}, status=status.HTTP_400_BAD_REQUEST)
             
             qty = int(it.get('quantity', 1))
+            if qty > prod.quantity:
+                return Response({"detail": f"المنتج '{prod.name}' لا يحتوي على كمية كافية في المخزن! المتاح حالياً: {prod.quantity} فقط."}, status=status.HTTP_400_BAD_REQUEST)
+            
             price = prod.price
             total_price += price * qty
             order_items.append((prod, qty, price))
@@ -77,6 +80,11 @@ class OrderViewSet(viewsets.ModelViewSet):
                 quantity=qty,
                 price=price
             )
+            # Deduct stock and save
+            prod.quantity -= qty
+            if prod.quantity == 0:
+                prod.available = False
+            prod.save()
             
         # High-Performance Asynchronous Dispatch: Alert nearby drivers in the background
         from .tasks import send_order_notifications_to_drivers

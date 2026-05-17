@@ -4,10 +4,11 @@ from rest_framework.response import Response
 from .models import Order, OrderItem, OrderStatus
 from .serializers import OrderSerializer
 from shops.models import Shop, Product
+from users.permissions import IsApprovedOrReadOnly
 
 class OrderViewSet(viewsets.ModelViewSet):
     serializer_class = OrderSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsApprovedOrReadOnly]
 
     def get_queryset(self):
         user = self.request.user

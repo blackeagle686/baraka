@@ -57,6 +57,13 @@
                     </button>
                 </li>
                 <li class="dash-nav-item">
+                    <button class="dash-nav-link" onclick="switchTab('orders')">
+                        <i class="bi bi-receipt-cutoff"></i>
+                        <span>الطلبات</span>
+                        <span class="nav-badge bg-danger" id="sidebarOrderBadge">0</span>
+                    </button>
+                </li>
+                <li class="dash-nav-item">
                     <button class="dash-nav-link" onclick="switchTab('settings')">
                         <i class="bi bi-gear-fill"></i>
                         <span>إعدادات المحل</span>
@@ -106,11 +113,11 @@
                     <div class="col-md-4">
                         <div class="stat-card">
                             <div class="stat-icon stat-mesa">
-                                <i class="bi bi-eye"></i>
+                                <i class="bi bi-receipt"></i>
                             </div>
                             <div>
-                                <div class="stat-value">124</div>
-                                <div class="stat-label">مشاهدات المحل (هذا الأسبوع)</div>
+                                <div class="stat-value" id="statActiveOrdersCount">0</div>
+                                <div class="stat-label">الطلبات النشطة</div>
                             </div>
                         </div>
                     </div>
@@ -206,6 +213,26 @@
                     
                     <div class="row g-3" id="shopProductsList">
                         <!-- Products will be listed here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Orders Panel -->
+            <div class="dash-panel" id="ordersPanel">
+                <div class="dash-page-title">إدارة الطلبات</div>
+                <div class="dash-page-subtitle">تابع طلبات العملاء وحدث حالتها أولاً بأول</div>
+
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="fw-bold text-espresso m-0"><i class="bi bi-receipt me-2"></i>الطلبات الواردة</h4>
+                    <button class="btn btn-outline-mesa rounded-pill btn-sm fw-bold px-3" onclick="loadShopOrders()">
+                        <i class="bi bi-arrow-clockwise me-1"></i>تحديث الطلبات
+                    </button>
+                </div>
+                
+                <div class="row g-3" id="shopOrdersList">
+                    <div class="text-center text-mesa py-4">
+                        <div class="spinner-border text-marigold mb-3" role="status"></div>
+                        <p>جاري تحميل الطلبات...</p>
                     </div>
                 </div>
             </div>

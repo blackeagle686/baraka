@@ -9,17 +9,38 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 let allFetchedShops = [];
+let currentPage = 1;
+let currentSearch = '';
+let isOpenFilter = false;
+let searchDebounceTimer = null;
 
-async function initShopsList() {
+async function initShopsList(page = 1) {
     try {
-        const shops = await api.shops.getAll();
+        currentPage = page;
+        const response = await api.shops.getAll(currentPage, currentSearch);
+        
+        // Handle paginated responses
+        const shops = response.results || response;
         allFetchedShops = shops;
-        renderAllShops(shops);
+        
+        renderFilteredShops();
         renderShopsMap(shops);
+        renderPagination(response);
         setupFilters();
     } catch (error) {
         console.error("Error fetching shops:", error);
     }
+}
+
+// Expose globally so pagination onclick works
+window.initShopsList = initShopsList;
+
+function renderFilteredShops() {
+    let filtered = allFetchedShops;
+    if (isOpenFilter) {
+        filtered = allFetchedShops.filter(shop => shop.is_open);
+    }
+    renderAllShops(filtered);
 }
 
 function setupFilters() {
@@ -28,22 +49,77 @@ function setupFilters() {
     
     if(!searchInput || !openNowFilter) return;
 
-    const applyFilters = () => {
-        const searchTerm = searchInput.value.toLowerCase();
-        const isOpenOnly = openNowFilter.checked;
-
-        const filtered = allFetchedShops.filter(shop => {
-            const matchesSearch = shop.name.toLowerCase().includes(searchTerm) || 
-                                  (shop.description && shop.description.toLowerCase().includes(searchTerm));
-            const matchesOpen = isOpenOnly ? shop.is_open : true;
-            return matchesSearch && matchesOpen;
-        });
-
-        renderAllShops(filtered);
+    // Use oninput to easily override event listeners on re-run
+    searchInput.oninput = () => {
+        clearTimeout(searchDebounceTimer);
+        searchDebounceTimer = setTimeout(() => {
+            currentSearch = searchInput.value;
+            initShopsList(1); // Reset to page 1 on search
+        }, 300);
     };
 
-    searchInput.addEventListener('input', applyFilters);
-    openNowFilter.addEventListener('change', applyFilters);
+    openNowFilter.onchange = () => {
+        isOpenFilter = openNowFilter.checked;
+        renderFilteredShops();
+    };
+}
+
+function renderPagination(response) {
+    const container = document.getElementById('shopsPagination');
+    if (!container) return;
+
+    container.innerHTML = '';
+    
+    // Hide pagination controls if it's not a paginated response or there is only 1 page
+    if (!response.count || response.count <= 6) {
+        container.classList.add('d-none');
+        return;
+    }
+    
+    container.classList.remove('d-none');
+    
+    const totalPages = Math.ceil(response.count / 6);
+    
+    let paginationHtml = '';
+    
+    // Previous Button
+    if (currentPage > 1) {
+        paginationHtml += `
+            <button class="btn btn-outline-mesa rounded-pill btn-sm px-3 py-1 fw-bold" onclick="initShopsList(${currentPage - 1})">
+                السابق <i class="bi bi-chevron-left ms-1"></i>
+            </button>
+        `;
+    } else {
+        paginationHtml += `
+            <button class="btn btn-outline-mesa rounded-pill btn-sm px-3 py-1 fw-bold disabled" style="opacity: 0.5;">
+                السابق <i class="bi bi-chevron-left ms-1"></i>
+            </button>
+        `;
+    }
+    
+    // Page Numbers
+    paginationHtml += `
+        <span class="fw-bold text-espresso small mx-2">
+            صفحة <span class="text-marigold">${currentPage}</span> من ${totalPages}
+        </span>
+    `;
+    
+    // Next Button
+    if (currentPage < totalPages) {
+        paginationHtml += `
+            <button class="btn btn-outline-mesa rounded-pill btn-sm px-3 py-1 fw-bold" onclick="initShopsList(${currentPage + 1})">
+                التالي <i class="bi bi-chevron-right me-1"></i>
+            </button>
+        `;
+    } else {
+        paginationHtml += `
+            <button class="btn btn-outline-mesa rounded-pill btn-sm px-3 py-1 fw-bold disabled" style="opacity: 0.5;">
+                التالي <i class="bi bi-chevron-right me-1"></i>
+            </button>
+        `;
+    }
+    
+    container.innerHTML = paginationHtml;
 }
 
 function renderAllShops(shops) {

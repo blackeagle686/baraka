@@ -467,7 +467,15 @@ window.acceptDeliveryTrip = async function(orderId) {
 
 window.completeDeliveryTrip = async function(orderId) {
     const token = localStorage.getItem('access_token');
-    const customerOtp = await showBarakaPrompt('برجاء إدخال رمز التحقق المستلم من العميل (المكون من 4 أرقام) لتأكيد تسليم الطلب واستلام الكاش:', 'مثال: 1234', 'تأكيد التسليم للعميل 📦');
+    
+    // Attempt QR Code Scan first
+    let customerOtp = await showBarakaQRScanner('مسح رمز QR للعميل 📦');
+    
+    // Fallback to manual entry if cancelled or unavailable
+    if (!customerOtp) {
+        customerOtp = await showBarakaPrompt('برجاء إدخال رمز التحقق المستلم من العميل (المكون من 4 أرقام) لتأكيد تسليم الطلب واستلام الكاش:', 'مثال: 1234', 'تأكيد التسليم للعميل 📦');
+    }
+    
     if (!customerOtp) return;
     
     try {

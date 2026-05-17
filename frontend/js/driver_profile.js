@@ -331,6 +331,8 @@ function renderActiveTrips(trips) {
         return;
     }
 
+    let allHtml = '';
+
     trips.forEach((trip, i) => {
         const dateFormatted = new Date(trip.created_at).toLocaleString('ar-EG', {
             hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short'
@@ -369,8 +371,9 @@ function renderActiveTrips(trips) {
                 <div class="alert alert-danger text-center py-3 rounded-4 mb-2 border-0 fw-bold shadow-sm" style="background-color: rgba(220,53,69,0.06); color: var(--color-terracotta);">
                     <div class="mb-1"><i class="bi bi-exclamation-triangle-fill me-1"></i>يرجى سداد ${trip.total_price} ج.م للمحل لتصفية الحساب.</div>
                     <div class="mt-2 p-2 bg-white rounded-3 border text-espresso text-center">
-                        <span class="small text-mesa d-block mb-1">اعطِ هذا الرمز لصاحب المحل بعد الدفع:</span>
+                        <span class="small text-mesa d-block mb-1">اعطِ هذا الرمز أو أظهر رمز QR لصاحب المحل بعد الدفع:</span>
                         <strong class="fs-4 text-success tracking-wide" style="font-family: monospace; letter-spacing: 4px;">${trip.driver_otp || '----'}</strong>
+                        <div id="qrcode-driver-${trip.id}" class="d-flex justify-content-center my-2"></div>
                     </div>
                 </div>
                 <button onclick="raiseDriverDispute(${trip.id})" class="btn btn-sm btn-outline-danger rounded-pill w-100 mt-1">
@@ -423,7 +426,28 @@ function renderActiveTrips(trips) {
                 </div>
             </div>
         `;
-        container.innerHTML += html;
+        allHtml += html;
+    });
+
+    container.innerHTML = allHtml;
+
+    // Generate QR Codes
+    trips.forEach((trip) => {
+        const isDeliveredUnpaid = (trip.status === 'DELIVERED' && !trip.is_paid_to_shop);
+        if (isDeliveredUnpaid && trip.driver_otp) {
+            const qrContainer = document.getElementById(`qrcode-driver-${trip.id}`);
+            if (qrContainer && typeof QRCode !== 'undefined') {
+                qrContainer.innerHTML = '';
+                new QRCode(qrContainer, {
+                    text: trip.driver_otp,
+                    width: 140,
+                    height: 140,
+                    colorDark : "#198754", // text-success color
+                    colorLight : "#ffffff",
+                    correctLevel : QRCode.CorrectLevel.H
+                });
+            }
+        }
     });
 }
 

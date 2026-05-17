@@ -26,6 +26,9 @@ class OrderViewSet(viewsets.ModelViewSet):
             return Order.objects.filter(customer=user).order_by('-created_at')
 
     def create(self, request, *args, **kwargs):
+        if request.user.role != 'CUSTOMER' and not request.user.is_staff:
+            return Response({"detail": "Only customers can place orders."}, status=status.HTTP_403_FORBIDDEN)
+
         data = request.data
         shop_id = data.get('shop')
         address = data.get('address')
@@ -85,6 +88,15 @@ class OrderViewSet(viewsets.ModelViewSet):
         
         if new_status not in [c[0] for c in OrderStatus.choices]:
             return Response({"detail": "Invalid status value."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Enforce role-specific transition constraints
+        if is_driver and not is_shop_owner and not request.user.is_staff:
+            if new_status != 'DELIVERED':
+                return Response({"detail": "Drivers are only authorized to mark orders as DELIVERED."}, status=status.HTTP_403_FORBIDDEN)
+        
+        if is_shop_owner and not is_driver and not request.user.is_staff:
+            if new_status == 'DELIVERED':
+                return Response({"detail": "Only drivers can mark orders as DELIVERED."}, status=status.HTTP_403_FORBIDDEN)
             
         order.status = new_status
         order.save()

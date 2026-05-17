@@ -21,3 +21,16 @@ class IsApprovedUser(permissions.BasePermission):
             and request.user.is_authenticated
             and request.user.is_approved
         )
+
+class IsApprovedOrReadOnly(permissions.BasePermission):
+    """Only allow approved users to write, anyone can read."""
+    message = "حسابك قيد المراجعة. لا يمكنك تنفيذ هذا الإجراء حتى يتم اعتمادك."
+
+    def has_permission(self, request, view):
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        return (
+            request.user
+            and request.user.is_authenticated
+            and request.user.is_approved
+        )

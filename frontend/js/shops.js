@@ -570,8 +570,12 @@ window.changeQuantity = function(productId, delta) {
             removeFromCart(productId);
         } else {
             updateCartUI();
-            // Re-render modal contents using the same openCartModal logic
-            openCartModal();
+            
+            // Re-render modal contents only if the modal is open
+            const modalEl = document.getElementById('cartModal');
+            if (modalEl && modalEl.classList.contains('show')) {
+                openCartModal();
+            }
         }
     }
 }
@@ -580,12 +584,10 @@ window.removeFromCart = function(productId) {
     cart = cart.filter(it => it.product !== productId);
     updateCartUI();
     
-    if (cart.length === 0) {
-        const modalEl = document.getElementById('cartModal');
+    const modalEl = document.getElementById('cartModal');
+    if (cart.length === 0 && modalEl && modalEl.classList.contains('show')) {
         const modal = bootstrap.Modal.getInstance(modalEl);
         if (modal) modal.hide();
-    } else {
-        window.changeQuantity(null, 0); // Trigger visual refresh
     }
 }
 
@@ -593,9 +595,14 @@ window.submitOrder = async function() {
     const token = localStorage.getItem('access_token');
     if (!token) return;
     
-    const address = document.getElementById('orderAddress').value.trim();
+    const addressInput = document.getElementById('orderAddress');
+    const address = addressInput ? addressInput.value.trim() : '';
     if (!address) {
-        alert('يرجى تحديد عنوان التوصيل أولاً.');
+        if (window.showBarakaToast) {
+            window.showBarakaToast('يرجى تحديد عنوان التوصيل أولاً.', 'error', 'bi-geo-alt');
+        } else {
+            alert('يرجى تحديد عنوان التوصيل أولاً.');
+        }
         return;
     }
     
@@ -603,8 +610,10 @@ window.submitOrder = async function() {
     const shopId = params.get('id');
     
     const submitBtn = document.getElementById('submitOrderBtn');
-    submitBtn.disabled = true;
-    submitBtn.innerText = 'جاري إرسال الطلب...';
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerText = 'جاري إرسال الطلب...';
+    }
     
     const orderData = {
         shop: parseInt(shopId),
@@ -614,19 +623,31 @@ window.submitOrder = async function() {
     
     try {
         await api.orders.create(token, orderData);
-        alert('تم إرسال طلبك بنجاح! سيقوم المحل بمراجعته فوراً.');
+        if (window.showBarakaToast) {
+            window.showBarakaToast('تم إرسال طلبك بنجاح! سيصلك الدليفري فوراً.', 'success', 'bi-check-all');
+        } else {
+            alert('تم إرسال طلبك بنجاح! سيقوم المحل بمراجعته فوراً.');
+        }
         
         cart = [];
         updateCartUI();
         
         const modalEl = document.getElementById('cartModal');
-        const modal = bootstrap.Modal.getInstance(modalEl);
-        if (modal) modal.hide();
+        if (modalEl && modalEl.classList.contains('show')) {
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            if (modal) modal.hide();
+        }
     } catch (error) {
-        alert('حدث خطأ أثناء إرسال الطلب: ' + JSON.stringify(error));
+        if (window.showBarakaToast) {
+            window.showBarakaToast('حدث خطأ أثناء إرسال الطلب.', 'error', 'bi-exclamation-triangle');
+        } else {
+            alert('حدث خطأ أثناء إرسال الطلب: ' + JSON.stringify(error));
+        }
     } finally {
-        submitBtn.disabled = false;
-        submitBtn.innerText = 'إرسال الطلب للمحل';
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerText = 'تأكيد الطلب ودليفري!';
+        }
     }
 }
 

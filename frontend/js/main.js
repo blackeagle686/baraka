@@ -24,7 +24,7 @@ function renderHeader() {
 
     // Always include Cart Icon with badge
     rightSideHtml += `
-        <a class="nav-link d-flex align-items-center position-relative me-4" href="#" onclick="event.preventDefault(); if(window.openCartModal) { window.openCartModal(); } else { window.location.href='/html/shops/list.html'; }" id="headerCartBtn" style="cursor: pointer; padding: 0.5rem;">
+        <a class="nav-link d-flex align-items-center position-relative me-4" href="/html/cart.html" id="headerCartBtn" style="cursor: pointer; padding: 0.5rem;">
             <i class="bi bi-cart3 fs-4 text-espresso"></i>
             <span class="badge bg-success rounded-circle position-absolute top-0 start-100 translate-middle-y" id="headerCartCount" style="font-size: 0.65rem; padding: 0.25em 0.5em; min-width: 1.5em; display: none;">0</span>
         </a>
@@ -90,9 +90,8 @@ function updateHeaderCartUI() {
     const headerCount = document.getElementById('headerCartCount');
     if (!headerCount) return;
     
-    // We can count items in cart from window.cart or localStorage if persistent
-    // Since cart is globally active in shops.js, we can try to fetch it
-    const cartItems = window.cart || [];
+    // We count items from localStorage for global synchronization
+    const cartItems = JSON.parse(localStorage.getItem('baraka_cart')) || [];
     const totalQty = cartItems.reduce((sum, item) => sum + item.quantity, 0);
     
     if (totalQty > 0) {

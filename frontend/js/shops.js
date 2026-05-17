@@ -347,7 +347,7 @@ function renderShopProducts(products) {
 // ==========================================
 // Client-side Cart & Order Checkout System
 // ==========================================
-let cart = [];
+let cart = JSON.parse(localStorage.getItem('baraka_cart')) || [];
 
 window.addToCart = function(id, name, price, image = '') {
     const token = localStorage.getItem('access_token');
@@ -371,11 +371,24 @@ window.addToCart = function(id, name, price, image = '') {
         return;
     }
     
+    const params = new URLSearchParams(window.location.search);
+    const shopId = parseInt(params.get('id'));
+    
+    // Enforce single-shop cart rule with a gorgeous native prompt
+    if (cart.length > 0 && cart[0].shop !== shopId) {
+        const confirmClear = confirm('سلتك فيها طلبات من محل تاني في قريتنا. تحب نفضيها ونبدأ نشتري من المحل الجديد ده؟');
+        if (confirmClear) {
+            cart = [];
+        } else {
+            return;
+        }
+    }
+    
     const existing = cart.find(it => it.product === id);
     if (existing) {
         existing.quantity += 1;
     } else {
-        cart.push({ product: id, name: name, price: price, quantity: 1, image: image });
+        cart.push({ product: id, name: name, price: price, quantity: 1, image: image, shop: shopId });
     }
     updateCartUI();
     
@@ -402,6 +415,9 @@ window.addToCart = function(id, name, price, image = '') {
 }
 
 function updateCartUI() {
+    // Persist cart state to localStorage
+    localStorage.setItem('baraka_cart', JSON.stringify(cart));
+
     // 1. Sync global cart items to window for navbar badge sync
     window.cart = cart;
     if (window.updateHeaderCartUI) {

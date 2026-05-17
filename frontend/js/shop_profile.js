@@ -327,8 +327,8 @@ async function handleProductEditSubmit() {
         
         // Hide Modal
         const modalEl = document.getElementById('editProductModal');
-        const modal = bootstrap.Modal.getInstance(modalEl);
-        if (modal) modal.hide();
+        const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+        modal.hide();
         
         // Reload products
         loadShopProducts(currentShopId);
@@ -353,8 +353,8 @@ async function handleProductDelete() {
         
         // Hide Modal
         const modalEl = document.getElementById('editProductModal');
-        const modal = bootstrap.Modal.getInstance(modalEl);
-        if (modal) modal.hide();
+        const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+        modal.hide();
         
         // Reload products
         loadShopProducts(currentShopId);
@@ -391,8 +391,8 @@ async function handleProductSubmit() {
         
         // Hide Modal via Bootstrap JS
         const modalEl = document.getElementById('addProductModal');
-        const modal = bootstrap.Modal.getInstance(modalEl);
-        if (modal) modal.hide();
+        const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+        modal.hide();
         
         // Reset form
         document.getElementById('productForm').reset();

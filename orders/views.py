@@ -16,10 +16,10 @@ class OrderViewSet(viewsets.ModelViewSet):
         elif user.role == 'SHOP_OWNER':
             return Order.objects.filter(shop__owner=user).order_by('-created_at')
         elif user.role == 'DRIVER':
-            # Drivers can see their own assigned orders or accepted orders that need a driver
+            # Drivers can see their own assigned orders or accepted/preparing/pending orders that need a driver
             from django.db.models import Q
             return Order.objects.filter(
-                Q(driver=user) | Q(driver__isnull=True, status__in=['ACCEPTED', 'PREPARING'])
+                Q(driver=user) | Q(driver__isnull=True, status__in=['PENDING', 'ACCEPTED', 'PREPARING', 'ON_DELIVERY'])
             ).order_by('-created_at')
         else:
             # Customer

@@ -24,9 +24,9 @@
     --shadow-glow: 0 0 40px rgba(194, 146, 64, 0.15);
 
     /* Radius */
-    --radius-sm: 12px;
-    --radius-md: 18px;
-    --radius-lg: 24px;
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
     --radius-full: 100px;
 
     /* Transitions */
@@ -40,7 +40,7 @@
 }
 
 html {
-    font-size: 90% !important;
+    font-size: 80% !important;
 }
 
 body {
@@ -48,7 +48,7 @@ body {
     background-color: var(--color-dune-light);
     color: var(--color-espresso);
     overflow-x: hidden;
-    line-height: 1.55;
+    line-height: 1.4;
     -webkit-font-smoothing: antialiased;
 }
 

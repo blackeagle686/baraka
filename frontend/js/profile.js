@@ -139,6 +139,8 @@ async function loadCustomerOrders() {
             'CANCELLED': { text: 'ملغي', class: 'bg-danger text-white' }
         };
         
+        let allHtml = '';
+        
         orders.forEach((order, i) => {
             const dateFormatted = new Date(order.created_at).toLocaleString('ar-EG', {
                 hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short'
@@ -217,7 +219,28 @@ async function loadCustomerOrders() {
                     ${disputeActionHtml}
                 </div>
             `;
-            container.innerHTML += html;
+            allHtml += html;
+        });
+        
+        container.innerHTML = allHtml;
+        
+        // Generate QR Codes
+        orders.forEach((order) => {
+            const isCompleted = ['DELIVERED', 'CANCELLED'].includes(order.status);
+            if (!isCompleted && order.customer_otp) {
+                const qrContainer = document.getElementById(`qrcode-customer-${order.id}`);
+                if (qrContainer && typeof QRCode !== 'undefined') {
+                    qrContainer.innerHTML = ''; // Clear previous
+                    new QRCode(qrContainer, {
+                        text: order.customer_otp,
+                        width: 160,
+                        height: 160,
+                        colorDark : "#320404", // espresso
+                        colorLight : "#ffffff",
+                        correctLevel : QRCode.CorrectLevel.H
+                    });
+                }
+            }
         });
     } catch (error) {
         console.error("Failed to load customer orders:", error);

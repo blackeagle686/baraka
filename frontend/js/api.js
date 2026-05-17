@@ -150,6 +150,17 @@ const api = {
             });
             if (!res.ok) throw await res.json();
             return await res.json();
+        },
+        confirmPaymentReceived: async (token, orderId) => {
+            const res = await fetch(`${API_BASE}/orders/${orderId}/confirm_payment_received/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            if (!res.ok) throw await res.json();
+            return await res.json();
         }
     }
 };

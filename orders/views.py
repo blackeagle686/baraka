@@ -123,3 +123,13 @@ class OrderViewSet(viewsets.ModelViewSet):
         order.status = OrderStatus.ON_DELIVERY
         order.save()
         return Response(self.get_serializer(order).data)
+
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
+    def confirm_payment_received(self, request, pk=None):
+        order = self.get_object()
+        if order.shop.owner != request.user and not request.user.is_staff:
+            return Response({"detail": "Not authorized to settle this order's cash."}, status=status.HTTP_403_FORBIDDEN)
+            
+        order.is_paid_to_shop = True
+        order.save()
+        return Response(self.get_serializer(order).data)

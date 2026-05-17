@@ -1,3 +1,8 @@
+/* ===========================
+   Baraka Design System v2.0
+   Premium Egyptian SaaS Theme
+   =========================== */
+
 :root {
     --color-dune: #f7e3da;
     --color-terracotta: #c99997;
@@ -5,78 +10,344 @@
     --color-bronze: #9f811f;
     --color-mesa: #5e2c38;
     --color-espresso: #320404;
+
+    /* Derived shades */
+    --color-dune-light: #fdf5f1;
+    --color-dune-dark: #edd4c8;
+    --color-mesa-soft: rgba(94, 44, 56, 0.08);
+    --color-marigold-glow: rgba(194, 146, 64, 0.25);
+
+    /* Shadows */
+    --shadow-sm: 0 2px 8px rgba(50, 4, 4, 0.04);
+    --shadow-md: 0 8px 24px rgba(50, 4, 4, 0.06);
+    --shadow-lg: 0 16px 48px rgba(50, 4, 4, 0.10);
+    --shadow-glow: 0 0 40px rgba(194, 146, 64, 0.15);
+
+    /* Radius */
+    --radius-sm: 12px;
+    --radius-md: 18px;
+    --radius-lg: 24px;
+    --radius-full: 100px;
+
+    /* Transitions */
+    --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+    --transition-base: 0.35s var(--ease-out-expo);
+}
+
+/* ===== Reset & Base ===== */
+*, *::before, *::after {
+    box-sizing: border-box;
 }
 
 body {
     font-family: 'Cairo', sans-serif;
-    background-color: var(--color-dune);
+    background-color: var(--color-dune-light);
     color: var(--color-espresso);
     overflow-x: hidden;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
 }
 
-/* Custom Text Colors & Backgrounds */
+::selection {
+    background: var(--color-marigold);
+    color: #fff;
+}
+
+/* ===== Typography ===== */
+h1, h2, h3, h4, h5, h6 {
+    font-weight: 700;
+    letter-spacing: -0.01em;
+}
+
 .text-espresso { color: var(--color-espresso) !important; }
 .text-mesa { color: var(--color-mesa) !important; }
 .text-marigold { color: var(--color-marigold) !important; }
-.bg-dune { background-color: var(--color-dune) !important; }
+.text-terracotta { color: var(--color-terracotta) !important; }
+.bg-dune { background-color: var(--color-dune-light) !important; }
 .bg-terracotta { background-color: var(--color-terracotta) !important; }
 
-/* Buttons */
+/* ===== Glassmorphism Navbar ===== */
+.glass-nav {
+    background: rgba(253, 245, 241, 0.75);
+    backdrop-filter: blur(20px) saturate(1.8);
+    -webkit-backdrop-filter: blur(20px) saturate(1.8);
+    border-bottom: 1px solid rgba(201, 153, 151, 0.15);
+    box-shadow: 0 1px 20px rgba(50, 4, 4, 0.04);
+    transition: var(--transition-base);
+    padding: 0.6rem 0;
+}
+
+.glass-nav .navbar-brand {
+    font-size: 1.6rem !important;
+    background: linear-gradient(135deg, var(--color-espresso), var(--color-mesa));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    transition: var(--transition-base);
+}
+
+.glass-nav .navbar-brand:hover {
+    transform: scale(1.04);
+}
+
+.glass-nav .nav-link {
+    color: var(--color-mesa) !important;
+    font-weight: 600;
+    font-size: 0.92rem;
+    padding: 0.5rem 1rem !important;
+    border-radius: var(--radius-full);
+    transition: var(--transition-base);
+    position: relative;
+}
+
+.glass-nav .nav-link:hover,
+.glass-nav .nav-link.active {
+    color: var(--color-espresso) !important;
+    background: var(--color-mesa-soft);
+}
+
+.glass-nav .nav-link.active::after {
+    content: '';
+    position: absolute;
+    bottom: 2px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 20px;
+    height: 3px;
+    border-radius: 2px;
+    background: var(--color-marigold);
+}
+
+/* ===== Buttons ===== */
+.btn {
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    transition: var(--transition-base);
+    border: none;
+}
+
 .btn-primary {
-    background-color: var(--color-marigold);
-    border-color: var(--color-marigold);
+    background: linear-gradient(135deg, var(--color-marigold), var(--color-bronze));
+    border: none;
     color: #fff;
-    transition: all 0.3s ease;
+    box-shadow: var(--shadow-sm);
 }
 
 .btn-primary:hover {
-    background-color: var(--color-bronze);
-    border-color: var(--color-bronze);
-    transform: translateY(-3px);
-    box-shadow: 0 10px 20px rgba(159, 129, 31, 0.3);
+    background: linear-gradient(135deg, var(--color-bronze), var(--color-marigold));
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px var(--color-marigold-glow);
+}
+
+.btn-primary:active {
+    transform: translateY(0);
 }
 
 .btn-outline-primary {
     color: var(--color-mesa);
-    border-color: var(--color-mesa);
-    transition: all 0.3s ease;
+    border: 2px solid var(--color-mesa);
+    background: transparent;
 }
 
 .btn-outline-primary:hover {
-    background-color: var(--color-mesa);
+    background: var(--color-mesa);
+    border-color: var(--color-mesa);
     color: #fff;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-outline-mesa {
+    color: var(--color-mesa) !important;
+    border: 2px solid var(--color-mesa) !important;
+    background: transparent;
+}
+
+.btn-outline-mesa:hover {
+    background: var(--color-mesa) !important;
+    color: #fff !important;
     transform: translateY(-2px);
 }
 
-/* Glassmorphism Navbar */
-.glass-nav {
-    background: rgba(247, 227, 218, 0.8);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
-    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
+.btn-marigold {
+    background: linear-gradient(135deg, var(--color-marigold), var(--color-bronze)) !important;
+    border: none !important;
+    color: #fff !important;
+    box-shadow: var(--shadow-sm);
 }
 
-/* Animations */
+.btn-marigold:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px var(--color-marigold-glow);
+}
+
+/* ===== Cards (Glass) ===== */
+.glass-card {
+    background: rgba(255, 255, 255, 0.65);
+    backdrop-filter: blur(16px) saturate(1.5);
+    -webkit-backdrop-filter: blur(16px) saturate(1.5);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    transition: var(--transition-base);
+}
+
+.glass-card:hover {
+    transform: translateY(-6px);
+    box-shadow: var(--shadow-lg);
+    border-color: rgba(194, 146, 64, 0.2);
+}
+
+/* Legacy shop-card class compatibility */
+.shop-card {
+    background: rgba(255, 255, 255, 0.65);
+    backdrop-filter: blur(16px) saturate(1.5);
+    -webkit-backdrop-filter: blur(16px) saturate(1.5);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    transition: var(--transition-base);
+}
+
+.shop-card:hover {
+    transform: translateY(-6px);
+    box-shadow: var(--shadow-lg);
+    border-color: rgba(194, 146, 64, 0.2);
+}
+
+/* ===== Form Controls ===== */
+.form-control, .form-select {
+    background: var(--color-dune-light) !important;
+    border: 1.5px solid transparent !important;
+    font-family: 'Cairo', sans-serif;
+    font-size: 0.92rem;
+    transition: var(--transition-base);
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--color-marigold) !important;
+    box-shadow: 0 0 0 4px var(--color-marigold-glow) !important;
+    outline: none;
+    background: #fff !important;
+}
+
+.form-label {
+    font-size: 0.88rem;
+    margin-bottom: 0.4rem;
+}
+
+.form-check-input:checked {
+    background-color: var(--color-marigold);
+    border-color: var(--color-marigold);
+}
+
+/* ===== Badges ===== */
+.badge {
+    font-weight: 600;
+    font-size: 0.78rem;
+    padding: 0.35em 0.8em;
+}
+
+.w-fit-content {
+    width: fit-content;
+}
+
+/* ===== Footer ===== */
+.app-footer {
+    background: var(--color-espresso);
+    color: rgba(247, 227, 218, 0.7);
+    padding: 2.5rem 0 1.5rem;
+    font-size: 0.88rem;
+}
+
+.app-footer a {
+    color: var(--color-marigold);
+    text-decoration: none;
+    transition: var(--transition-base);
+}
+
+.app-footer a:hover {
+    color: #fff;
+}
+
+.app-footer .footer-brand {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--color-dune);
+}
+
+/* ===== Animations ===== */
 @keyframes slideUpFade {
-    0% { opacity: 0; transform: translateY(40px); }
+    0% { opacity: 0; transform: translateY(30px); }
     100% { opacity: 1; transform: translateY(0); }
 }
 
 .animate-up {
-    animation: slideUpFade 0.8s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
+    animation: slideUpFade 0.7s var(--ease-out-expo) forwards;
     opacity: 0;
 }
 
-.delay-1 { animation-delay: 0.2s; }
-.delay-2 { animation-delay: 0.4s; }
-
-.pulse-btn {
-    animation: pulse 2s infinite;
-}
+.delay-1 { animation-delay: 0.15s; }
+.delay-2 { animation-delay: 0.3s; }
+.delay-3 { animation-delay: 0.45s; }
+.delay-4 { animation-delay: 0.6s; }
 
 @keyframes pulse {
-    0% { box-shadow: 0 0 0 0 rgba(194, 146, 64, 0.4); }
-    70% { box-shadow: 0 0 0 15px rgba(194, 146, 64, 0); }
+    0% { box-shadow: 0 0 0 0 var(--color-marigold-glow); }
+    70% { box-shadow: 0 0 0 18px rgba(194, 146, 64, 0); }
     100% { box-shadow: 0 0 0 0 rgba(194, 146, 64, 0); }
+}
+
+.pulse-btn { animation: pulse 2.5s infinite; }
+
+@keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+.skeleton {
+    background: linear-gradient(90deg, var(--color-dune-dark) 25%, var(--color-dune-light) 50%, var(--color-dune-dark) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: var(--radius-sm);
+}
+
+/* ===== Scrollbar ===== */
+::-webkit-scrollbar {
+    width: 8px;
+}
+::-webkit-scrollbar-track {
+    background: var(--color-dune-light);
+}
+::-webkit-scrollbar-thumb {
+    background: var(--color-terracotta);
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--color-mesa);
+}
+
+/* ===== Modal Styling ===== */
+.modal-content {
+    border: 1px solid rgba(201, 153, 151, 0.15) !important;
+    box-shadow: var(--shadow-lg) !important;
+}
+
+.modal-backdrop {
+    backdrop-filter: blur(4px);
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 768px) {
+    .glass-nav .navbar-brand {
+        font-size: 1.3rem !important;
+    }
+    .auth-buttons {
+        margin-top: 0.8rem;
+        gap: 0.5rem;
+    }
+    .auth-buttons .btn {
+        font-size: 0.82rem;
+        padding: 0.4rem 0.8rem;
+    }
 }

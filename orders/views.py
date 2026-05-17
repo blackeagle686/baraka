@@ -128,9 +128,20 @@ class OrderViewSet(viewsets.ModelViewSet):
         delivery_price = request.data.get('delivery_price')
         if delivery_price is not None:
             try:
-                order.delivery_price = float(delivery_price)
+                price_val = float(delivery_price)
             except ValueError:
-                return Response({"detail": "Invalid delivery price."}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({"detail": "سعر التوصيل غير صالح."}, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Enforce constraints: Minimum 15.00 EGP, Maximum 2% of the total order price (capped to at least 15.00 EGP)
+            min_price = 15.00
+            max_price = max(15.00, float(order.total_price) * 0.02)
+            
+            if price_val < min_price:
+                return Response({"detail": f"سعر خدمة التوصيل لا يمكن أن يقل عن {min_price} ج.م."}, status=status.HTTP_400_BAD_REQUEST)
+            if price_val > max_price:
+                return Response({"detail": f"سعر خدمة التوصيل لا يمكن أن يتخطى الحد الأقصى المسموح به (2% من إجمالي الطلب: {max_price:.2f} ج.م)."}, status=status.HTTP_400_BAD_REQUEST)
+            
+            order.delivery_price = price_val
         else:
             order.delivery_price = 15.00  # Default base delivery fee (15 ج.م)
             

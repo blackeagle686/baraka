@@ -437,7 +437,7 @@ window.acceptDeliveryTrip = async function(orderId) {
         alert('تم قبول الرحلة وتعيينك طياراً للتوصيل بنجاح!');
         loadDriverOrders();
     } catch (error) {
-        alert('حدث خطأ أثناء قبول الرحلة: ' + JSON.stringify(error));
+        alert('حدث خطأ أثناء قبول الرحلة: ' + (error.detail || JSON.stringify(error)));
     }
 }
 

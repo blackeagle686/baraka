@@ -277,6 +277,10 @@
                             <input type="number" step="0.01" class="form-control rounded-pill px-4 py-2" id="prodPrice" placeholder="0.00" required>
                         </div>
                         <div class="mb-3">
+                            <label class="form-label text-espresso fw-bold">الكمية المتاحة في المخزن</label>
+                            <input type="number" class="form-control rounded-pill px-4 py-2" id="prodQuantity" value="10" min="0" required>
+                        </div>
+                        <div class="mb-3">
                             <label class="form-label text-espresso fw-bold">الوصف</label>
                             <textarea class="form-control rounded-4 px-4 py-2" id="prodDesc" rows="2" placeholder="وصف مختصر للمنتج..."></textarea>
                         </div>
@@ -317,6 +321,10 @@
                         <div class="mb-3">
                             <label class="form-label text-espresso fw-bold">السعر (ج.م)</label>
                             <input type="number" step="0.01" class="form-control rounded-pill px-4 py-2" id="editProdPrice" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-espresso fw-bold">الكمية المتاحة في المخزن</label>
+                            <input type="number" class="form-control rounded-pill px-4 py-2" id="editProdQuantity" min="0" required>
                         </div>
                         <div class="mb-3">
                             <label class="form-label text-espresso fw-bold">الوصف</label>

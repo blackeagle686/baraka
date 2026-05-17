@@ -121,6 +121,13 @@ class OrderViewSet(viewsets.ModelViewSet):
             if new_status == 'DELIVERED':
                 return Response({"detail": "Only drivers can mark orders as DELIVERED."}, status=status.HTTP_403_FORBIDDEN)
             
+        if new_status == 'CANCELLED' and order.status != 'CANCELLED':
+            for item in order.items.all():
+                if item.product:
+                    item.product.quantity += item.quantity
+                    item.product.available = True
+                    item.product.save()
+
         order.status = new_status
         order.save()
         return Response(self.get_serializer(order).data)

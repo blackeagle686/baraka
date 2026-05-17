@@ -561,3 +561,103 @@ window.updateOrderStatus = async function(orderId, newStatus) {
         alert('حدث خطأ أثناء تحديث حالة الطلب: ' + JSON.stringify(error));
     }
 }
+
+// ==========================================
+// Leaflet.js Map Geolocation Integration
+// ==========================================
+let shopMapInstance = null;
+let shopMarkerInstance = null;
+
+function initShopMap(lat, lon) {
+    const latVal = parseFloat(lat) || 30.0444; // Default to Cairo area
+    const lonVal = parseFloat(lon) || 31.2357;
+
+    const mapContainer = document.getElementById('shopMap');
+    if (!mapContainer) return;
+
+    if (shopMapInstance) {
+        // Map is already initialized, just fly/pan and reposition current marker
+        shopMapInstance.setView([latVal, lonVal], 14);
+        if (shopMarkerInstance) {
+            shopMarkerInstance.setLatLng([latVal, lonVal]);
+        } else {
+            shopMarkerInstance = L.marker([latVal, lonVal], { draggable: true }).addTo(shopMapInstance);
+            bindMarkerDragEvent();
+        }
+        return;
+    }
+
+    // Initialize Leaflet Map
+    shopMapInstance = L.map('shopMap').setView([latVal, lonVal], 14);
+
+    // Add High-Quality Leaflet OpenStreetMap tiles
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(shopMapInstance);
+
+    // Create Draggable Pin Marker
+    shopMarkerInstance = L.marker([latVal, lonVal], { draggable: true }).addTo(shopMapInstance);
+    bindMarkerDragEvent();
+
+    // Bind click anywhere on the map to pin position
+    shopMapInstance.on('click', (e) => {
+        const newLat = e.latlng.lat;
+        const newLon = e.latlng.lng;
+        shopMarkerInstance.setLatLng([newLat, newLon]);
+        syncMapToCoordinatesFields(newLat, newLon);
+    });
+
+    // Attach listeners to manual coordinate input fields for full two-way binding
+    const latInput = document.getElementById('shopLatitude');
+    const lonInput = document.getElementById('shopLongitude');
+    
+    if (latInput && lonInput) {
+        latInput.addEventListener('input', syncInputsToMap);
+        lonInput.addEventListener('input', syncInputsToMap);
+    }
+}
+
+function bindMarkerDragEvent() {
+    if (shopMarkerInstance) {
+        shopMarkerInstance.on('dragend', () => {
+            const pos = shopMarkerInstance.getLatLng();
+            syncMapToCoordinatesFields(pos.lat, pos.lng);
+        });
+    }
+}
+
+function syncMapToCoordinatesFields(lat, lon) {
+    const latInput = document.getElementById('shopLatitude');
+    const lonInput = document.getElementById('shopLongitude');
+    if (latInput) latInput.value = lat.toFixed(6);
+    if (lonInput) lonInput.value = lon.toFixed(6);
+}
+
+function syncInputsToMap() {
+    const latVal = parseFloat(document.getElementById('shopLatitude').value);
+    const lonVal = parseFloat(document.getElementById('shopLongitude').value);
+    if (!isNaN(latVal) && !isNaN(lonVal)) {
+        if (shopMarkerInstance && shopMapInstance) {
+            shopMarkerInstance.setLatLng([latVal, lonVal]);
+            shopMapInstance.setView([latVal, lonVal]);
+        }
+    }
+}
+
+// Override or hook window.switchTab to fix Leaflet size recalculation issue
+document.addEventListener('DOMContentLoaded', () => {
+    const originalSwitchTab = window.switchTab;
+    window.switchTab = function(tabId) {
+        if (originalSwitchTab) {
+            originalSwitchTab(tabId);
+        }
+        
+        // Leaflet maps render improperly in hidden divs. Force invalidation on tab display
+        if (tabId === 'settings' && shopMapInstance) {
+            setTimeout(() => {
+                shopMapInstance.invalidateSize();
+            }, 250);
+        }
+    };
+});

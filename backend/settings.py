@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 from pathlib import Path
+from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -147,3 +148,16 @@ REST_FRAMEWORK = {
 }
 
 CORS_ALLOW_ALL_ORIGINS = True # For development only
+
+# Session Lifetimes (for standard Django session management)
+SESSION_COOKIE_AGE = 432000  # 5 days (in seconds: 5 * 24 * 60 * 60)
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False  # Keep cookie even if browser closes
+
+# Simple JWT Token Lifetimes (for REST API authentication)
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=5),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=5),
+    'ROTATE_REFRESH_TOKENS': False,
+    'BLACKLIST_AFTER_ROTATION': False,
+    'UPDATE_LAST_LOGIN': True,
+}

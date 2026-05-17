@@ -1,4 +1,20 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // If user is already logged in, redirect them to their respective dashboard or home page
+    const token = localStorage.getItem('access_token');
+    if (token) {
+        const role = localStorage.getItem('user_role');
+        if (role === 'ADMIN') {
+            window.location.href = '/html/admin/dashboard.html';
+        } else if (role === 'DRIVER') {
+            window.location.href = '/html/profile/driver.html';
+        } else if (role === 'SHOP_OWNER') {
+            window.location.href = '/html/profile/shop.html';
+        } else {
+            window.location.href = '/html/index.html';
+        }
+        return; // Stop further execution
+    }
+
     const loginForm = document.getElementById('loginForm');
     const registerForm = document.getElementById('registerForm');
 

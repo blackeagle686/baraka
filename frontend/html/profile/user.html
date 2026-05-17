@@ -14,87 +14,200 @@
     <!-- Header Placeholder -->
     <div id="header-placeholder"></div>
 
-    <!-- Profile Section -->
-    <section class="profile-header">
-        <div class="container">
-            <div class="text-center animate-up">
-                <h3 class="fw-bold text-espresso"><i class="bi bi-person-circle me-2"></i>الملف الشخصي</h3>
+    <!-- Modern Dashboard Layout -->
+    <div class="dash-layout">
+        <!-- Sidebar -->
+        <aside class="dash-sidebar">
+            <div class="dash-sidebar-brand">
+                <div class="dash-sidebar-brand-icon">
+                    <i class="bi bi-person-heart text-white"></i>
+                </div>
+                <div class="dash-sidebar-brand-text">
+                    <span id="sidebarUserName">جاري التحميل...</span>
+                    <small>حساب عميل</small>
+                </div>
             </div>
-        </div>
-    </section>
 
-    <section class="py-4">
-        <div class="container">
-            <div class="row g-4 justify-content-center">
-                <!-- Profile Edit Card (Right) -->
-                <div class="col-lg-5 col-md-6 order-lg-2">
-                    <div class="dashboard-card animate-up mb-4">
-                        <h4 class="fw-bold text-espresso mb-4 pb-2 border-bottom"><i class="bi bi-person-gear me-2 text-marigold"></i>تعديل بيانات الحساب</h4>
-                        <form id="profileForm" enctype="multipart/form-data">
-                            <!-- Avatar -->
-                            <div class="text-center mb-4">
-                                <div class="d-inline-block position-relative">
-                                    <div id="profileImagePreview" class="profile-avatar mx-auto">
-                                        <span class="text-white fs-1" id="profileInitials">?</span>
+            <ul class="dash-nav">
+                <li class="dash-nav-label">لوحة التحكم</li>
+                <li class="dash-nav-item">
+                    <button class="dash-nav-link active" onclick="switchTab('orders')">
+                        <i class="bi bi-bag-check-fill"></i>
+                        <span>طلباتي</span>
+                        <span class="nav-badge bg-marigold" id="sidebarOrdersBadge">0</span>
+                    </button>
+                </li>
+                <li class="dash-nav-item">
+                    <button class="dash-nav-link" onclick="switchTab('settings')">
+                        <i class="bi bi-gear-fill"></i>
+                        <span>إعدادات الحساب</span>
+                    </button>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- Main Workspace -->
+        <main class="dash-main">
+
+            <!-- ===== Orders Panel (Default Active) ===== -->
+            <div class="dash-panel active" id="ordersPanel">
+                <div class="dash-page-title">📦 طلباتي الأخيرة</div>
+                <div class="dash-page-subtitle">تابع حالة طلباتك خطوة بخطوة بشكل مباشر وسهل</div>
+
+                <!-- Summary Stat Cards -->
+                <div class="row g-3 mb-4 animate-up">
+                    <div class="col-6 col-md-3">
+                        <div class="stat-card">
+                            <div class="stat-icon stat-marigold">
+                                <i class="bi bi-bag"></i>
+                            </div>
+                            <div>
+                                <div class="stat-value" id="statTotalOrders">0</div>
+                                <div class="stat-label">إجمالي الطلبات</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="stat-card">
+                            <div class="stat-icon stat-green">
+                                <i class="bi bi-check-circle"></i>
+                            </div>
+                            <div>
+                                <div class="stat-value" id="statDelivered">0</div>
+                                <div class="stat-label">تم توصيلها ✅</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background: linear-gradient(135deg, rgba(59,130,246,0.15), rgba(59,130,246,0.05)); color: #3b82f6;">
+                                <i class="bi bi-truck"></i>
+                            </div>
+                            <div>
+                                <div class="stat-value" id="statActive">0</div>
+                                <div class="stat-label">قيد التوصيل 🚚</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="stat-card">
+                            <div class="stat-icon stat-mesa">
+                                <i class="bi bi-clock-history"></i>
+                            </div>
+                            <div>
+                                <div class="stat-value" id="statPending">0</div>
+                                <div class="stat-label">بانتظار الموافقة ⏳</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filter Tabs -->
+                <div class="d-flex gap-2 mb-4 flex-wrap animate-up" id="orderFilterTabs">
+                    <button class="btn btn-sm rounded-pill fw-bold px-3 py-2 active" data-filter="all" onclick="filterOrders('all', this)" style="font-size: 0.95rem;">
+                        <i class="bi bi-grid me-1"></i>الكل
+                    </button>
+                    <button class="btn btn-sm rounded-pill fw-bold px-3 py-2" data-filter="active" onclick="filterOrders('active', this)" style="font-size: 0.95rem;">
+                        <i class="bi bi-lightning me-1"></i>النشطة
+                    </button>
+                    <button class="btn btn-sm rounded-pill fw-bold px-3 py-2" data-filter="delivered" onclick="filterOrders('delivered', this)" style="font-size: 0.95rem;">
+                        <i class="bi bi-check2-all me-1"></i>المكتملة
+                    </button>
+                    <button class="btn btn-sm rounded-pill fw-bold px-3 py-2" data-filter="cancelled" onclick="filterOrders('cancelled', this)" style="font-size: 0.95rem;">
+                        <i class="bi bi-x-circle me-1"></i>الملغية
+                    </button>
+                </div>
+
+                <!-- Refresh Button -->
+                <div class="d-flex justify-content-end mb-3">
+                    <button class="btn btn-outline-mesa rounded-pill btn-sm fw-bold px-3" onclick="loadCustomerOrders()" style="font-size: 0.92rem;">
+                        <i class="bi bi-arrow-clockwise me-1"></i>تحديث الطلبات
+                    </button>
+                </div>
+
+                <!-- Orders List Container -->
+                <div id="customerOrdersList">
+                    <div class="text-center text-mesa py-5">
+                        <div class="spinner-border text-marigold mb-3" role="status"></div>
+                        <p class="fw-bold" style="font-size: 1.1rem;">جاري تحميل طلباتك...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== Settings Panel ===== -->
+            <div class="dash-panel" id="settingsPanel">
+                <div class="dash-page-title">⚙️ إعدادات الحساب</div>
+                <div class="dash-page-subtitle">عدّل بياناتك الشخصية ومعلومات التوصيل</div>
+
+                <div class="row justify-content-center">
+                    <div class="col-lg-7 col-md-9">
+                        <div class="dashboard-card animate-up">
+                            <form id="profileForm" enctype="multipart/form-data">
+                                <!-- Avatar -->
+                                <div class="text-center mb-4">
+                                    <div class="d-inline-block position-relative">
+                                        <div id="profileImagePreview" class="profile-avatar mx-auto" style="width: 120px; height: 120px;">
+                                            <span class="text-white fs-1" id="profileInitials">?</span>
+                                        </div>
+                                        <label for="image" class="upload-btn position-absolute bottom-0 start-0">
+                                            <i class="bi bi-camera-fill" style="font-size: 0.85rem;"></i>
+                                        </label>
+                                        <input type="file" id="image" accept="image/*" class="d-none">
                                     </div>
-                                    <label for="image" class="upload-btn position-absolute bottom-0 start-0">
-                                        <i class="bi bi-camera-fill" style="font-size: 0.85rem;"></i>
+                                    <div class="mt-2 text-mesa small fw-bold">اضغط على الكاميرا لتغيير الصورة</div>
+                                </div>
+
+                                <!-- Fields (larger for older users) -->
+                                <div class="mb-4">
+                                    <label class="form-label text-espresso fw-bold" style="font-size: 1.05rem;">
+                                        <i class="bi bi-person-fill me-1"></i>الاسم بالكامل
                                     </label>
-                                    <input type="file" id="image" accept="image/*" class="d-none">
+                                    <input type="text" class="form-control rounded-pill px-4 py-3" id="name" required style="font-size: 1.1rem;">
                                 </div>
-                            </div>
+                                <div class="mb-4">
+                                    <label class="form-label text-espresso fw-bold" style="font-size: 1.05rem;">
+                                        <i class="bi bi-telephone-fill me-1"></i>رقم الهاتف
+                                    </label>
+                                    <input type="text" class="form-control rounded-pill px-4 py-3" id="phone" required style="font-size: 1.1rem;">
+                                </div>
+                                <div class="mb-4">
+                                    <label class="form-label text-espresso fw-bold" style="font-size: 1.05rem;">
+                                        <i class="bi bi-geo-alt-fill me-1"></i>عنوان التوصيل
+                                    </label>
+                                    <input type="text" class="form-control rounded-pill px-4 py-3" id="location" placeholder="مثال: شارع السلام، بجوار المسجد الكبير" style="font-size: 1.1rem;">
+                                </div>
+                                <div class="row">
+                                    <div class="col-6 mb-4">
+                                        <label class="form-label text-espresso fw-bold small">
+                                            <i class="bi bi-compass me-1"></i>خط العرض
+                                        </label>
+                                        <input type="number" step="0.000001" class="form-control rounded-pill px-3 py-2" id="latitude">
+                                    </div>
+                                    <div class="col-6 mb-4">
+                                        <label class="form-label text-espresso fw-bold small">
+                                            <i class="bi bi-compass-fill me-1"></i>خط الطول
+                                        </label>
+                                        <input type="number" step="0.000001" class="form-control rounded-pill px-3 py-2" id="longitude">
+                                    </div>
+                                </div>
+                                <div class="mb-4">
+                                    <label class="form-label text-espresso fw-bold" style="font-size: 1.05rem;">
+                                        <i class="bi bi-person-badge-fill me-1"></i>نوع الحساب
+                                    </label>
+                                    <input type="text" class="form-control rounded-pill px-4 py-3 text-muted" id="role" disabled style="font-size: 1.1rem;">
+                                </div>
 
-                            <!-- Fields -->
-                            <div class="mb-3">
-                                <label class="form-label text-espresso fw-bold"><i class="bi bi-person me-1"></i>الاسم</label>
-                                <input type="text" class="form-control rounded-pill px-4 py-2" id="name" required>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label text-espresso fw-bold"><i class="bi bi-phone me-1"></i>رقم الهاتف</label>
-                                <input type="text" class="form-control rounded-pill px-4 py-2" id="phone" required>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label text-espresso fw-bold"><i class="bi bi-geo-alt me-1"></i>العنوان (المكان)</label>
-                                <input type="text" class="form-control rounded-pill px-4 py-2" id="location">
-                            </div>
-                            <div class="row">
-                                <div class="col-6 mb-3">
-                                    <label class="form-label text-espresso fw-bold small"><i class="bi bi-compass me-1"></i>خط العرض</label>
-                                    <input type="number" step="0.000001" class="form-control rounded-pill px-3 py-2" id="latitude">
-                                </div>
-                                <div class="col-6 mb-3">
-                                    <label class="form-label text-espresso fw-bold small"><i class="bi bi-compass-fill me-1"></i>خط الطول</label>
-                                    <input type="number" step="0.000001" class="form-control rounded-pill px-3 py-2" id="longitude">
-                                </div>
-                            </div>
-                            <div class="mb-4">
-                                <label class="form-label text-espresso fw-bold"><i class="bi bi-person-badge me-1"></i>نوع الحساب</label>
-                                <input type="text" class="form-control rounded-pill px-4 py-2 text-muted" id="role" disabled>
-                            </div>
-                            
-                            <button type="submit" class="btn btn-primary rounded-pill w-100 py-2 fw-bold mb-2" id="saveBtn">
-                                <i class="bi bi-check2-circle me-1"></i>حفظ التعديلات
-                            </button>
-                            <div id="statusMsg" class="text-center fw-bold d-none"></div>
-                        </form>
-                    </div>
-                </div>
-
-                <!-- Recent Orders Tracker Card (Left) -->
-                <div class="col-lg-7 col-md-6 order-lg-1" id="customerOrdersContainer" style="display: none;">
-                    <div class="dashboard-card animate-up">
-                        <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
-                            <h4 class="fw-bold text-espresso mb-0"><i class="bi bi-bag-check me-2 text-marigold"></i>طلباتي الأخيرة</h4>
-                            <span class="badge bg-espresso text-white rounded-pill px-3 py-1" id="ordersCountBadge">0 طلب</span>
-                        </div>
-                        <div id="customerOrdersList" style="max-height: 550px; overflow-y: auto; padding-right: 5px;">
-                            <!-- Dynamic customer orders will be populated here -->
+                                <button type="submit" class="btn btn-primary rounded-pill w-100 py-3 fw-bold mb-2" id="saveBtn" style="font-size: 1.15rem;">
+                                    <i class="bi bi-check2-circle me-1"></i>حفظ التعديلات
+                                </button>
+                                <div id="statusMsg" class="text-center fw-bold d-none mt-2" style="font-size: 1rem;"></div>
+                            </form>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </section>
+        </main>
+    </div>
 
     <!-- Footer Placeholder -->
     <div id="footer-placeholder"></div>
@@ -105,5 +218,26 @@
     <script src="/js/api.js"></script>
     <script src="/js/main.js"></script>
     <script src="/js/profile.js"></script>
+
+    <!-- Tab Switching -->
+    <script>
+        window.switchTab = function(tabId) {
+            document.querySelectorAll('.dash-panel').forEach(panel => {
+                panel.classList.remove('active');
+            });
+            const targetPanel = document.getElementById(tabId + 'Panel');
+            if (targetPanel) {
+                targetPanel.classList.add('active');
+            }
+
+            document.querySelectorAll('.dash-nav-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            const clickedLink = document.querySelector(`[onclick="switchTab('${tabId}')"]`);
+            if (clickedLink) {
+                clickedLink.classList.add('active');
+            }
+        }
+    </script>
 </body>
 </html>

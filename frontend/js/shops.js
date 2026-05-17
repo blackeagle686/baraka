@@ -593,6 +593,14 @@ window.openCartModal = function() {
 window.changeQuantity = function(productId, delta) {
     const item = cart.find(it => it.product === productId);
     if (item) {
+        if (delta > 0 && item.maxQty && item.quantity >= item.maxQty) {
+            if (window.showBarakaToast) {
+                window.showBarakaToast(`عذراً، لا يمكن تجاوز الكمية المتاحة في المخزن (${item.maxQty} قطع).`, 'error', 'bi-exclamation-triangle');
+            } else {
+                alert(`عذراً، لا يمكن تجاوز الكمية المتاحة في المخزن (${item.maxQty} قطع).`);
+            }
+            return;
+        }
         item.quantity += delta;
         if (item.quantity <= 0) {
             removeFromCart(productId);

@@ -502,16 +502,10 @@ function renderShopOrders(orders) {
                 <button onclick="updateOrderStatus(${order.id}, 'ON_DELIVERY')" class="btn btn-sm btn-marigold rounded-pill px-3 text-white">
                     <i class="bi bi-truck me-1"></i>تسليم للمندوب
                 </button>
-                <button onclick="updateOrderStatus(${order.id}, 'DELIVERED')" class="btn btn-sm btn-success rounded-pill px-3 ms-2">
-                    <i class="bi bi-check-all me-1"></i>تم التوصيل المباشر
-                </button>
             `;
         } else if (order.status === 'ON_DELIVERY') {
             actionsHtml = `
                 <span class="text-muted small"><i class="bi bi-truck me-1"></i>المندوب: ${order.driver_details ? order.driver_details.name : 'جاري التحديد'}</span>
-                <button onclick="updateOrderStatus(${order.id}, 'DELIVERED')" class="btn btn-sm btn-success rounded-pill px-3 ms-3">
-                    <i class="bi bi-check-all me-1"></i>تم التوصيل
-                </button>
             `;
         } else {
             actionsHtml = `<span class="text-muted small"><i class="bi bi-info-circle me-1"></i>لا توجد إجراءات معلقة</span>`;

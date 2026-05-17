@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const data = await api.auth.login(phone, password);
                 localStorage.setItem('access_token', data.access);
                 localStorage.setItem('refresh_token', data.refresh);
-                window.location.href = '../index.html';
+                window.location.href = '/html/index.html';
             } catch (error) {
                 document.getElementById('errorMsg').classList.remove('d-none');
                 console.error("Login failed:", error);
@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             try {
                 await api.auth.register({ name, phone, location, role, password });
-                window.location.href = 'login.html';
+                window.location.href = '/html/auth/login.html';
             } catch (error) {
                 const errorMsg = document.getElementById('errorMsg');
                 errorMsg.innerText = "خطأ: " + JSON.stringify(error);

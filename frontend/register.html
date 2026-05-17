@@ -21,8 +21,8 @@
                 <form id="registerForm">
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label text-espresso fw-bold">اسم المستخدم</label>
-                            <input type="text" class="form-control rounded-pill bg-light border-0 px-4 py-2" id="username" required>
+                            <label class="form-label text-espresso fw-bold">الاسم</label>
+                            <input type="text" class="form-control rounded-pill bg-light border-0 px-4 py-2" id="name" required>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label text-espresso fw-bold">رقم الهاتف</label>
@@ -30,8 +30,8 @@
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label text-espresso fw-bold">البريد الإلكتروني (اختياري)</label>
-                        <input type="email" class="form-control rounded-pill bg-light border-0 px-4 py-2" id="email">
+                        <label class="form-label text-espresso fw-bold">العنوان (المكان)</label>
+                        <input type="text" class="form-control rounded-pill bg-light border-0 px-4 py-2" id="location">
                     </div>
                     <div class="mb-3">
                         <label class="form-label text-espresso fw-bold">نوع الحساب</label>
@@ -59,9 +59,9 @@
     <script>
         document.getElementById('registerForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const username = document.getElementById('username').value;
+            const name = document.getElementById('name').value;
             const phone = document.getElementById('phone').value;
-            const email = document.getElementById('email').value;
+            const location = document.getElementById('location').value;
             const role = document.getElementById('role').value;
             const password = document.getElementById('password').value;
 
@@ -69,7 +69,7 @@
                 const res = await fetch('http://127.0.0.1:8000/api/auth/register/', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, phone, email, role, password })
+                    body: JSON.stringify({ name, phone, location, role, password })
                 });
 
                 if (res.ok) {

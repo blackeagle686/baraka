@@ -102,8 +102,8 @@ async function fetchProfile() {
         const sidebarName = document.getElementById('sidebarUserName');
         if (sidebarName) sidebarName.innerText = data.name || data.phone || 'عميل بركة';
 
-        // Load orders for any role that sees orders (customer primarily)
-        if (data.role === 'CUSTOMER') {
+        // Load orders only if orders list is present in DOM
+        if (data.role === 'CUSTOMER' && document.getElementById('customerOrdersList')) {
             loadCustomerOrders();
         }
 

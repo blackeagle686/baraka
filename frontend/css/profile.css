@@ -1,23 +1,136 @@
-.shop-card {
+/* ===========================
+   Profile & Dashboard Styles
+   =========================== */
+
+.profile-header {
+    background: linear-gradient(160deg, var(--color-dune-light), var(--color-dune));
+    padding: 7rem 0 2rem;
+}
+
+.profile-avatar {
+    width: 110px;
+    height: 110px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 4px solid rgba(255, 255, 255, 0.8);
+    box-shadow: var(--shadow-md);
+    transition: var(--transition-base);
+    background: linear-gradient(135deg, var(--color-terracotta), var(--color-mesa));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.profile-avatar:hover {
+    transform: scale(1.05);
+    box-shadow: var(--shadow-lg);
+}
+
+.profile-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Dashboard Cards */
+.dashboard-card {
+    background: rgba(255, 255, 255, 0.65);
+    backdrop-filter: blur(16px) saturate(1.5);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    padding: 2rem;
+    transition: var(--transition-base);
+}
+
+.dashboard-card:hover {
+    box-shadow: var(--shadow-lg);
+}
+
+.dashboard-section-title {
+    font-weight: 800;
+    font-size: 1.3rem;
+    color: var(--color-espresso);
+    padding-bottom: 0.8rem;
+    border-bottom: 2px solid rgba(201, 153, 151, 0.2);
+    margin-bottom: 1.5rem;
+}
+
+/* Product Management Cards */
+.product-manage-card {
     background: rgba(255, 255, 255, 0.6);
-    backdrop-filter: blur(10px);
-    border-radius: 20px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    transition: var(--transition-base);
+    box-shadow: var(--shadow-sm);
 }
 
-#profileImagePreview {
-    transition: all 0.3s ease;
+.product-manage-card:hover {
+    box-shadow: var(--shadow-md);
+    border-color: rgba(194, 146, 64, 0.15);
 }
 
-#profileImagePreview:hover {
-    filter: brightness(0.9);
+/* Shop Image Preview */
+.shop-image-preview {
+    width: 200px;
+    height: 130px;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    background: linear-gradient(135deg, var(--color-terracotta), var(--color-mesa));
+    box-shadow: var(--shadow-md);
+    transition: var(--transition-base);
 }
 
-.form-control {
-    transition: all 0.3s ease;
+.shop-image-preview:hover {
+    box-shadow: var(--shadow-lg);
+    transform: scale(1.03);
 }
 
-.form-control:focus {
-    box-shadow: 0 0 0 4px rgba(194, 146, 64, 0.2);
-    outline: none;
+.shop-image-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Camera Upload Button */
+.upload-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--color-marigold), var(--color-bronze));
+    border: 3px solid #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: var(--shadow-sm);
+    transition: var(--transition-base);
+    color: #fff;
+}
+
+.upload-btn:hover {
+    transform: scale(1.1);
+    box-shadow: var(--shadow-md);
+}
+
+/* Status Badges */
+.status-open {
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    color: #fff;
+}
+
+.status-closed {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: #fff;
+}
+
+@media (max-width: 768px) {
+    .dashboard-card {
+        padding: 1.5rem;
+    }
+    .profile-avatar {
+        width: 85px;
+        height: 85px;
+    }
 }

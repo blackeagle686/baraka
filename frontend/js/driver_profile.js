@@ -210,8 +210,8 @@ async function loadDriverOrders() {
     try {
         const orders = await api.orders.getAll(token);
         
-        // 1. Available orders: has no driver assigned, status ACCEPTED or PREPARING
-        const availableOrders = orders.filter(o => !o.driver && ['ACCEPTED', 'PREPARING'].includes(o.status));
+        // 1. Available orders: has no driver assigned, status PENDING, ACCEPTED, PREPARING or ON_DELIVERY
+        const availableOrders = orders.filter(o => !o.driver && ['PENDING', 'ACCEPTED', 'PREPARING', 'ON_DELIVERY'].includes(o.status));
         renderAvailableOrders(availableOrders);
 
         // 2. Active trips: assigned to this driver, not delivered/cancelled

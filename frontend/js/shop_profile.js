@@ -507,6 +507,21 @@ function renderShopOrders(orders) {
             actionsHtml = `
                 <span class="text-muted small"><i class="bi bi-truck me-1"></i>المندوب: ${order.driver_details ? order.driver_details.name : 'جاري التحديد'}</span>
             `;
+        } else if (order.status === 'DELIVERED') {
+            if (!order.is_paid_to_shop) {
+                actionsHtml = `
+                    <div class="d-flex flex-column gap-1 mt-2">
+                        <span class="text-danger small fw-bold mb-1"><i class="bi bi-exclamation-circle-fill me-1"></i>الطيار استلم المبلغ ولم يقم بتصفيته معك بعد!</span>
+                        <button onclick="confirmShopPaymentReceived(${order.id}, ${order.total_price})" class="btn btn-sm btn-success rounded-pill px-3 fw-bold text-white shadow-sm">
+                            <i class="bi bi-cash me-1"></i>تأكيد استلام المبلغ (${order.total_price} ج.م)
+                        </button>
+                    </div>
+                `;
+            } else {
+                actionsHtml = `
+                    <span class="badge bg-success-subtle text-success rounded-pill px-3 py-2 small fw-bold"><i class="bi bi-wallet2 me-1"></i>تم استلام وتصفية الحساب</span>
+                `;
+            }
         } else {
             actionsHtml = `<span class="text-muted small"><i class="bi bi-info-circle me-1"></i>لا توجد إجراءات معلقة</span>`;
         }
@@ -655,3 +670,18 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 });
+
+window.confirmShopPaymentReceived = async function(orderId, totalPrice) {
+    const token = localStorage.getItem('access_token');
+    if (!confirm(`هل أنت متأكد من استلام مبلغ (${totalPrice} ج.م) بالكامل من طيار التوصيل؟`)) {
+        return;
+    }
+    
+    try {
+        await api.orders.confirmPaymentReceived(token, orderId);
+        alert('تم تأكيد استلام وتصفية المبلغ بنجاح!');
+        loadShopOrders(); // Reload orders list
+    } catch (error) {
+        alert('حدث خطأ أثناء تأكيد استلام المبلغ: ' + JSON.stringify(error));
+    }
+}

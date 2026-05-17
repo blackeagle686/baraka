@@ -9,6 +9,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/main_style.css">
     <link rel="stylesheet" href="/css/shops.css">
+    <!-- Leaflet.js CSS for Map Integration -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 </head>
 <body class="bg-dune">
     <!-- Header Placeholder -->
@@ -19,6 +21,19 @@
         <div class="container animate-up">
             <h2 class="text-espresso"><i class="bi bi-shop me-2"></i>كل المحلات</h2>
             <p class="text-mesa">تصفح جميع المحلات في منطقتك واطلب كل اللي تحتاجه</p>
+        </div>
+    </section>
+
+    <!-- Interactive Map Section -->
+    <section class="mb-5">
+        <div class="container animate-up">
+            <div class="dashboard-card p-0 overflow-hidden border" style="border-radius: var(--radius-lg); border-color: rgba(201,153,151,0.15) !important;">
+                <div class="p-3 d-flex justify-content-between align-items-center bg-white border-bottom" style="border-color: rgba(201,153,151,0.08) !important;">
+                    <h5 class="fw-bold text-espresso m-0"><i class="bi bi-map-fill text-marigold me-2"></i>خريطة المحلات التفاعلية</h5>
+                    <span class="badge rounded-pill px-3 py-2 small" style="background-color: var(--color-dune); color: var(--color-espresso);" id="activeShopsMapCount">جاري تحديد المحلات...</span>
+                </div>
+                <div id="shopsDirectoryMap" style="height: 380px; z-index: 5;"></div>
+            </div>
         </div>
     </section>
 
@@ -38,6 +53,8 @@
     <div id="footer-placeholder"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Leaflet JS Library -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="/js/api.js"></script>
     <script src="/js/main.js"></script>
     <script src="/js/shops.js"></script>

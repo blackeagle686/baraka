@@ -27,6 +27,20 @@
     pointer-events: none;
 }
 
+/* Second decorative orb */
+.auth-wrapper::after {
+    content: '';
+    position: absolute;
+    bottom: -15%;
+    right: -10%;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, var(--color-marigold) 0%, transparent 60%);
+    opacity: 0.1;
+    border-radius: 50%;
+    pointer-events: none;
+}
+
 .auth-card {
     background: rgba(255, 255, 255, 0.65);
     backdrop-filter: blur(20px) saturate(1.6);
@@ -55,8 +69,18 @@
 
 .auth-subtitle {
     color: var(--color-mesa);
-    font-size: 0.92rem;
-    opacity: 0.8;
+    font-size: 0.95rem;
+    font-weight: 600;
+    opacity: 0.85;
+}
+
+.password-toggle {
+    color: var(--color-mesa);
+    transition: var(--transition-base);
+}
+
+.password-toggle:hover {
+    color: var(--color-marigold);
 }
 
 .auth-divider {

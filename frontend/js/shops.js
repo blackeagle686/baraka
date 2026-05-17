@@ -197,44 +197,100 @@ async function initShopDetails() {
             
             const products = await api.shops.getProducts(shopId);
             renderShopProducts(products);
+            
+            // Render initial Cart inside Checkout Sidebar Card
+            updateCartUI();
         } catch (error) {
             console.error("Error:", error);
-            document.getElementById('shopHeader').innerHTML = `
-                <div class="text-center py-4">
-                    <i class="bi bi-exclamation-triangle text-danger fs-1"></i>
-                    <h4 class="text-danger mt-2">حدث خطأ أثناء تحميل المحل</h4>
-                </div>`;
+            const banner = document.getElementById('shopCoverBanner');
+            if(banner) {
+                banner.innerHTML = `
+                    <div class="shop-cover-banner" style="background-color: var(--color-espresso);">
+                        <div class="container py-5 text-center animate-up">
+                            <i class="bi bi-exclamation-triangle text-danger fs-1"></i>
+                            <h2 class="text-white mt-2">حدث خطأ أثناء تحميل بيانات المحل</h2>
+                        </div>
+                    </div>`;
+            }
         }
     } else {
-        document.getElementById('shopHeader').innerHTML = `
-            <div class="text-center py-4">
-                <i class="bi bi-question-circle text-mesa fs-1"></i>
-                <h4 class="text-mesa mt-2">محل غير معروف</h4>
-            </div>`;
+        const banner = document.getElementById('shopCoverBanner');
+        if(banner) {
+            banner.innerHTML = `
+                <div class="shop-cover-banner" style="background-color: var(--color-espresso);">
+                    <div class="container py-5 text-center animate-up">
+                        <i class="bi bi-question-circle text-mesa fs-1"></i>
+                        <h2 class="text-white mt-2">المحل ده مش معروف في قريتنا!</h2>
+                    </div>
+                </div>`;
+        }
     }
 }
 
 function renderShopHeader(shop) {
-    const header = document.getElementById('shopHeader');
-    if (!header) return;
+    const bannerContainer = document.getElementById('shopCoverBanner');
+    if (!bannerContainer) return;
+    
+    // Choose high quality background cover photo based on shop name/description
+    let coverPhoto = 'https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=1200';
+    const desc = (shop.description || '').toLowerCase();
+    const name = shop.name.toLowerCase();
+    
+    if (desc.includes('grocery') || name.includes('سوبر') || name.includes('بقالة') || name.includes('ماركت')) {
+        coverPhoto = 'https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=1200'; // groceries
+    } else if (desc.includes('bakery') || name.includes('مخبز') || name.includes('حلواني') || name.includes('فرن')) {
+        coverPhoto = 'https://images.unsplash.com/photo-1509440159596-0249088772ff?q=80&w=1200'; // bakery
+    } else if (desc.includes('butcher') || name.includes('لحم') || name.includes('جزار') || name.includes('لحوم')) {
+        coverPhoto = 'https://images.unsplash.com/photo-1603048588665-791ca8aea617?q=80&w=1200'; // meat
+    } else if (desc.includes('pharmacy') || name.includes('صيدلية') || name.includes('دوا')) {
+        coverPhoto = 'https://images.unsplash.com/photo-1586015555751-63bb77f4322a?q=80&w=1200'; // pharmacy
+    } else if (desc.includes('vegetable') || name.includes('خضار') || name.includes('فاكهة') || name.includes('سوق')) {
+        coverPhoto = 'https://images.unsplash.com/photo-1574316071802-0d684efa7bf5?q=80&w=1200'; // greens
+    } else if (shop.image) {
+        coverPhoto = shop.image;
+    }
 
-    header.innerHTML = `
-        <div class="d-flex align-items-center justify-content-center flex-column animate-up">
-            ${shop.image 
-                ? `<img src="${shop.image}" class="rounded-circle mb-3 shadow-lg" style="width:110px;height:110px;object-fit:cover;border:4px solid rgba(255,255,255,0.8);">` 
-                : `<div class="rounded-circle mb-3 d-flex align-items-center justify-content-center text-white fs-1 shadow-lg" style="width:110px;height:110px;background:linear-gradient(135deg, var(--color-terracotta), var(--color-mesa));border:4px solid rgba(255,255,255,0.8);">${shop.name.charAt(0)}</div>`
-            }
-            <h2 class="shop-detail-name">${shop.name}</h2>
-            <p class="text-mesa mb-2">${shop.description || ''}</p>
-            <div class="shop-meta">
-                <div class="shop-meta-item">
-                    <i class="bi bi-geo-alt-fill text-marigold"></i>
-                    <span>${shop.address || 'غير محدد'}</span>
-                </div>
-                <div class="shop-meta-item">
-                    <span class="badge ${shop.is_open ? 'status-open' : 'status-closed'} rounded-pill px-3 py-2">
-                        <i class="bi ${shop.is_open ? 'bi-check-circle' : 'bi-x-circle'} me-1"></i>
-                        ${shop.is_open ? 'مفتوح الآن' : 'مغلق'}
+    const rating = (4.4 + (shop.id % 6) * 0.1).toFixed(1);
+    const deliveryTime = (15 + (shop.id % 4) * 5) + '-' + (25 + (shop.id % 4) * 5) + ' دقيقة';
+    
+    let category = 'محل في قريتك';
+    if (desc.includes('grocery') || desc.includes('بقالة') || desc.includes('سوبر')) {
+        category = 'بقالة وسوبرماركت';
+    } else if (desc.includes('bakery') || desc.includes('مخبز') || desc.includes('عيش')) {
+        category = 'مخبز وحلويات دافية';
+    } else if (desc.includes('butcher') || desc.includes('لحم') || desc.includes('جزار')) {
+        category = 'جزارة ولحوم بلدي';
+    } else if (desc.includes('pharmacy') || desc.includes('صيدلية') || desc.includes('دوا')) {
+        category = 'صيدلية وخدمات طبية';
+    } else if (desc.includes('vegetable') || desc.includes('خضار') || desc.includes('فاكهة')) {
+        category = 'خضار وفاكهة طازة';
+    }
+
+    bannerContainer.innerHTML = `
+        <div class="shop-cover-banner" style="background-image: linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.75)), url('${coverPhoto}');">
+            <div class="container pb-4 w-100 animate-up">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb m-0 mb-3">
+                        <li class="breadcrumb-item"><a href="/html/shops/list.html" class="text-white-50 text-decoration-none fw-bold"><i class="bi bi-arrow-right-short"></i> الرجوع للمحلات</a></li>
+                    </ol>
+                </nav>
+                <h1 class="shop-cover-title text-white fw-bold mb-3">${shop.name}</h1>
+                <div class="shop-cover-badges">
+                    <span class="shop-cover-badge-item">
+                        <i class="bi bi-star-fill"></i>
+                        <span>${rating} (120+ تقييم)</span>
+                    </span>
+                    <span class="shop-cover-badge-item">
+                        <i class="bi bi-clock-fill"></i>
+                        <span>${deliveryTime} دليفري</span>
+                    </span>
+                    <span class="shop-cover-badge-item">
+                        <i class="bi bi-tag-fill"></i>
+                        <span>${category}</span>
+                    </span>
+                    <span class="shop-cover-badge-item">
+                        <i class="bi ${shop.is_open ? 'bi-check-circle-fill text-success' : 'bi-x-circle-fill text-danger'}"></i>
+                        <span class="${shop.is_open ? 'text-success' : 'text-danger'}">${shop.is_open ? 'مفتوح دلوقتي' : 'مقفول دلوقتي'}</span>
                     </span>
                 </div>
             </div>
@@ -250,31 +306,34 @@ function renderShopProducts(products) {
     
     if (products.length === 0) {
         container.innerHTML = `
-            <div class="empty-state w-100 animate-up">
-                <div class="empty-state-icon"><i class="bi bi-box-seam"></i></div>
-                <p class="fw-bold">لا توجد منتجات متوفرة حالياً</p>
+            <div class="col-12 text-center text-mesa py-5 animate-up">
+                <i class="bi bi-box-seam fs-1 text-mesa-light mb-3 d-block" style="opacity: 0.5;"></i>
+                <p class="fw-bold mb-0 fs-5">المحل لسه ماضافش منتجات!</p>
+                <p class="small text-muted">تابعنا قريب، هننزل كل المنتجات المتاحة هنا</p>
             </div>`;
         return;
     }
 
     products.forEach((product, i) => {
         const html = `
-            <div class="col-lg-3 col-md-4 col-sm-6 animate-up" style="animation-delay: ${i * 0.06}s;">
+            <div class="col-lg-4 col-md-6 animate-up" style="animation-delay: ${i * 0.05}s;">
                 <div class="product-card h-100">
                     ${product.image 
                         ? `<img src="${product.image}" class="product-img">` 
                         : `<div class="product-img-placeholder"><i class="bi bi-image"></i></div>`
                     }
-                    <div class="card-body p-3">
-                        <p class="product-name">${product.name}</p>
-                        <p class="text-mesa small mb-2" style="min-height: 2rem;">${product.description || ''}</p>
-                        <div class="d-flex justify-content-between align-items-center">
+                    <div class="card-body p-3 d-flex flex-column justify-content-between flex-grow-1">
+                        <div>
+                            <p class="product-name mb-1">${product.name}</p>
+                            <p class="text-mesa small mb-3" style="min-height: 2rem; font-size: 0.85rem;">${product.description || 'من منتجات بركة الطازة والجميلة.'}</p>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-auto">
                             <span class="product-price">${product.price} ج.م</span>
                             ${product.available 
-                                ? `<button onclick="addToCart(${product.id}, '${product.name}', ${product.price}, '${product.image || ''}')" class="btn btn-marigold btn-sm rounded-pill px-3 fw-bold">
-                                       <i class="bi bi-cart-plus me-1"></i>أضف
+                                ? `<button onclick="addToCart(${product.id}, '${product.name}', ${product.price}, '${product.image || ''}')" class="btn-add-circle" title="أضف للسلة">
+                                       <i class="bi bi-plus-lg"></i>
                                    </button>`
-                                : `<span class="badge bg-danger rounded-pill small">غير متوفر</span>`
+                                : `<span class="badge bg-danger rounded-pill small">خلصان</span>`
                             }
                         </div>
                     </div>

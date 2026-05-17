@@ -88,6 +88,23 @@ const api = {
             });
             if (!res.ok) throw await res.json();
             return await res.json();
+        },
+        updateProduct: async (token, prodId, formData) => {
+            const res = await fetch(`${API_BASE}/products/${prodId}/`, {
+                method: 'PATCH',
+                headers: { 'Authorization': `Bearer ${token}` },
+                body: formData
+            });
+            if (!res.ok) throw await res.json();
+            return await res.json();
+        },
+        deleteProduct: async (token, prodId) => {
+            const res = await fetch(`${API_BASE}/products/${prodId}/`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!res.ok) throw await res.json();
+            return true;
         }
     }
 };

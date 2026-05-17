@@ -118,6 +118,18 @@ if not os.environ.get('REDIS_URL'):
         }
     }
 
+# Celery High-Performance Broker Configurations
+CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'redis://127.0.0.1:6379/1')
+CELERY_RESULT_BACKEND = os.environ.get('CELERY_RESULT_BACKEND', 'redis://127.0.0.1:6379/1')
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'UTC'
+
+# Eager execution fallback in local development if Redis is not configured
+if not os.environ.get('REDIS_URL') and not os.environ.get('CELERY_BROKER_URL'):
+    CELERY_TASK_ALWAYS_EAGER = True
+
 
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators

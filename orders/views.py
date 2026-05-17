@@ -78,6 +78,10 @@ class OrderViewSet(viewsets.ModelViewSet):
                 price=price
             )
             
+        # High-Performance Asynchronous Dispatch: Alert nearby drivers in the background
+        from .tasks import send_order_notifications_to_drivers
+        send_order_notifications_to_drivers.delay(order.id)
+            
         serializer = self.get_serializer(order)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 

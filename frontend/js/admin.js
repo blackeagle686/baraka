@@ -221,13 +221,16 @@ function debounceOrderSearch() {
     orderSearchTimer = setTimeout(() => loadOrders(1), 400);
 }
 
+let currentOrders = [];
+
 async function loadOrders(page = 1) {
     const search = document.getElementById('orderSearch').value;
     const statusFilter = document.getElementById('orderStatusFilter').value;
 
     try {
         const data = await api.admin.getOrders(TOKEN, page, search, statusFilter);
-        renderOrdersTable(data.results || []);
+        currentOrders = data.results || [];
+        renderOrdersTable(currentOrders);
         renderPagination('ordersPagination', data, loadOrders);
     } catch (err) {
         console.error('Failed to load orders:', err);
@@ -245,7 +248,7 @@ function getOrderStatusBadge(status) {
 function renderOrdersTable(orders) {
     const tbody = document.getElementById('ordersTableBody');
     if (!orders.length) {
-        tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state"><i class="bi bi-receipt"></i>لا يوجد طلبات مطابقة</div></td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state"><i class="bi bi-receipt"></i>لا يوجد طلبات مطابقة</div></td></tr>`;
         return;
     }
 
@@ -264,9 +267,71 @@ function renderOrdersTable(orders) {
                 <td>${parseFloat(o.total_price).toFixed(2)} ج.م</td>
                 <td>${getOrderStatusBadge(o.status)}</td>
                 <td>${date}</td>
+                <td>
+                    <button class="btn-action unblock" onclick="viewOrderDetails(${o.id})"><i class="bi bi-info-circle"></i> تفاصيل</button>
+                </td>
             </tr>
         `;
     }).join('');
+}
+
+function viewOrderDetails(orderId) {
+    const order = currentOrders.find(o => o.id === orderId);
+    if (!order) return;
+
+    const modalBody = document.getElementById('orderModalBody');
+    
+    // Build Items HTML
+    let itemsHtml = order.items.map(item => `
+        <div class="d-flex justify-content-between border-bottom border-secondary py-2">
+            <div>
+                <strong>${item.product_details?.name || 'منتج'}</strong>
+                <div class="text-muted small">الكمية: ${item.quantity}</div>
+            </div>
+            <div class="fw-bold">${parseFloat(item.price).toFixed(2)} ج.م</div>
+        </div>
+    `).join('');
+
+    modalBody.innerHTML = `
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div class="p-3 rounded" style="background: rgba(255,255,255,0.05);">
+                    <h6 class="text-marigold mb-3"><i class="bi bi-person"></i> بيانات العميل</h6>
+                    <p class="mb-1"><strong>الاسم:</strong> ${order.customer_details?.name || '—'}</p>
+                    <p class="mb-1"><strong>الهاتف:</strong> <span dir="ltr">${order.customer_details?.phone}</span></p>
+                    <p class="mb-1"><strong>العنوان:</strong> ${order.delivery_location}</p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="p-3 rounded" style="background: rgba(255,255,255,0.05);">
+                    <h6 class="text-marigold mb-3"><i class="bi bi-shop"></i> المحل والطيار</h6>
+                    <p class="mb-1"><strong>المحل:</strong> ${order.shop_details?.name || '—'}</p>
+                    <p class="mb-1"><strong>هاتف المحل:</strong> <span dir="ltr">${order.shop_details?.phone || '—'}</span></p>
+                    <p class="mb-1"><strong>الطيار:</strong> ${order.driver_details?.name || 'لم يُعيّن'}</p>
+                    <p class="mb-1"><strong>هاتف الطيار:</strong> <span dir="ltr">${order.driver_details?.phone || '—'}</span></p>
+                </div>
+            </div>
+            
+            <div class="col-12 mt-4">
+                <h6 class="text-marigold mb-3"><i class="bi bi-box"></i> محتويات الطلب</h6>
+                ${itemsHtml}
+                <div class="d-flex justify-content-between mt-3 pt-3 border-top border-secondary">
+                    <h5 class="mb-0">الإجمالي:</h5>
+                    <h5 class="text-success mb-0">${parseFloat(order.total_price).toFixed(2)} ج.م</h5>
+                </div>
+            </div>
+
+            ${order.dispute_status !== 'NONE' ? `
+            <div class="col-12 mt-3">
+                <div class="alert alert-warning mb-0 py-2">
+                    <strong>تنبيه مشكلة:</strong> ${order.dispute_reason || '—'}
+                </div>
+            </div>` : ''}
+        </div>
+    `;
+
+    const modal = new bootstrap.Modal(document.getElementById('orderDetailsModal'));
+    modal.show();
 }
 
 // ==========================================

@@ -83,6 +83,39 @@ function renderHeader() {
     `;
 }
 
+function renderFooter() {
+    const footerPlaceholder = document.getElementById('footer-placeholder');
+    if (!footerPlaceholder) return;
+
+    footerPlaceholder.innerHTML = `
+    <footer class="py-4 mt-5 border-top" style="background-color: var(--color-dune-light); border-color: rgba(201, 153, 151, 0.15) !important; direction: rtl;">
+        <div class="container">
+            <div class="row g-4 align-items-center">
+                <!-- Branding and info -->
+                <div class="col-md-6 text-center text-md-start">
+                    <h5 class="fw-bold text-espresso d-flex align-items-center gap-2 justify-content-center justify-content-md-start mb-2">
+                        <i class="bi bi-shop text-success fs-4"></i>
+                        <span>سوق بركة الموحد</span>
+                    </h5>
+                    <p class="text-mesa small mb-0">منصة رقمية متكاملة لربط محلات القرية، المشتريين، والطيارين لدعم الاقتصاد المحلي وتسهيل حياة أهالينا.</p>
+                </div>
+                <!-- Navigation links and credits -->
+                <div class="col-md-6 text-center text-md-end">
+                    <div class="d-flex flex-wrap gap-3 justify-content-center justify-content-md-end mb-2">
+                        <a href="/html/index.html" class="text-espresso text-decoration-none small fw-bold" style="transition: var(--transition-base);">الرئيسية</a>
+                        <a href="/html/shops/list.html" class="text-espresso text-decoration-none small fw-bold" style="transition: var(--transition-base);">لف في المحلات</a>
+                        <a href="/html/cart.html" class="text-espresso text-decoration-none small fw-bold" style="transition: var(--transition-base);">سلة الطلبات</a>
+                    </div>
+                    <p class="text-muted small mb-0" style="font-size: 0.8rem;">
+                        صُنع بكل حب لدعم القرية المصرية 🌾 <span class="text-marigold font-monospace">© ٢٠٢٦ منصة بركة</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </footer>
+    `;
+}
+
 function checkAuth() {
     // Auth elements are now rendered dynamically inside renderHeader() for a premium, single-source header flow.
     // Expose cart sync utility

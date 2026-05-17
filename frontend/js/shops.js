@@ -193,6 +193,7 @@ async function initShopDetails() {
     if(shopId) {
         try {
             const shop = await api.shops.getById(shopId);
+            localStorage.setItem('current_shop_name', shop.name);
             renderShopHeader(shop);
             
             const products = await api.shops.getProducts(shopId);

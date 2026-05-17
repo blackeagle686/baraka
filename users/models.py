@@ -36,6 +36,7 @@ class User(AbstractUser):
         choices=UserRole.choices,
         default=UserRole.CUSTOMER
     )
+    is_approved = models.BooleanField(default=True)
 
     USERNAME_FIELD = 'phone'
     REQUIRED_FIELDS = []

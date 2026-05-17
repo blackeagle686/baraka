@@ -44,7 +44,7 @@ class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsApprovedOrReadOnly, IsOwnerOrReadOnly]
 
     def create(self, request, *args, **kwargs):
         if request.user.role != 'SHOP_OWNER' and not request.user.is_staff:

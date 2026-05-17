@@ -21,6 +21,26 @@ class OrderSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'customer', 'customer_details', 'shop', 'shop_details',
             'driver', 'driver_details', 'total_price', 'delivery_price', 'status', 'address',
-            'is_paid_to_shop', 'items', 'created_at', 'updated_at'
+            'is_paid_to_shop', 'customer_otp', 'driver_otp', 'dispute_status', 
+            'dispute_reason', 'disputed_by', 'items', 'created_at', 'updated_at'
         ]
-        read_only_fields = ['customer', 'driver', 'total_price', 'status']
+        read_only_fields = ['customer', 'driver', 'total_price', 'status', 'customer_otp', 'driver_otp']
+
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        request = self.context.get('request')
+        
+        # Safe pop by default so no third party gets these private trust tokens
+        ret.pop('customer_otp', None)
+        ret.pop('driver_otp', None)
+        
+        if request and request.user.is_authenticated:
+            # Only the actual customer of this order can see the delivery verification OTP
+            if instance.customer == request.user or request.user.is_staff:
+                ret['customer_otp'] = instance.customer_otp
+                
+            # Only the actual driver of this order can see the settlement verification OTP
+            if instance.driver == request.user or request.user.is_staff:
+                ret['driver_otp'] = instance.driver_otp
+                
+        return ret

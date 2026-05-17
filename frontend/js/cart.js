@@ -66,9 +66,7 @@ function loadLocalCart() {
 function renderActiveCart() {
     const listContainer = document.getElementById('activeCartItemsList');
     const tabBadge = document.getElementById('cartTabBadge');
-    
-    const subtotalEl = document.getElementById('cartSubtotal');
-    const totalSumEl = document.getElementById('cartTotalSum');
+    const breakdownEl = document.getElementById('cartCheckoutBreakdown');
     
     if (!listContainer) return;
     
@@ -94,8 +92,15 @@ function renderActiveCart() {
                 </a>
             </div>
         `;
-        if (subtotalEl) subtotalEl.innerText = '0.00 ج.م';
-        if (totalSumEl) totalSumEl.innerText = '0.00 ج.م';
+        if (breakdownEl) {
+            breakdownEl.innerHTML = `
+                <div class="checkout-sidebar-summary" style="border-top: none; padding-top: 0;">
+                    <div class="text-center text-mesa py-3 fw-bold">
+                        <i class="bi bi-basket me-1"></i>السلة فارغة حالياً
+                    </div>
+                </div>
+            `;
+        }
         return;
     }
     
@@ -200,8 +205,50 @@ function renderActiveCart() {
     
     const globalTotal = globalSubtotal + globalDeliveryTotal;
     
-    if (subtotalEl) subtotalEl.innerText = `${globalSubtotal.toFixed(2)} ج.م`;
-    if (totalSumEl) totalSumEl.innerText = `${globalTotal.toFixed(2)} ج.م`;
+    if (breakdownEl) {
+        const shopIds = Object.keys(grouped);
+        let ordersBreakdownHtml = '';
+        Object.values(grouped).forEach(group => {
+            const deliveryFee = 15;
+            const groupTotal = group.subtotal + deliveryFee;
+            ordersBreakdownHtml += `
+                <div class="d-flex justify-content-between align-items-center mb-2 p-2 rounded-3" style="background: rgba(229, 218, 206, 0.2); border-right: 3px solid var(--color-marigold);">
+                    <span class="small fw-semibold text-espresso">طلب من: <strong>${group.shopName}</strong></span>
+                    <span class="small fw-bold text-marigold">${groupTotal.toFixed(2)} ج.م <small class="text-muted fw-normal" style="font-size: 0.7rem;">شامل</small></span>
+                </div>
+            `;
+        });
+
+        breakdownEl.innerHTML = `
+            <div class="checkout-sidebar-summary animate-up" style="border-top: none; padding-top: 0;">
+                <!-- Number of orders -->
+                <div class="checkout-sidebar-summary-row fw-bold text-espresso mb-3 border-bottom pb-2">
+                    <span class="d-flex align-items-center gap-1"><i class="bi bi-bag-check-fill text-marigold"></i> عدد الطلبات المفرعة:</span>
+                    <span class="badge bg-marigold text-white rounded-pill px-3 py-1.5 fs-6">${shopIds.length} طلبات</span>
+                </div>
+                
+                <!-- Breakdown list for each order -->
+                <div class="mb-3">
+                    <span class="text-mesa small fw-bold d-block mb-2">تفصيل حساب كل طلب (شامل الدليفري):</span>
+                    ${ordersBreakdownHtml}
+                </div>
+                
+                <!-- Grand totals -->
+                <div class="checkout-sidebar-summary-row text-mesa small pt-2 border-top">
+                    <span>إجمالي كل المنتجات</span>
+                    <span>${globalSubtotal.toFixed(2)} ج.م</span>
+                </div>
+                <div class="checkout-sidebar-summary-row text-mesa small">
+                    <span>إجمالي خدمة التوصيل (${shopIds.length} مشاوير)</span>
+                    <span>${globalDeliveryTotal.toFixed(2)} ج.م</span>
+                </div>
+                <div class="checkout-sidebar-summary-total fs-4 mt-2 pt-2 border-top">
+                    <span>المجموع الكلي النهائي</span>
+                    <span class="text-marigold font-monospace">${globalTotal.toFixed(2)} ج.م</span>
+                </div>
+            </div>
+        `;
+    }
 }
 
 window.changeCartItemQty = function(productId, delta) {

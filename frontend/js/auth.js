@@ -12,6 +12,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 const data = await api.auth.login(phone, password);
                 localStorage.setItem('access_token', data.access);
                 localStorage.setItem('refresh_token', data.refresh);
+                
+                // Fetch user profile to get the role
+                const profile = await api.auth.getProfile(data.access);
+                localStorage.setItem('user_role', profile.role);
+                
                 window.location.href = '/html/index.html';
             } catch (error) {
                 document.getElementById('errorMsg').classList.remove('d-none');

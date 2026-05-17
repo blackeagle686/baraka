@@ -3,245 +3,133 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>حسابي - منصة بركة</title>
+    <title>الملف الشخصي - منصة بركة</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/main_style.css">
     <link rel="stylesheet" href="/css/profile.css">
+    <style>
+        .profile-header-banner {
+            background: linear-gradient(135deg, var(--color-espresso) 0%, var(--color-mesa) 100%);
+            padding: 6.5rem 0 3rem;
+            color: white;
+            border-bottom: 1px solid rgba(201, 153, 151, 0.15);
+            text-align: center;
+        }
+        .profile-card-container {
+            margin-top: -2.5rem;
+            position: relative;
+            z-index: 10;
+        }
+        .profile-main-card {
+            background: white;
+            border: 1px solid rgba(201, 153, 151, 0.12);
+            border-radius: 24px;
+            padding: 2.5rem;
+            box-shadow: var(--shadow-lg);
+        }
+    </style>
 </head>
 <body class="bg-dune">
     <!-- Header Placeholder -->
     <div id="header-placeholder"></div>
 
-    <!-- Modern Dashboard Layout -->
-    <div class="dash-layout">
-        <!-- Sidebar -->
-        <aside class="dash-sidebar">
-            <div class="dash-sidebar-brand">
-                <div class="dash-sidebar-brand-icon">
-                    <i class="bi bi-person-heart text-white"></i>
-                </div>
-                <div class="dash-sidebar-brand-text">
-                    <span id="sidebarUserName">جاري التحميل...</span>
-                    <small>حساب عميل</small>
-                </div>
-            </div>
+    <!-- Profile Cover Banner -->
+    <section class="profile-header-banner">
+        <div class="container animate-up">
+            <h1 class="fw-bold mb-2">👤 ملفك الشخصي</h1>
+            <p class="mb-0 opacity-75 fs-5">تعديل بيانات حسابك ومعلومات التوصيل لخدمة دليفري أسرع</p>
+        </div>
+    </section>
 
-            <ul class="dash-nav">
-                <li class="dash-nav-label">لوحة التحكم</li>
-                <li class="dash-nav-item">
-                    <button class="dash-nav-link active" onclick="switchTab('orders')">
-                        <i class="bi bi-bag-check-fill"></i>
-                        <span>طلباتي</span>
-                        <span class="nav-badge bg-marigold" id="sidebarOrdersBadge">0</span>
-                    </button>
-                </li>
-                <li class="dash-nav-item">
-                    <button class="dash-nav-link" onclick="switchTab('settings')">
-                        <i class="bi bi-gear-fill"></i>
-                        <span>إعدادات الحساب</span>
-                    </button>
-                </li>
-            </ul>
-        </aside>
+    <!-- Main Form Container -->
+    <section class="profile-card-container pb-5">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-7 col-md-9 col-sm-12">
+                    <div class="profile-main-card animate-up">
+                        <form id="profileForm" enctype="multipart/form-data">
+                            <!-- User Avatar Section -->
+                            <div class="text-center mb-4">
+                                <div class="d-inline-block position-relative">
+                                    <div id="profileImagePreview" class="profile-avatar mx-auto" style="width: 130px; height: 130px; border-radius: 50%; overflow: hidden; background: var(--color-espresso); display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-md);">
+                                        <span class="text-white fs-1 fw-bold" id="profileInitials">?</span>
+                                    </div>
+                                    <label for="image" class="upload-btn position-absolute bottom-0 start-0" style="background: var(--color-marigold); color: white; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 3px solid white; cursor: pointer; box-shadow: var(--shadow-sm); transition: var(--transition-base);">
+                                        <i class="bi bi-camera-fill" style="font-size: 0.95rem;"></i>
+                                    </label>
+                                    <input type="file" id="image" accept="image/*" class="d-none">
+                                </div>
+                                <div class="mt-2 text-mesa small fw-bold">اضغط على الكاميرا لتغيير صورتك الشخصية</div>
+                            </div>
 
-        <!-- Main Workspace -->
-        <main class="dash-main">
+                            <!-- Full Name Input -->
+                            <div class="mb-4">
+                                <label class="form-label text-espresso fw-bold" style="font-size: 1.05rem;">
+                                    <i class="bi bi-person-fill text-marigold me-1"></i>الاسم بالكامل
+                                </label>
+                                <input type="text" class="form-control rounded-pill px-4 py-3" id="name" required style="font-size: 1.1rem; border: 1.5px solid rgba(201,153,151,0.2);">
+                            </div>
 
-            <!-- ===== Orders Panel (Default Active) ===== -->
-            <div class="dash-panel active" id="ordersPanel">
-                <div class="dash-page-title">📦 طلباتي الأخيرة</div>
-                <div class="dash-page-subtitle">تابع حالة طلباتك خطوة بخطوة بشكل مباشر وسهل</div>
+                            <!-- Phone Number Input -->
+                            <div class="mb-4">
+                                <label class="form-label text-espresso fw-bold" style="font-size: 1.05rem;">
+                                    <i class="bi bi-telephone-fill text-marigold me-1"></i>رقم الهاتف المحمول
+                                </label>
+                                <input type="text" class="form-control rounded-pill px-4 py-3" id="phone" required style="font-size: 1.1rem; border: 1.5px solid rgba(201,153,151,0.2);">
+                            </div>
 
-                <!-- Summary Stat Cards -->
-                <div class="row g-3 mb-4 animate-up">
-                    <div class="col-6 col-md-3">
-                        <div class="stat-card">
-                            <div class="stat-icon stat-marigold">
-                                <i class="bi bi-bag"></i>
+                            <!-- Location/Address Input -->
+                            <div class="mb-4">
+                                <label class="form-label text-espresso fw-bold" style="font-size: 1.05rem;">
+                                    <i class="bi bi-geo-alt-fill text-marigold me-1"></i>عنوان التوصيل بالتفصيل في قريتنا
+                                </label>
+                                <input type="text" class="form-control rounded-pill px-4 py-3" id="location" placeholder="مثال: بحري البلد، بجوار المسجد الكبير، بيت أبو أحمد" style="font-size: 1.1rem; border: 1.5px solid rgba(201,153,151,0.2);">
                             </div>
-                            <div>
-                                <div class="stat-value" id="statTotalOrders">0</div>
-                                <div class="stat-label">إجمالي الطلبات</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-6 col-md-3">
-                        <div class="stat-card">
-                            <div class="stat-icon stat-green">
-                                <i class="bi bi-check-circle"></i>
-                            </div>
-                            <div>
-                                <div class="stat-value" id="statDelivered">0</div>
-                                <div class="stat-label">تم توصيلها ✅</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-6 col-md-3">
-                        <div class="stat-card">
-                            <div class="stat-icon" style="background: linear-gradient(135deg, rgba(59,130,246,0.15), rgba(59,130,246,0.05)); color: #3b82f6;">
-                                <i class="bi bi-truck"></i>
-                            </div>
-                            <div>
-                                <div class="stat-value" id="statActive">0</div>
-                                <div class="stat-label">قيد التوصيل 🚚</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-6 col-md-3">
-                        <div class="stat-card">
-                            <div class="stat-icon stat-mesa">
-                                <i class="bi bi-clock-history"></i>
-                            </div>
-                            <div>
-                                <div class="stat-value" id="statPending">0</div>
-                                <div class="stat-label">بانتظار الموافقة ⏳</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
 
-                <!-- Filter Tabs -->
-                <div class="d-flex gap-2 mb-4 flex-wrap animate-up" id="orderFilterTabs">
-                    <button class="btn btn-sm rounded-pill fw-bold px-3 py-2 active" data-filter="all" onclick="filterOrders('all', this)" style="font-size: 0.95rem;">
-                        <i class="bi bi-grid me-1"></i>الكل
-                    </button>
-                    <button class="btn btn-sm rounded-pill fw-bold px-3 py-2" data-filter="active" onclick="filterOrders('active', this)" style="font-size: 0.95rem;">
-                        <i class="bi bi-lightning me-1"></i>النشطة
-                    </button>
-                    <button class="btn btn-sm rounded-pill fw-bold px-3 py-2" data-filter="delivered" onclick="filterOrders('delivered', this)" style="font-size: 0.95rem;">
-                        <i class="bi bi-check2-all me-1"></i>المكتملة
-                    </button>
-                    <button class="btn btn-sm rounded-pill fw-bold px-3 py-2" data-filter="cancelled" onclick="filterOrders('cancelled', this)" style="font-size: 0.95rem;">
-                        <i class="bi bi-x-circle me-1"></i>الملغية
-                    </button>
-                </div>
+                            <!-- Coordinates (Lat / Lon) Row -->
+                            <div class="row">
+                                <div class="col-6 mb-4">
+                                    <label class="form-label text-espresso fw-bold small">
+                                        <i class="bi bi-compass text-marigold me-1"></i>خط العرض (Latitude)
+                                    </label>
+                                    <input type="number" step="0.000001" class="form-control rounded-pill px-3 py-2" id="latitude" style="border: 1.5px solid rgba(201,153,151,0.15);">
+                                </div>
+                                <div class="col-6 mb-4">
+                                    <label class="form-label text-espresso fw-bold small">
+                                        <i class="bi bi-compass-fill text-marigold me-1"></i>خط الطول (Longitude)
+                                    </label>
+                                    <input type="number" step="0.000001" class="form-control rounded-pill px-3 py-2" id="longitude" style="border: 1.5px solid rgba(201,153,151,0.15);">
+                                </div>
+                            </div>
 
-                <!-- Refresh Button & Auto-refresh Indicator -->
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <div class="d-flex align-items-center text-mesa small fw-bold" id="autoRefreshIndicator">
-                        <div class="live-dot me-2"></div>
-                        تحديث تلقائي خلال <span id="refreshCountdown" class="ms-1 text-marigold">30</span>ث
-                    </div>
-                    <button class="btn btn-outline-mesa rounded-pill btn-sm fw-bold px-3" onclick="manualRefresh()" style="font-size: 0.92rem;">
-                        <i class="bi bi-arrow-clockwise me-1" id="refreshIcon"></i>تحديث الآن
-                    </button>
-                </div>
+                            <!-- Account Role -->
+                            <div class="mb-4">
+                                <label class="form-label text-espresso fw-bold" style="font-size: 1.05rem;">
+                                    <i class="bi bi-person-badge-fill text-marigold me-1"></i>نوع الحساب
+                                </label>
+                                <input type="text" class="form-control rounded-pill px-4 py-3 text-muted bg-light" id="role" disabled style="font-size: 1.1rem; border: 1.5px solid rgba(201,153,151,0.15);">
+                            </div>
 
-                <!-- Orders List Container -->
-                <div id="customerOrdersList">
-                    <div class="text-center text-mesa py-5">
-                        <div class="spinner-border text-marigold mb-3" role="status"></div>
-                        <p class="fw-bold" style="font-size: 1.1rem;">جاري تحميل طلباتك...</p>
+                            <!-- Save Button & Status Message -->
+                            <button type="submit" class="btn btn-primary rounded-pill w-100 py-3 fw-bold mb-2" id="saveBtn" style="font-size: 1.15rem;">
+                                <i class="bi bi-check2-circle me-1"></i>حفظ تعديلات حسابي
+                            </button>
+                            <div id="statusMsg" class="text-center fw-bold d-none mt-2" style="font-size: 1rem;"></div>
+                        </form>
                     </div>
                 </div>
             </div>
-
-            <!-- ===== Settings Panel ===== -->
-            <div class="dash-panel" id="settingsPanel">
-                <div class="dash-page-title">⚙️ إعدادات الحساب</div>
-                <div class="dash-page-subtitle">عدّل بياناتك الشخصية ومعلومات التوصيل</div>
-
-                <div class="row justify-content-center">
-                    <div class="col-lg-7 col-md-9">
-                        <div class="dashboard-card animate-up">
-                            <form id="profileForm" enctype="multipart/form-data">
-                                <!-- Avatar -->
-                                <div class="text-center mb-4">
-                                    <div class="d-inline-block position-relative">
-                                        <div id="profileImagePreview" class="profile-avatar mx-auto" style="width: 120px; height: 120px;">
-                                            <span class="text-white fs-1" id="profileInitials">?</span>
-                                        </div>
-                                        <label for="image" class="upload-btn position-absolute bottom-0 start-0">
-                                            <i class="bi bi-camera-fill" style="font-size: 0.85rem;"></i>
-                                        </label>
-                                        <input type="file" id="image" accept="image/*" class="d-none">
-                                    </div>
-                                    <div class="mt-2 text-mesa small fw-bold">اضغط على الكاميرا لتغيير الصورة</div>
-                                </div>
-
-                                <!-- Fields (larger for older users) -->
-                                <div class="mb-4">
-                                    <label class="form-label text-espresso fw-bold" style="font-size: 1.05rem;">
-                                        <i class="bi bi-person-fill me-1"></i>الاسم بالكامل
-                                    </label>
-                                    <input type="text" class="form-control rounded-pill px-4 py-3" id="name" required style="font-size: 1.1rem;">
-                                </div>
-                                <div class="mb-4">
-                                    <label class="form-label text-espresso fw-bold" style="font-size: 1.05rem;">
-                                        <i class="bi bi-telephone-fill me-1"></i>رقم الهاتف
-                                    </label>
-                                    <input type="text" class="form-control rounded-pill px-4 py-3" id="phone" required style="font-size: 1.1rem;">
-                                </div>
-                                <div class="mb-4">
-                                    <label class="form-label text-espresso fw-bold" style="font-size: 1.05rem;">
-                                        <i class="bi bi-geo-alt-fill me-1"></i>عنوان التوصيل
-                                    </label>
-                                    <input type="text" class="form-control rounded-pill px-4 py-3" id="location" placeholder="مثال: شارع السلام، بجوار المسجد الكبير" style="font-size: 1.1rem;">
-                                </div>
-                                <div class="row">
-                                    <div class="col-6 mb-4">
-                                        <label class="form-label text-espresso fw-bold small">
-                                            <i class="bi bi-compass me-1"></i>خط العرض
-                                        </label>
-                                        <input type="number" step="0.000001" class="form-control rounded-pill px-3 py-2" id="latitude">
-                                    </div>
-                                    <div class="col-6 mb-4">
-                                        <label class="form-label text-espresso fw-bold small">
-                                            <i class="bi bi-compass-fill me-1"></i>خط الطول
-                                        </label>
-                                        <input type="number" step="0.000001" class="form-control rounded-pill px-3 py-2" id="longitude">
-                                    </div>
-                                </div>
-                                <div class="mb-4">
-                                    <label class="form-label text-espresso fw-bold" style="font-size: 1.05rem;">
-                                        <i class="bi bi-person-badge-fill me-1"></i>نوع الحساب
-                                    </label>
-                                    <input type="text" class="form-control rounded-pill px-4 py-3 text-muted" id="role" disabled style="font-size: 1.1rem;">
-                                </div>
-
-                                <button type="submit" class="btn btn-primary rounded-pill w-100 py-3 fw-bold mb-2" id="saveBtn" style="font-size: 1.15rem;">
-                                    <i class="bi bi-check2-circle me-1"></i>حفظ التعديلات
-                                </button>
-                                <div id="statusMsg" class="text-center fw-bold d-none mt-2" style="font-size: 1rem;"></div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </main>
-    </div>
+        </div>
+    </section>
 
     <!-- Footer Placeholder -->
     <div id="footer-placeholder"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     <script src="/js/api.js"></script>
     <script src="/js/main.js"></script>
     <script src="/js/profile.js"></script>
-
-    <!-- Tab Switching -->
-    <script>
-        window.switchTab = function(tabId) {
-            document.querySelectorAll('.dash-panel').forEach(panel => {
-                panel.classList.remove('active');
-            });
-            const targetPanel = document.getElementById(tabId + 'Panel');
-            if (targetPanel) {
-                targetPanel.classList.add('active');
-            }
-
-            document.querySelectorAll('.dash-nav-link').forEach(link => {
-                link.classList.remove('active');
-            });
-            const clickedLink = document.querySelector(`[onclick="switchTab('${tabId}')"]`);
-            if (clickedLink) {
-                clickedLink.classList.add('active');
-            }
-        }
-    </script>
 </body>
 </html>

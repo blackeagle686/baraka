@@ -259,6 +259,9 @@ function renderAvailableOrders(orders) {
             hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short'
         });
 
+        // Calculate max allowed delivery fee: minimum 15, max 2% of total order price
+        const maxAllowedPrice = Math.max(15.00, parseFloat(order.total_price) * 0.02).toFixed(2);
+
         // Items summary list
         const itemsList = order.items.map(it => `
             <div class="d-flex justify-content-between text-muted small py-1">
@@ -292,7 +295,10 @@ function renderAvailableOrders(orders) {
                     <!-- Custom Delivery Price input section -->
                     <div class="mb-3">
                         <label class="form-label text-espresso small fw-bold mb-1"><i class="bi bi-cash-stack me-1 text-marigold"></i>سعر التوصيل الذي تطلبه (ج.م):</label>
-                        <input type="number" class="form-control rounded-pill px-3 py-1" id="deliveryPriceInput-${order.id}" value="15" min="5" step="1">
+                        <input type="number" class="form-control rounded-pill px-3 py-1 mb-1" id="deliveryPriceInput-${order.id}" value="15" min="15" max="${maxAllowedPrice}" step="1">
+                        <span class="d-block text-muted px-2" style="font-size: 0.72rem; line-height: 1.2;">
+                            <i class="bi bi-info-circle me-1 text-marigold"></i>الحد الأدنى: <strong>15 ج.م</strong> | الحد الأقصى (2%): <strong>${maxAllowedPrice} ج.م</strong>
+                        </span>
                     </div>
 
                     <button class="btn btn-primary rounded-pill w-100 py-2 fw-bold mt-auto" onclick="acceptDeliveryTrip(${order.id})">

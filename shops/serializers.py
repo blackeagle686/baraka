@@ -16,6 +16,7 @@ class ProductSerializer(serializers.ModelSerializer):
 
 class ShopSerializer(serializers.ModelSerializer):
     products = ProductSerializer(many=True, read_only=True)
+    owner_phone = serializers.ReadOnlyField(source='owner.phone')
 
     class Meta:
         model = Shop

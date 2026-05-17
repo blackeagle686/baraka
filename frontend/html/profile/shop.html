@@ -4,9 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>إدارة محلي - منصة بركة</title>
+    <!-- Bootstrap 5 RTL -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
     <link rel="stylesheet" href="/css/main_style.css">
     <link rel="stylesheet" href="/css/profile.css">
 </head>
@@ -28,74 +34,169 @@
         </div>
     </nav>
 
-    <!-- Header -->
-    <section class="profile-header">
-        <div class="container">
-            <div class="text-center animate-up">
-                <h3 class="fw-bold text-espresso"><i class="bi bi-shop-window me-2"></i>لوحة تحكم المحل</h3>
+    <!-- Modern Dashboard Layout -->
+    <div class="dash-layout">
+        <!-- Sidebar -->
+        <aside class="dash-sidebar">
+            <div class="dash-sidebar-brand">
+                <div class="dash-sidebar-brand-icon">
+                    <i class="bi bi-shop-window"></i>
+                </div>
+                <div class="dash-sidebar-brand-text">
+                    <span id="sidebarShopName">جاري التحميل...</span>
+                    <small>صاحب محل</small>
+                </div>
             </div>
-        </div>
-    </section>
 
-    <!-- Dashboard -->
-    <section class="py-4">
-        <div class="container">
-            <div class="row justify-content-center">
-                <!-- Shop Settings Card -->
-                <div class="col-lg-10 mb-4">
-                    <div class="dashboard-card animate-up">
-                        <div class="dashboard-section-title d-flex justify-content-between align-items-center">
-                            <span id="shopTitle"><i class="bi bi-gear me-2"></i>إعدادات المحل</span>
-                            <span class="badge status-closed rounded-pill px-3 py-2 d-none" id="shopStatusBadge">
-                                <i class="bi bi-pause-circle me-1"></i>مغلق
-                            </span>
+            <ul class="dash-nav">
+                <li class="dash-nav-label">لوحة التحكم</li>
+                <li class="dash-nav-item">
+                    <button class="dash-nav-link active" onclick="switchTab('overview')">
+                        <i class="bi bi-grid-1x2"></i>
+                        <span>نظرة عامة</span>
+                    </button>
+                </li>
+                <li class="dash-nav-item">
+                    <button class="dash-nav-link" onclick="switchTab('settings')">
+                        <i class="bi bi-gear-fill"></i>
+                        <span>إعدادات المحل</span>
+                    </button>
+                </li>
+                <li class="dash-nav-item">
+                    <button class="dash-nav-link" onclick="switchTab('products')">
+                        <i class="bi bi-box-seam-fill"></i>
+                        <span>إدارة المنتجات</span>
+                        <span class="nav-badge" id="sidebarProductBadge">0</span>
+                    </button>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- Main Workspace -->
+        <main class="dash-main">
+            <!-- Overview Panel -->
+            <div class="dash-panel active" id="overviewPanel">
+                <div class="dash-page-title">مرحباً بك في لوحة تحكمك</div>
+                <div class="dash-page-subtitle">نظرة سريعة على أداء محلك اليوم</div>
+
+                <!-- Stats Grid -->
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4">
+                        <div class="stat-card">
+                            <div class="stat-icon stat-marigold">
+                                <i class="bi bi-box-seam"></i>
+                            </div>
+                            <div>
+                                <div class="stat-value" id="statProductCount">0</div>
+                                <div class="stat-label">إجمالي المنتجات</div>
+                            </div>
                         </div>
-                        
-                        <form id="shopForm" enctype="multipart/form-data">
-                            <!-- Shop Image -->
-                            <div class="text-center mb-4">
-                                <div class="d-inline-block position-relative">
-                                    <div id="shopImagePreview" class="shop-image-preview d-flex align-items-center justify-content-center">
-                                        <span class="text-white fs-4" id="shopInitials">صورة المحل</span>
-                                    </div>
-                                    <label for="shopImage" class="upload-btn position-absolute bottom-0 start-0 translate-middle-y ms-2">
-                                        <i class="bi bi-camera-fill" style="font-size: 0.85rem;"></i>
-                                    </label>
-                                    <input type="file" id="shopImage" accept="image/*" class="d-none">
-                                </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stat-card">
+                            <div class="stat-icon stat-green">
+                                <i class="bi bi-door-open"></i>
                             </div>
-
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label text-espresso fw-bold"><i class="bi bi-shop me-1"></i>اسم المحل</label>
-                                    <input type="text" class="form-control rounded-pill px-4 py-2" id="shopName" required>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label text-espresso fw-bold"><i class="bi bi-geo-alt me-1"></i>العنوان</label>
-                                    <input type="text" class="form-control rounded-pill px-4 py-2" id="shopAddress" required>
-                                </div>
+                            <div>
+                                <div class="stat-value" id="statShopStatus">مغلق</div>
+                                <div class="stat-label">حالة استقبال الطلبات</div>
                             </div>
-                            <div class="mb-3">
-                                <label class="form-label text-espresso fw-bold"><i class="bi bi-text-paragraph me-1"></i>وصف المحل</label>
-                                <textarea class="form-control rounded-4 px-4 py-2" id="shopDesc" rows="3"></textarea>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stat-card">
+                            <div class="stat-icon stat-mesa">
+                                <i class="bi bi-eye"></i>
                             </div>
-                            <div class="form-check form-switch mb-4">
-                                <input class="form-check-input" type="checkbox" role="switch" id="shopIsOpen" checked>
-                                <label class="form-check-label text-espresso fw-bold ms-2" for="shopIsOpen">
-                                    <i class="bi bi-door-open me-1"></i>المحل مفتوح لاستقبال الطلبات
-                                </label>
+                            <div>
+                                <div class="stat-value">124</div>
+                                <div class="stat-label">مشاهدات المحل (هذا الأسبوع)</div>
                             </div>
-                            
-                            <button type="submit" class="btn btn-primary rounded-pill w-100 py-2 fw-bold mb-3" id="saveShopBtn">
-                                <i class="bi bi-check2-circle me-1"></i>حفظ بيانات المحل
-                            </button>
-                            <div id="shopStatusMsg" class="text-center fw-bold d-none"></div>
-                        </form>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Products Management -->
-                <div class="col-lg-10" id="productsSection" style="display: none;">
+                <!-- Quick actions / Summary card -->
+                <div class="dashboard-card mb-4 animate-up">
+                    <div class="dashboard-section-title">
+                        <span><i class="bi bi-lightning-charge-fill text-marigold me-2"></i>إجراءات سريعة</span>
+                    </div>
+                    <div class="d-flex flex-wrap gap-3">
+                        <button class="btn btn-primary rounded-pill px-4 py-2 fw-bold" onclick="switchTab('products')">
+                            <i class="bi bi-pencil-square me-2"></i>تعديل المنتجات
+                        </button>
+                        <button class="btn btn-outline-mesa rounded-pill px-4 py-2 fw-bold" onclick="switchTab('settings')">
+                            <i class="bi bi-gear-wide-connected me-2"></i>تحديث البيانات الأساسية
+                        </button>
+                        <a href="/html/shops/list.html" class="btn btn-outline-secondary rounded-pill px-4 py-2 fw-bold">
+                            <i class="bi bi-eye me-2"></i>عرض المنصة العام
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Panel -->
+            <div class="dash-panel" id="settingsPanel">
+                <div class="dash-page-title">إعدادات المحل</div>
+                <div class="dash-page-subtitle">تحكم في اسم المحل، الصورة، مواعيد العمل، والحالة الحالية</div>
+
+                <div class="dashboard-card animate-up">
+                    <div class="dashboard-section-title d-flex justify-content-between align-items-center">
+                        <span id="shopTitle"><i class="bi bi-gear me-2"></i>إعدادات المحل</span>
+                        <span class="badge status-closed rounded-pill px-3 py-2 d-none" id="shopStatusBadge">
+                            <i class="bi bi-pause-circle me-1"></i>مغلق
+                        </span>
+                    </div>
+                    
+                    <form id="shopForm" enctype="multipart/form-data">
+                        <!-- Shop Image -->
+                        <div class="text-center mb-4">
+                            <div class="d-inline-block position-relative">
+                                <div id="shopImagePreview" class="shop-image-preview d-flex align-items-center justify-content-center">
+                                    <span class="text-white fs-4" id="shopInitials">صورة المحل</span>
+                                </div>
+                                <label for="shopImage" class="upload-btn position-absolute bottom-0 start-0 translate-middle-y ms-2">
+                                    <i class="bi bi-camera-fill" style="font-size: 0.85rem;"></i>
+                                </label>
+                                <input type="file" id="shopImage" accept="image/*" class="d-none">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-espresso fw-bold"><i class="bi bi-shop me-1"></i>اسم المحل</label>
+                                <input type="text" class="form-control rounded-pill px-4 py-2" id="shopName" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-espresso fw-bold"><i class="bi bi-geo-alt me-1"></i>العنوان</label>
+                                <input type="text" class="form-control rounded-pill px-4 py-2" id="shopAddress" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-espresso fw-bold"><i class="bi bi-text-paragraph me-1"></i>وصف المحل</label>
+                            <textarea class="form-control rounded-4 px-4 py-2" id="shopDesc" rows="3"></textarea>
+                        </div>
+                        <div class="form-check form-switch mb-4">
+                            <input class="form-check-input" type="checkbox" role="switch" id="shopIsOpen" checked>
+                            <label class="form-check-label text-espresso fw-bold ms-2" for="shopIsOpen">
+                                <i class="bi bi-door-open me-1"></i>المحل مفتوح لاستقبال الطلبات
+                            </label>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary rounded-pill w-100 py-2 fw-bold mb-3" id="saveShopBtn">
+                            <i class="bi bi-check2-circle me-1"></i>حفظ بيانات المحل
+                        </button>
+                        <div id="shopStatusMsg" class="text-center fw-bold d-none"></div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Products Panel -->
+            <div class="dash-panel" id="productsPanel">
+                <div class="dash-page-title">إدارة المنتجات</div>
+                <div class="dash-page-subtitle">أضف منتجات جديدة أو عدّل الأسعار والتوافر بسهولة تامة</div>
+
+                <div id="productsSection" style="display: none;">
                     <div class="d-flex justify-content-between align-items-center mb-4">
                         <h4 class="fw-bold text-espresso m-0"><i class="bi bi-box-seam me-2"></i>منتجات المحل</h4>
                         <button class="btn btn-marigold rounded-pill fw-bold shadow-sm px-4" data-bs-toggle="modal" data-bs-target="#addProductModal">
@@ -108,8 +209,8 @@
                     </div>
                 </div>
             </div>
-        </div>
-    </section>
+        </main>
+    </div>
 
     <!-- Add Product Modal -->
     <div class="modal fade" id="addProductModal" tabindex="-1" aria-labelledby="addProductModalLabel" aria-hidden="true">
@@ -199,23 +300,35 @@
         </div>
     </div>
 
-    <!-- Footer -->
-    <footer class="app-footer mt-5">
-        <div class="container">
-            <div class="row align-items-center">
-                <div class="col-md-6 text-center text-md-start mb-3 mb-md-0">
-                    <span class="footer-brand">بركة</span>
-                </div>
-                <div class="col-md-6 text-center text-md-end">
-                    <p class="mb-0 small">© 2026 بركة. جميع الحقوق محفوظة.</p>
-                </div>
-            </div>
-        </div>
-    </footer>
-
+    <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JS -->
     <script src="/js/api.js"></script>
     <script src="/js/main.js"></script>
     <script src="/js/shop_profile.js"></script>
+
+    <!-- Tabs Switching Inline Script to ensure absolute separation & zero backend dependencies -->
+    <script>
+        window.switchTab = function(tabId) {
+            // Hide all panels
+            document.querySelectorAll('.dash-panel').forEach(panel => {
+                panel.classList.remove('active');
+            });
+            // Show selected panel
+            const targetPanel = document.getElementById(tabId + 'Panel');
+            if (targetPanel) {
+                targetPanel.classList.add('active');
+            }
+            
+            // Toggle active state in nav buttons
+            document.querySelectorAll('.dash-nav-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            const clickedLink = document.querySelector(`[onclick="switchTab('${tabId}')"]`);
+            if (clickedLink) {
+                clickedLink.classList.add('active');
+            }
+        }
+    </script>
 </body>
 </html>

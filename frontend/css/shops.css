@@ -612,3 +612,188 @@
         width: 100%;
     }
 }
+
+/* ==========================================
+   Product Search & Partition (Category) Tabs
+   ========================================== */
+.shop-search-filter-section {
+    background: rgba(255, 255, 255, 0.55) !important;
+    backdrop-filter: blur(20px) saturate(1.7) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(1.7) !important;
+    border: 1px solid rgba(201, 153, 151, 0.15) !important;
+    box-shadow: var(--shadow-sm) !important;
+    transition: var(--transition-base);
+}
+
+.shop-search-filter-section:hover {
+    box-shadow: var(--shadow-md) !important;
+    border-color: rgba(194, 146, 64, 0.25) !important;
+}
+
+.shop-search-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.shop-search-icon {
+    position: absolute;
+    top: 50%;
+    right: 1.25rem;
+    transform: translateY(-50%);
+    font-size: 1.25rem;
+    z-index: 5;
+    pointer-events: none;
+    transition: var(--transition-base);
+}
+
+.shop-search-input {
+    background: rgba(253, 245, 241, 0.75) !important;
+    border: 1.5px solid rgba(201, 153, 151, 0.1) !important;
+    font-size: 0.95rem !important;
+    color: var(--color-espresso) !important;
+    padding-right: 3.2rem !important;
+    padding-left: 3.2rem !important;
+    transition: var(--transition-base) !important;
+}
+
+.shop-search-input:focus {
+    background: #ffffff !important;
+    border-color: var(--color-marigold) !important;
+    box-shadow: 0 0 0 4px var(--color-marigold-glow) !important;
+}
+
+.shop-search-clear-btn {
+    position: absolute;
+    top: 50%;
+    left: 1.25rem;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    color: var(--color-mesa);
+    font-size: 1.1rem;
+    cursor: pointer;
+    z-index: 5;
+    padding: 0.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    transition: var(--transition-base);
+}
+
+.shop-search-clear-btn:hover {
+    background: rgba(94, 44, 56, 0.08);
+    color: var(--color-espresso);
+}
+
+/* Category Tabs (Partitions) */
+.shop-categories-tabs {
+    scrollbar-width: none; /* Hide scrollbar for Firefox */
+    display: flex;
+    gap: 0.75rem;
+    overflow-x: auto;
+    padding: 0.25rem 0.1rem 0.5rem;
+}
+
+.shop-categories-tabs::-webkit-scrollbar {
+    display: none; /* Hide scrollbar for Chrome/Safari/Opera */
+}
+
+.shop-category-tab {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.65rem 1.35rem;
+    background: white;
+    border: 1.5px solid rgba(201, 153, 151, 0.12);
+    border-radius: 100px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: var(--color-mesa);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: var(--shadow-sm);
+    user-select: none;
+}
+
+.shop-category-tab:hover {
+    transform: translateY(-2px);
+    border-color: var(--color-marigold);
+    color: var(--color-marigold);
+    box-shadow: 0 4px 12px rgba(194, 146, 64, 0.1);
+}
+
+.shop-category-tab:active {
+    transform: translateY(0);
+}
+
+.shop-category-tab.active {
+    background: linear-gradient(135deg, var(--color-marigold) 0%, var(--color-bronze) 100%) !important;
+    color: white !important;
+    border-color: var(--color-marigold) !important;
+    box-shadow: 0 4px 15px rgba(194, 146, 64, 0.3);
+    transform: translateY(-1px) scale(1.02);
+}
+
+.shop-category-tab .tab-icon {
+    font-size: 1.05rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.shop-category-tab .tab-count {
+    background: rgba(94, 44, 56, 0.08);
+    color: var(--color-mesa);
+    font-size: 0.75rem;
+    font-weight: 800;
+    padding: 0.1rem 0.5rem;
+    border-radius: 100px;
+    transition: var(--transition-base);
+}
+
+.shop-category-tab.active .tab-count {
+    background: rgba(255, 255, 255, 0.22);
+    color: white;
+}
+
+/* Category Badge inside Card */
+.product-card {
+    position: relative;
+}
+
+.product-card-category-badge {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    color: var(--color-mesa);
+    font-size: 0.72rem;
+    font-weight: 800;
+    padding: 0.25rem 0.65rem;
+    border-radius: var(--radius-full);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    z-index: 5;
+    box-shadow: 0 2px 8px rgba(50, 4, 4, 0.06);
+    pointer-events: none;
+}
+
+/* Shimmer & Transitions */
+.fade-stagger {
+    opacity: 0;
+    transform: translateY(12px);
+    animation: fadeStaggerIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes fadeStaggerIn {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+

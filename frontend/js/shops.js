@@ -14,6 +14,11 @@ let currentSearch = '';
 let isOpenFilter = false;
 let searchDebounceTimer = null;
 
+// Product state variables
+let allShopProducts = [];
+let currentProductCategory = 'all';
+let currentProductSearch = '';
+
 async function initShopsList(page = 1) {
     try {
         currentPage = page;
@@ -197,7 +202,11 @@ async function initShopDetails() {
             renderShopHeader(shop);
             
             const products = await api.shops.getProducts(shopId);
-            renderShopProducts(products);
+            allShopProducts = products;
+            
+            // Initialize premium filtering and dynamic visual categories
+            initProductFilters();
+            filterAndRenderProducts();
             
             // Render initial Cart inside Checkout Sidebar Card
             updateCartUI();

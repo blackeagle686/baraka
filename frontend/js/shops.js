@@ -169,7 +169,7 @@ function renderShopProducts(products) {
                         <div class="d-flex justify-content-between align-items-center">
                             <span class="product-price">${product.price} ج.م</span>
                             ${product.available 
-                                ? `<button onclick="addToCart(${product.id}, '${product.name}', ${product.price})" class="btn btn-marigold btn-sm rounded-pill px-3 fw-bold">
+                                ? `<button onclick="addToCart(${product.id}, '${product.name}', ${product.price}, '${product.image || ''}')" class="btn btn-marigold btn-sm rounded-pill px-3 fw-bold">
                                        <i class="bi bi-cart-plus me-1"></i>أضف
                                    </button>`
                                 : `<span class="badge bg-danger rounded-pill small">غير متوفر</span>`
@@ -188,7 +188,7 @@ function renderShopProducts(products) {
 // ==========================================
 let cart = [];
 
-window.addToCart = function(id, name, price) {
+window.addToCart = function(id, name, price, image = '') {
     const token = localStorage.getItem('access_token');
     if (!token) {
         if(window.showBarakaToast) {
@@ -214,7 +214,7 @@ window.addToCart = function(id, name, price) {
     if (existing) {
         existing.quantity += 1;
     } else {
-        cart.push({ product: id, name: name, price: price, quantity: 1 });
+        cart.push({ product: id, name: name, price: price, quantity: 1, image: image });
     }
     updateCartUI();
     
@@ -264,17 +264,25 @@ window.openCartModal = function() {
         total += itemTotal;
         
         itemsList.innerHTML += `
-            <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
-                <div>
-                    <h6 class="fw-bold text-espresso mb-0">${item.name}</h6>
-                    <small class="text-muted">${item.price} ج.م</small>
+            <div class="d-flex align-items-center mb-3 pb-3 border-bottom" style="border-color: rgba(201,153,151,0.15) !important;">
+                <div class="me-3" style="width: 55px; height: 55px; border-radius: 12px; overflow: hidden; flex-shrink: 0; background: var(--color-dune);">
+                    ${item.image 
+                        ? `<img src="${item.image}" class="w-100 h-100 object-fit-cover">` 
+                        : `<div class="d-flex h-100 align-items-center justify-content-center text-marigold"><i class="bi bi-box-seam"></i></div>`
+                    }
                 </div>
-                <div class="d-flex align-items-center gap-2">
-                    <button class="btn btn-sm btn-outline-secondary rounded-circle py-0 px-2" onclick="changeQuantity(${item.product}, -1)">-</button>
-                    <span class="fw-bold">${item.quantity}</span>
-                    <button class="btn btn-sm btn-outline-secondary rounded-circle py-0 px-2" onclick="changeQuantity(${item.product}, 1)">+</button>
-                    <button class="btn btn-sm btn-link text-danger ms-2 p-0" onclick="removeFromCart(${item.product})"><i class="bi bi-trash3"></i></button>
+                <div class="flex-grow-1">
+                    <h6 class="fw-bold text-espresso mb-1" style="font-size: 0.95rem;">${item.name}</h6>
+                    <small class="text-marigold fw-bold">${item.price} ج.م</small>
                 </div>
+                <div class="d-flex align-items-center gap-1 bg-white border rounded-pill px-2 py-1" style="border-color: rgba(201,153,151,0.2) !important;">
+                    <button class="btn btn-sm btn-link text-mesa p-0 text-decoration-none fw-bold" style="width: 24px; height: 24px;" onclick="changeQuantity(${item.product}, -1)">-</button>
+                    <span class="fw-bold text-espresso px-2" style="font-size: 0.9rem;">${item.quantity}</span>
+                    <button class="btn btn-sm btn-link text-mesa p-0 text-decoration-none fw-bold" style="width: 24px; height: 24px;" onclick="changeQuantity(${item.product}, 1)">+</button>
+                </div>
+                <button class="btn btn-sm btn-link text-danger ms-2 p-1" onclick="removeFromCart(${item.product})" title="حذف">
+                    <i class="bi bi-trash3"></i>
+                </button>
             </div>
         `;
     });
@@ -303,32 +311,8 @@ window.changeQuantity = function(productId, delta) {
             removeFromCart(productId);
         } else {
             updateCartUI();
-            // Re-render modal contents
-            const itemsList = document.getElementById('cartItemsList');
-            const totalPriceEl = document.getElementById('cartTotalPrice');
-            if (itemsList && totalPriceEl) {
-                itemsList.innerHTML = '';
-                let total = 0;
-                cart.forEach(it => {
-                    const itemTotal = it.price * it.quantity;
-                    total += itemTotal;
-                    itemsList.innerHTML += `
-                        <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
-                            <div>
-                                <h6 class="fw-bold text-espresso mb-0">${it.name}</h6>
-                                <small class="text-muted">${it.price} ج.م</small>
-                            </div>
-                            <div class="d-flex align-items-center gap-2">
-                                <button class="btn btn-sm btn-outline-secondary rounded-circle py-0 px-2" onclick="changeQuantity(${it.product}, -1)">-</button>
-                                <span class="fw-bold">${it.quantity}</span>
-                                <button class="btn btn-sm btn-outline-secondary rounded-circle py-0 px-2" onclick="changeQuantity(${it.product}, 1)">+</button>
-                                <button class="btn btn-sm btn-link text-danger ms-2 p-0" onclick="removeFromCart(${it.product})"><i class="bi bi-trash3"></i></button>
-                            </div>
-                        </div>
-                    `;
-                });
-                totalPriceEl.innerText = `${total.toFixed(2)} ج.م`;
-            }
+            // Re-render modal contents using the same openCartModal logic
+            openCartModal();
         }
     }
 }

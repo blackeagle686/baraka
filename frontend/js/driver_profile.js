@@ -214,13 +214,18 @@ async function loadDriverOrders() {
         const availableOrders = orders.filter(o => !o.driver && ['PENDING', 'ACCEPTED', 'PREPARING', 'ON_DELIVERY'].includes(o.status));
         renderAvailableOrders(availableOrders);
 
-        // 2. Active trips: assigned to this driver, not delivered/cancelled
-        const myActiveTrips = orders.filter(o => o.driver == currentDriver.id && ['ON_DELIVERY', 'ACCEPTED', 'PREPARING'].includes(o.status));
+        // 2. Active trips: assigned to this driver, not delivered/cancelled OR delivered but unpaid to shop
+        const myActiveTrips = orders.filter(o => o.driver == currentDriver.id && (['ON_DELIVERY', 'ACCEPTED', 'PREPARING'].includes(o.status) || (o.status === 'DELIVERED' && !o.is_paid_to_shop)));
         renderActiveTrips(myActiveTrips);
 
         // 3. Completed trips: assigned to this driver, status DELIVERED
         const completedCount = orders.filter(o => o.driver == currentDriver.id && o.status === 'DELIVERED').length;
         document.getElementById('statCompletedCount').innerText = completedCount;
+
+        // 4. Settle debts: total price of delivered orders that haven't been paid back to shop owners
+        const pendingDues = orders.filter(o => o.driver == currentDriver.id && o.status === 'DELIVERED' && !o.is_paid_to_shop);
+        const totalDebt = pendingDues.reduce((sum, o) => sum + parseFloat(o.total_price), 0);
+        document.getElementById('statDebtCount').innerText = totalDebt.toFixed(2) + ' ج.م';
 
     } catch (error) {
         console.error("Error loading driver orders:", error);
@@ -324,6 +329,31 @@ function renderActiveTrips(trips) {
         const dateFormatted = new Date(trip.created_at).toLocaleString('ar-EG', {
             hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short'
         });
+        
+        const isDeliveredUnpaid = (trip.status === 'DELIVERED' && !trip.is_paid_to_shop);
+        
+        let statusBadgeHtml = `<span class="badge bg-success-subtle text-success rounded-pill px-2 py-1">جاري التوصيل للعميل</span>`;
+        if (isDeliveredUnpaid) {
+            statusBadgeHtml = `<span class="badge bg-danger-subtle text-danger rounded-pill px-2 py-1">بانتظار سداد الحساب للمحل</span>`;
+        }
+
+        let cardTitle = `رحلة نشطة #${trip.id}`;
+        if (isDeliveredUnpaid) {
+            cardTitle = `رحلة مكتملة بانتظار السداد #${trip.id}`;
+        }
+
+        let actionHtmlBlock = `
+            <button class="btn btn-success flex-grow-1 rounded-pill py-2 fw-bold" onclick="completeDeliveryTrip(${trip.id})">
+                <i class="bi bi-check2-all me-1"></i>تم التوصيل بنجاح للعميل
+            </button>
+        `;
+        if (isDeliveredUnpaid) {
+            actionHtmlBlock = `
+                <div class="alert alert-danger text-center py-2 rounded-pill small mb-0 fw-bold border-0" style="background-color: rgba(220,53,69,0.08); color: var(--color-terracotta);">
+                    <i class="bi bi-exclamation-triangle-fill me-1"></i>يرجى سداد ${trip.total_price} ج.م لصاحب المحل لتصفية الحساب.
+                </div>
+            `;
+        }
 
         const itemsList = trip.items.map(it => `
             <div class="d-flex justify-content-between text-muted small py-1">
@@ -335,8 +365,8 @@ function renderActiveTrips(trips) {
             <div class="col-md-6 mb-3 animate-up" style="animation-delay: ${i * 0.05}s;">
                 <div class="dashboard-card p-3 h-100 d-flex flex-column border" style="background-color: rgba(255,255,255,0.7); border-color: rgba(201,153,151,0.12) !important;">
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <span class="fw-bold text-espresso">رحلة نشطة #${trip.id}</span>
-                        <span class="badge bg-success-subtle text-success rounded-pill px-2 py-1">جاري التوصيل للعميل</span>
+                        <span class="fw-bold text-espresso">${cardTitle}</span>
+                        ${statusBadgeHtml}
                     </div>
 
                     <div class="mb-3">
@@ -364,9 +394,7 @@ function renderActiveTrips(trips) {
                     </div>
 
                     <div class="d-flex gap-2">
-                        <button class="btn btn-success flex-grow-1 rounded-pill py-2 fw-bold" onclick="completeDeliveryTrip(${trip.id})">
-                            <i class="bi bi-check2-all me-1"></i>تم التوصيل بنجاح للعميل
-                        </button>
+                        ${actionHtmlBlock}
                     </div>
                 </div>
             </div>

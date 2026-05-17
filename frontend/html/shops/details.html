@@ -68,6 +68,45 @@
         </div>
     </footer>
 
+    <!-- Floating Cart Button -->
+    <div id="floatingCartBtn" class="floating-cart-btn d-none animate-up" onclick="openCartModal()">
+        <i class="bi bi-cart3"></i>
+        <span class="cart-badge" id="cartCountBadge">0</span>
+    </div>
+
+    <!-- Cart Modal -->
+    <div class="modal fade" id="cartModal" tabindex="-1" aria-labelledby="cartModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 rounded-4 shadow-lg" style="background-color: var(--color-dune-light);">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold text-espresso" id="cartModalLabel">
+                        <i class="bi bi-cart3 me-2 text-marigold"></i>سلة المشتريات
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div id="cartItemsList" class="mb-4">
+                        <!-- Cart items will be loaded here -->
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label text-espresso fw-bold"><i class="bi bi-geo-alt me-1"></i>عنوان التوصيل</label>
+                        <input type="text" class="form-control rounded-pill px-4 py-2" id="orderAddress" placeholder="ادخل عنوانك بالتفصيل...">
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-center mb-4 fw-bold text-espresso fs-5 border-top pt-3">
+                        <span>الإجمالي:</span>
+                        <span id="cartTotalPrice" class="text-marigold">0 ج.م</span>
+                    </div>
+                    
+                    <button onclick="submitOrder()" class="btn btn-primary w-100 rounded-pill py-2 fw-bold" id="submitOrderBtn">
+                        <i class="bi bi-check-all me-1"></i>إرسال الطلب للمحل
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/js/api.js"></script>
     <script src="/js/main.js"></script>

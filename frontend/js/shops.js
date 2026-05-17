@@ -139,9 +139,12 @@ function renderShopProducts(products) {
                         <p class="text-mesa small mb-2" style="min-height: 2rem;">${product.description || ''}</p>
                         <div class="d-flex justify-content-between align-items-center">
                             <span class="product-price">${product.price} ج.م</span>
-                            <span class="badge ${product.available ? 'bg-success' : 'bg-danger'} rounded-pill small">
-                                ${product.available ? 'متوفر' : 'غير متوفر'}
-                            </span>
+                            ${product.available 
+                                ? `<button onclick="addToCart(${product.id}, '${product.name}', ${product.price})" class="btn btn-marigold btn-sm rounded-pill px-3 fw-bold">
+                                       <i class="bi bi-cart-plus me-1"></i>أضف
+                                   </button>`
+                                : `<span class="badge bg-danger rounded-pill small">غير متوفر</span>`
+                            }
                         </div>
                     </div>
                 </div>
@@ -149,4 +152,189 @@ function renderShopProducts(products) {
         `;
         container.innerHTML += html;
     });
+}
+
+// ==========================================
+// Client-side Cart & Order Checkout System
+// ==========================================
+let cart = [];
+
+window.addToCart = function(id, name, price) {
+    const token = localStorage.getItem('access_token');
+    if (!token) {
+        alert('يرجى تسجيل الدخول أولاً لتتمكن من الطلب.');
+        window.location.href = '/html/auth/login.html';
+        return;
+    }
+    
+    const existing = cart.find(it => it.product === id);
+    if (existing) {
+        existing.quantity += 1;
+    } else {
+        cart.push({ product: id, name: name, price: price, quantity: 1 });
+    }
+    updateCartUI();
+    
+    // Visual indicator of item added
+    const btn = document.querySelector(`[onclick*="addToCart(${id}"]`);
+    if (btn) {
+        const originalHtml = btn.innerHTML;
+        btn.innerHTML = `<i class="bi bi-check-circle-fill me-1"></i>تم!`;
+        btn.className = 'btn btn-success btn-sm rounded-pill px-3 fw-bold';
+        setTimeout(() => {
+            btn.innerHTML = originalHtml;
+            btn.className = 'btn btn-marigold btn-sm rounded-pill px-3 fw-bold';
+        }, 1500);
+    }
+}
+
+function updateCartUI() {
+    const floatingBtn = document.getElementById('floatingCartBtn');
+    const badge = document.getElementById('cartCountBadge');
+    if (!floatingBtn || !badge) return;
+    
+    const totalQty = cart.reduce((sum, item) => sum + item.quantity, 0);
+    
+    if (totalQty > 0) {
+        floatingBtn.classList.remove('d-none');
+        badge.innerText = totalQty;
+    } else {
+        floatingBtn.classList.add('d-none');
+    }
+}
+
+window.openCartModal = function() {
+    const itemsList = document.getElementById('cartItemsList');
+    const totalPriceEl = document.getElementById('cartTotalPrice');
+    if (!itemsList || !totalPriceEl) return;
+    
+    itemsList.innerHTML = '';
+    
+    let total = 0;
+    cart.forEach(item => {
+        const itemTotal = item.price * item.quantity;
+        total += itemTotal;
+        
+        itemsList.innerHTML += `
+            <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
+                <div>
+                    <h6 class="fw-bold text-espresso mb-0">${item.name}</h6>
+                    <small class="text-muted">${item.price} ج.م</small>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <button class="btn btn-sm btn-outline-secondary rounded-circle py-0 px-2" onclick="changeQuantity(${item.product}, -1)">-</button>
+                    <span class="fw-bold">${item.quantity}</span>
+                    <button class="btn btn-sm btn-outline-secondary rounded-circle py-0 px-2" onclick="changeQuantity(${item.product}, 1)">+</button>
+                    <button class="btn btn-sm btn-link text-danger ms-2 p-0" onclick="removeFromCart(${item.product})"><i class="bi bi-trash3"></i></button>
+                </div>
+            </div>
+        `;
+    });
+    
+    totalPriceEl.innerText = `${total.toFixed(2)} ج.م`;
+    
+    // Set user location as default address if available
+    const token = localStorage.getItem('access_token');
+    if (token) {
+        api.auth.getProfile(token).then(profile => {
+            if (profile.location) {
+                document.getElementById('orderAddress').value = profile.location;
+            }
+        }).catch(err => console.error("Error fetching profile for address:", err));
+    }
+    
+    const modal = new bootstrap.Modal(document.getElementById('cartModal'));
+    modal.show();
+}
+
+window.changeQuantity = function(productId, delta) {
+    const item = cart.find(it => it.product === productId);
+    if (item) {
+        item.quantity += delta;
+        if (item.quantity <= 0) {
+            removeFromCart(productId);
+        } else {
+            updateCartUI();
+            // Re-render modal contents
+            const itemsList = document.getElementById('cartItemsList');
+            const totalPriceEl = document.getElementById('cartTotalPrice');
+            if (itemsList && totalPriceEl) {
+                itemsList.innerHTML = '';
+                let total = 0;
+                cart.forEach(it => {
+                    const itemTotal = it.price * it.quantity;
+                    total += itemTotal;
+                    itemsList.innerHTML += `
+                        <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
+                            <div>
+                                <h6 class="fw-bold text-espresso mb-0">${it.name}</h6>
+                                <small class="text-muted">${it.price} ج.م</small>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <button class="btn btn-sm btn-outline-secondary rounded-circle py-0 px-2" onclick="changeQuantity(${it.product}, -1)">-</button>
+                                <span class="fw-bold">${it.quantity}</span>
+                                <button class="btn btn-sm btn-outline-secondary rounded-circle py-0 px-2" onclick="changeQuantity(${it.product}, 1)">+</button>
+                                <button class="btn btn-sm btn-link text-danger ms-2 p-0" onclick="removeFromCart(${it.product})"><i class="bi bi-trash3"></i></button>
+                            </div>
+                        </div>
+                    `;
+                });
+                totalPriceEl.innerText = `${total.toFixed(2)} ج.م`;
+            }
+        }
+    }
+}
+
+window.removeFromCart = function(productId) {
+    cart = cart.filter(it => it.product !== productId);
+    updateCartUI();
+    
+    if (cart.length === 0) {
+        const modalEl = document.getElementById('cartModal');
+        const modal = bootstrap.Modal.getInstance(modalEl);
+        if (modal) modal.hide();
+    } else {
+        window.changeQuantity(null, 0); // Trigger visual refresh
+    }
+}
+
+window.submitOrder = async function() {
+    const token = localStorage.getItem('access_token');
+    if (!token) return;
+    
+    const address = document.getElementById('orderAddress').value.trim();
+    if (!address) {
+        alert('يرجى تحديد عنوان التوصيل أولاً.');
+        return;
+    }
+    
+    const params = new URLSearchParams(window.location.search);
+    const shopId = params.get('id');
+    
+    const submitBtn = document.getElementById('submitOrderBtn');
+    submitBtn.disabled = true;
+    submitBtn.innerText = 'جاري إرسال الطلب...';
+    
+    const orderData = {
+        shop: parseInt(shopId),
+        address: address,
+        items: cart.map(it => ({ product: it.product, quantity: it.quantity }))
+    };
+    
+    try {
+        await api.orders.create(token, orderData);
+        alert('تم إرسال طلبك بنجاح! سيقوم المحل بمراجعته فوراً.');
+        
+        cart = [];
+        updateCartUI();
+        
+        const modalEl = document.getElementById('cartModal');
+        const modal = bootstrap.Modal.getInstance(modalEl);
+        if (modal) modal.hide();
+    } catch (error) {
+        alert('حدث خطأ أثناء إرسال الطلب: ' + JSON.stringify(error));
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerText = 'إرسال الطلب للمحل';
+    }
 }

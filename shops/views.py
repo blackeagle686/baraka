@@ -1,14 +1,23 @@
-from rest_framework import viewsets, permissions, status
+from rest_framework import viewsets, permissions, status, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.pagination import PageNumberPagination
 from .models import Shop, Category, Product
 from .serializers import ShopSerializer, CategorySerializer, ProductSerializer
 from .permissions import IsOwnerOrReadOnly
+
+class ShopPagination(PageNumberPagination):
+    page_size = 6
+    page_size_query_param = 'page_size'
+    max_page_size = 100
 
 class ShopViewSet(viewsets.ModelViewSet):
     queryset = Shop.objects.all()
     serializer_class = ShopSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
+    pagination_class = ShopPagination
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['name', 'description', 'address']
 
     def create(self, request, *args, **kwargs):
         if request.user.role != 'SHOP_OWNER' and not request.user.is_staff:

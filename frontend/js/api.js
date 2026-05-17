@@ -39,8 +39,12 @@ const api = {
         }
     },
     shops: {
-        getAll: async () => {
-            const res = await fetch(`${API_BASE}/shops/`);
+        getAll: async (page = 1, search = '') => {
+            const url = new URL(`${API_BASE}/shops/`);
+            if (page) url.searchParams.append('page', page);
+            if (search) url.searchParams.append('search', search);
+            
+            const res = await fetch(url.toString());
             if (!res.ok) throw await res.json();
             return await res.json();
         },

@@ -4,7 +4,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function fetchShopsPreview() {
     try {
-        const shops = await api.shops.getAll();
+        const response = await api.shops.getAll(1);
+        const shops = response.results || response;
         renderShops(shops);
     } catch (error) {
         console.error("Error fetching shops:", error);

@@ -99,6 +99,7 @@ async function initShopProfile() {
             populateShopForm(shop);
             document.getElementById('productsSection').style.display = 'block';
             loadShopProducts(shop.id);
+            loadShopOrders();
         } else {
             document.getElementById('shopTitle').innerText = 'إنشاء محل جديد';
         }
@@ -373,5 +374,179 @@ async function handleProductSubmit() {
     } finally {
         saveBtn.disabled = false;
         saveBtn.innerText = 'حفظ المنتج';
+    }
+}
+
+async function loadShopOrders() {
+    const token = localStorage.getItem('access_token');
+    try {
+        const orders = await api.orders.getAll(token);
+        renderShopOrders(orders);
+    } catch (error) {
+        console.error("Error loading orders:", error);
+        const container = document.getElementById('shopOrdersList');
+        if (container) {
+            container.innerHTML = `<div class="text-danger text-center w-100">حدث خطأ أثناء تحميل الطلبات</div>`;
+        }
+    }
+}
+
+function renderShopOrders(orders) {
+    const container = document.getElementById('shopOrdersList');
+    if (!container) return;
+    
+    // Update stats & badges
+    const activeOrders = orders.filter(o => o.status !== 'DELIVERED' && o.status !== 'CANCELLED');
+    const statActiveOrdersCount = document.getElementById('statActiveOrdersCount');
+    if (statActiveOrdersCount) {
+        statActiveOrdersCount.innerText = activeOrders.length;
+    }
+    const sidebarOrderBadge = document.getElementById('sidebarOrderBadge');
+    if (sidebarOrderBadge) {
+        sidebarOrderBadge.innerText = activeOrders.length;
+        if (activeOrders.length === 0) {
+            sidebarOrderBadge.classList.add('d-none');
+        } else {
+            sidebarOrderBadge.classList.remove('d-none');
+        }
+    }
+
+    container.innerHTML = '';
+    
+    if (orders.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state w-100 animate-up">
+                <div class="empty-state-icon"><i class="bi bi-receipt"></i></div>
+                <p class="fw-bold">لا توجد طلبات حالياً</p>
+                <p class="small text-mesa">عندما يقوم العملاء بالطلب من محلك، ستظهر هنا فوراً!</p>
+            </div>`;
+        return;
+    }
+
+    orders.forEach((order, i) => {
+        // Status styling
+        let statusClass = 'bg-secondary';
+        let statusText = 'معلق';
+        
+        switch(order.status) {
+            case 'PENDING':
+                statusClass = 'bg-warning text-dark';
+                statusText = 'معلق';
+                break;
+            case 'ACCEPTED':
+                statusClass = 'bg-info text-dark';
+                statusText = 'مقبول';
+                break;
+            case 'PREPARING':
+                statusClass = 'bg-primary';
+                statusText = 'قيد التجهيز';
+                break;
+            case 'ON_DELIVERY':
+                statusClass = 'bg-marigold text-white';
+                statusText = 'مع المندوب';
+                break;
+            case 'DELIVERED':
+                statusClass = 'bg-success';
+                statusText = 'تم التوصيل';
+                break;
+            case 'CANCELLED':
+                statusClass = 'bg-danger';
+                statusText = 'ملغي';
+                break;
+        }
+
+        // Render items list
+        let itemsHtml = '';
+        if (order.items && order.items.length > 0) {
+            order.items.forEach(item => {
+                itemsHtml += `
+                    <div class="d-flex justify-content-between align-items-center mb-1 border-bottom border-light pb-1 small">
+                        <span class="text-espresso fw-bold">${item.product_details ? item.product_details.name : 'منتج'}</span>
+                        <span class="text-mesa">${item.quantity} × ${item.price} ج.م</span>
+                    </div>
+                `;
+            });
+        }
+
+        // Action buttons
+        let actionsHtml = '';
+        if (order.status === 'PENDING') {
+            actionsHtml = `
+                <button onclick="updateOrderStatus(${order.id}, 'ACCEPTED')" class="btn btn-sm btn-success rounded-pill px-3">
+                    <i class="bi bi-check-lg me-1"></i>قبول الطلب
+                </button>
+                <button onclick="updateOrderStatus(${order.id}, 'CANCELLED')" class="btn btn-sm btn-outline-danger rounded-pill px-3 ms-2">
+                    <i class="bi bi-x-lg me-1"></i>رفض
+                </button>
+            `;
+        } else if (order.status === 'ACCEPTED') {
+            actionsHtml = `
+                <button onclick="updateOrderStatus(${order.id}, 'PREPARING')" class="btn btn-sm btn-primary rounded-pill px-3">
+                    <i class="bi bi-hourglass-split me-1"></i>بدء التجهيز
+                </button>
+                <button onclick="updateOrderStatus(${order.id}, 'CANCELLED')" class="btn btn-sm btn-outline-danger rounded-pill px-2 ms-2">إلغاء</button>
+            `;
+        } else if (order.status === 'PREPARING') {
+            actionsHtml = `
+                <button onclick="updateOrderStatus(${order.id}, 'ON_DELIVERY')" class="btn btn-sm btn-marigold rounded-pill px-3 text-white">
+                    <i class="bi bi-truck me-1"></i>تسليم للمندوب
+                </button>
+                <button onclick="updateOrderStatus(${order.id}, 'DELIVERED')" class="btn btn-sm btn-success rounded-pill px-3 ms-2">
+                    <i class="bi bi-check-all me-1"></i>تم التوصيل المباشر
+                </button>
+            `;
+        } else if (order.status === 'ON_DELIVERY') {
+            actionsHtml = `
+                <span class="text-muted small"><i class="bi bi-truck me-1"></i>المندوب: ${order.driver_details ? order.driver_details.name : 'جاري التحديد'}</span>
+                <button onclick="updateOrderStatus(${order.id}, 'DELIVERED')" class="btn btn-sm btn-success rounded-pill px-3 ms-3">
+                    <i class="bi bi-check-all me-1"></i>تم التوصيل
+                </button>
+            `;
+        } else {
+            actionsHtml = `<span class="text-muted small"><i class="bi bi-info-circle me-1"></i>لا توجد إجراءات معلقة</span>`;
+        }
+
+        const dateFormatted = new Date(order.created_at).toLocaleString('ar-EG', { hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' });
+
+        const html = `
+            <div class="col-md-6 mb-3 animate-up" style="animation-delay: ${i * 0.05}s;">
+                <div class="dashboard-card p-3 h-100 d-flex flex-column border" style="background-color: rgba(255,255,255,0.7); border-color: rgba(201,153,151,0.12) !important;">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="fw-bold text-espresso">الطلب #${order.id}</span>
+                        <span class="badge ${statusClass} rounded-pill px-2 py-1">${statusText}</span>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="text-muted small mb-1"><i class="bi bi-person me-1"></i>العميل: <strong class="text-espresso">${order.customer_details ? order.customer_details.name : 'غير معروف'}</strong> (${order.customer_details ? order.customer_details.phone : ''})</div>
+                        <div class="text-muted small mb-1"><i class="bi bi-geo-alt me-1"></i>عنوان التوصيل: <strong class="text-espresso">${order.address || 'العنوان الافتراضي'}</strong></div>
+                        <div class="text-muted small mb-2"><i class="bi bi-clock me-1"></i>التاريخ: ${dateFormatted}</div>
+                    </div>
+                    
+                    <div class="bg-white rounded-3 p-2 mb-3 flex-grow-1" style="border: 1px solid rgba(201,153,151,0.08);">
+                        <div class="text-muted small mb-2 border-bottom pb-1 fw-bold">تفاصيل المنتجات:</div>
+                        ${itemsHtml}
+                        <div class="d-flex justify-content-between align-items-center mt-2 fw-bold text-espresso pt-1">
+                            <span>الإجمالي:</span>
+                            <span class="text-marigold">${order.total_price} ج.م</span>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-center mt-auto border-top pt-2">
+                        ${actionsHtml}
+                    </div>
+                </div>
+            </div>
+        `;
+        container.innerHTML += html;
+    });
+}
+
+window.updateOrderStatus = async function(orderId, newStatus) {
+    const token = localStorage.getItem('access_token');
+    try {
+        await api.orders.updateStatus(token, orderId, newStatus);
+        loadShopOrders();
+    } catch (error) {
+        alert('حدث خطأ أثناء تحديث حالة الطلب: ' + JSON.stringify(error));
     }
 }

@@ -203,3 +203,161 @@
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(194, 146, 64, 0.3) !important;
 }
+
+/* ==========================================
+   Split Layout & Premium Sidebar Card Styles
+   ========================================== */
+
+.shops-split-container {
+    display: flex;
+    height: calc(100vh - 65px);
+    margin-top: 65px;
+    overflow: hidden;
+}
+
+/* Sidebar Styling */
+.shops-sidebar {
+    width: 400px;
+    background-color: var(--color-dune-light);
+    border-left: 1px solid rgba(201, 153, 151, 0.15);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    z-index: 10;
+    box-shadow: -4px 0 15px rgba(50, 4, 4, 0.03);
+}
+
+.shops-list-scroll {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding-bottom: 2rem !important;
+}
+
+/* Map Wrapper Styling */
+.shops-map-wrapper {
+    flex-grow: 1;
+    position: relative;
+    height: 100%;
+}
+
+.map-status-overlay {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+}
+
+.map-status-overlay .badge {
+    background-color: white !important;
+    color: var(--color-espresso) !important;
+    border: 1px solid rgba(201, 153, 151, 0.25) !important;
+    font-weight: 700;
+    font-size: 0.85rem;
+    box-shadow: 0 4px 12px rgba(50, 4, 4, 0.08) !important;
+}
+
+/* Shop Card Split View (Mockup Style) */
+.shop-card-split {
+    background: white;
+    border: 1px solid rgba(201, 153, 151, 0.12);
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 1.25rem;
+    transition: var(--transition-base);
+    box-shadow: var(--shadow-sm);
+    display: block;
+    text-decoration: none !important;
+    position: relative;
+}
+
+.shop-card-split:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
+    border-color: rgba(194, 146, 64, 0.25);
+}
+
+.shop-card-split-img {
+    height: 150px;
+    width: 100%;
+    position: relative;
+    background: linear-gradient(135deg, var(--color-terracotta), var(--color-mesa));
+}
+
+.shop-rating-badge {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: white;
+    color: var(--color-espresso);
+    padding: 0.25rem 0.6rem;
+    border-radius: 100px;
+    font-weight: 700;
+    font-size: 0.8rem;
+    box-shadow: 0 4px 10px rgba(50, 4, 4, 0.1);
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    z-index: 5;
+}
+
+.shop-card-split-body {
+    padding: 1.25rem;
+}
+
+.shop-card-split-category {
+    font-size: 0.8rem;
+    color: var(--color-mesa);
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.shop-card-split-name {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--color-espresso);
+    margin-bottom: 0.75rem;
+}
+
+.shop-card-split-btn {
+    width: 100%;
+    background-color: var(--color-dune) !important;
+    color: var(--color-espresso) !important;
+    border: 1px solid rgba(201, 153, 151, 0.15) !important;
+    border-radius: 100px;
+    padding: 0.5rem 1rem;
+    font-weight: 700;
+    font-size: 0.85rem;
+    transition: var(--transition-base);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+}
+
+.shop-card-split:hover .shop-card-split-btn {
+    background-color: var(--color-marigold) !important;
+    color: white !important;
+    border-color: var(--color-marigold) !important;
+    box-shadow: 0 4px 12px rgba(194, 146, 64, 0.2);
+}
+
+/* Adjust layout on smaller screens to be stackable */
+@media (max-width: 768px) {
+    .shops-split-container {
+        flex-direction: column-reverse;
+        height: auto;
+        overflow: visible;
+    }
+    
+    .shops-sidebar {
+        width: 100%;
+        height: auto;
+        border-left: none;
+        border-top: 1px solid rgba(201, 153, 151, 0.15);
+    }
+    
+    .shops-map-wrapper {
+        height: 350px;
+        width: 100%;
+    }
+}

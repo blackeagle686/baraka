@@ -12,23 +12,25 @@ function renderHeader() {
     const userRole = localStorage.getItem('user_role');
     const userName = localStorage.getItem('user_name') || 'مستخدم بركة';
 
-    let rightSideHtml = '';
-    
-    // Always include Explore / لف في المحلات
-    rightSideHtml += `
-        <a class="nav-link d-flex align-items-center gap-2 fw-bold text-espresso me-3" href="/html/shops/list.html" style="font-size: 0.95rem; color: var(--color-espresso) !important;">
-            <i class="bi bi-compass fs-5 text-mesa"></i>
-            <span>لف في المحلات</span>
-        </a>
-    `;
+    const isCustomerOrGuest = !userRole || userRole === 'CUSTOMER';
 
-    // Always include Cart Icon with badge
-    rightSideHtml += `
-        <a class="nav-link d-flex align-items-center position-relative me-4" href="/html/cart.html" id="headerCartBtn" style="cursor: pointer; padding: 0.5rem;">
-            <i class="bi bi-cart3 fs-4 text-espresso"></i>
-            <span class="badge bg-success rounded-circle position-absolute top-0 start-100 translate-middle-y" id="headerCartCount" style="font-size: 0.65rem; padding: 0.25em 0.5em; min-width: 1.5em; display: none;">0</span>
-        </a>
-    `;
+    if (isCustomerOrGuest) {
+        // Always include Explore / لف في المحلات
+        rightSideHtml += `
+            <a class="nav-link d-flex align-items-center gap-2 fw-bold text-espresso me-3" href="/html/shops/list.html" style="font-size: 0.95rem; color: var(--color-espresso) !important;">
+                <i class="bi bi-compass fs-5 text-mesa"></i>
+                <span>لف في المحلات</span>
+            </a>
+        `;
+
+        // Always include Cart Icon with badge
+        rightSideHtml += `
+            <a class="nav-link d-flex align-items-center position-relative me-4" href="/html/cart.html" id="headerCartBtn" style="cursor: pointer; padding: 0.5rem;">
+                <i class="bi bi-cart3 fs-4 text-espresso"></i>
+                <span class="badge bg-success rounded-circle position-absolute top-0 start-100 translate-middle-y" id="headerCartCount" style="font-size: 0.65rem; padding: 0.25em 0.5em; min-width: 1.5em; display: none;">0</span>
+            </a>
+        `;
+    }
 
     if (token) {
         let roleBadge = '';

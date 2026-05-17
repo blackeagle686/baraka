@@ -59,11 +59,7 @@ function loadLocalCart() {
     
     // Sync navbar badge
     if (window.updateHeaderCartUI) {
-        window.updateHeaderCartUI();
-    }
-}
-
-function renderActiveCart() {
+        window.updfunction renderActiveCart() {
     const listContainer = document.getElementById('activeCartItemsList');
     const tabBadge = document.getElementById('cartTabBadge');
     
@@ -95,45 +91,102 @@ function renderActiveCart() {
             </div>
         `;
         if (subtotalEl) subtotalEl.innerText = '0.00 ج.م';
-        if (totalSumEl) totalSumEl.innerText = '0.00 ...';
+        if (totalSumEl) totalSumEl.innerText = '0.00 ج.م';
         return;
     }
     
-    let html = '';
-    let subtotal = 0;
-    
+    // Group items by shop ID
+    const grouped = {};
     cart.forEach(item => {
-        const itemTotal = item.price * item.quantity;
-        subtotal += itemTotal;
+        const sid = item.shop || 9999;
+        if (!grouped[sid]) {
+            grouped[sid] = {
+                shopId: sid,
+                shopName: item.shopName || 'محل بركة',
+                items: [],
+                subtotal: 0
+            };
+        }
+        grouped[sid].items.push(item);
+        grouped[sid].subtotal += item.price * item.quantity;
+    });
+    
+    let html = '';
+    let globalSubtotal = 0;
+    let globalDeliveryTotal = 0;
+    
+    Object.values(grouped).forEach(group => {
+        const deliveryFee = 15; // delivery fee per shop trip
+        const groupTotal = group.subtotal + deliveryFee;
+        globalSubtotal += group.subtotal;
+        globalDeliveryTotal += deliveryFee;
+        
+        let itemsHtml = '';
+        group.items.forEach(item => {
+            const itemTotal = item.price * item.quantity;
+            itemsHtml += `
+                <div class="cart-item-card animate-up" style="border: 0; border-bottom: 1px solid rgba(201,153,151,0.06); border-radius: 0; padding: 1.25rem 0;">
+                    <div class="d-flex align-items-center gap-3">
+                        ${item.image 
+                            ? `<img src="${item.image}" class="cart-item-img">` 
+                            : `<div class="cart-item-img d-flex align-items-center justify-content-center text-marigold"><i class="bi bi-box-seam fs-4"></i></div>`
+                        }
+                        <div>
+                            <h5 class="fw-bold text-espresso mb-1" style="font-size: 1.05rem;">${item.name}</h5>
+                            <span class="text-marigold fw-bold" style="font-size: 0.95rem;">${item.price} ج.م <span class="text-muted fw-normal small">للوحدة</span></span>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex align-items-center gap-4">
+                        <!-- Qty Control -->
+                        <div class="cart-qty-control">
+                            <button class="cart-qty-btn" onclick="changeCartItemQty(${item.product}, -1)">-</button>
+                            <span class="fw-bold text-espresso px-1" style="font-size: 1.05rem;">${item.quantity}</span>
+                            <button class="cart-qty-btn" onclick="changeCartItemQty(${item.product}, 1)">+</button>
+                        </div>
+                        
+                        <!-- Item Total Price -->
+                        <span class="fw-bold text-espresso font-monospace" style="min-width: 80px; text-align: left; font-size: 1.05rem;">${itemTotal.toFixed(2)} ج.م</span>
+                        
+                        <!-- Remove Button -->
+                        <button class="btn btn-sm btn-link text-danger p-1" onclick="removeCartItem(${item.product})" title="حذف">
+                            <i class="bi bi-trash3 fs-5"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+        });
         
         html += `
-            <div class="cart-item-card animate-up">
-                <div class="d-flex align-items-center gap-3">
-                    ${item.image 
-                        ? `<img src="${item.image}" class="cart-item-img">` 
-                        : `<div class="cart-item-img d-flex align-items-center justify-content-center text-marigold"><i class="bi bi-box-seam fs-4"></i></div>`
-                    }
+            <div class="dashboard-card mb-4 animate-up p-4" style="border: 1px solid rgba(194, 146, 64, 0.15);">
+                <!-- Shop Header -->
+                <div class="d-flex align-items-center gap-2 mb-3 pb-3 border-bottom" style="border-color: rgba(201,153,151,0.08) !important;">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center text-white" style="width: 36px; height: 36px; background: var(--color-marigold);">
+                        <i class="bi bi-shop fs-5"></i>
+                    </div>
                     <div>
-                        <h5 class="fw-bold text-espresso mb-1" style="font-size: 1.05rem;">${item.name}</h5>
-                        <span class="text-marigold fw-bold" style="font-size: 0.95rem;">${item.price} ج.م <span class="text-muted fw-normal small">للوحدة</span></span>
+                        <h4 class="fw-bold text-espresso mb-0" style="font-size: 1.15rem;">منتجات من: ${group.shopName}</h4>
+                        <span class="text-mesa small">سيتم تسليمها وتوصيلها في طلب واحد مخصص</span>
                     </div>
                 </div>
                 
-                <div class="d-flex align-items-center gap-4">
-                    <!-- Qty Control -->
-                    <div class="cart-qty-control">
-                        <button class="cart-qty-btn" onclick="changeCartItemQty(${item.product}, -1)">-</button>
-                        <span class="fw-bold text-espresso px-1" style="font-size: 1.05rem;">${item.quantity}</span>
-                        <button class="cart-qty-btn" onclick="changeCartItemQty(${item.product}, 1)">+</button>
-                    </div>
-                    
-                    <!-- Item Total Price -->
-                    <span class="fw-bold text-espresso" style="min-width: 80px; text-align: left; font-size: 1.05rem;">${itemTotal.toFixed(2)} ج.م</span>
-                    
-                    <!-- Remove Button -->
-                    <button class="btn btn-sm btn-link text-danger p-1" onclick="removeCartItem(${item.product})" title="حذف">
-                        <i class="bi bi-trash3 fs-5"></i>
-                    </button>
+                <!-- Items list -->
+                <div class="shop-group-items-list mb-3">
+                    ${itemsHtml}
+                </div>
+                
+                <!-- Shop specific delivery fee alert -->
+                <div class="d-flex justify-content-between align-items-center mt-3 pt-2 text-mesa small">
+                    <span>الإجمالي الفرعي للمحل</span>
+                    <span class="fw-bold text-espresso">${group.subtotal.toFixed(2)} ج.م</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mt-1 text-mesa small">
+                    <span>خدمة توصيل المحل (دليفري)</span>
+                    <span class="fw-bold text-success">${deliveryFee.toFixed(2)} ج.م</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top fw-bold text-espresso" style="border-color: rgba(201,153,151,0.06) !important; font-size: 1.05rem;">
+                    <span>حساب هذا الطلب</span>
+                    <span class="text-marigold font-monospace">${groupTotal.toFixed(2)} ج.م</span>
                 </div>
             </div>
         `;
@@ -141,10 +194,11 @@ function renderActiveCart() {
     
     listContainer.innerHTML = html;
     
-    const deliveryFee = 15; // standard village delivery in EGP
-    const totalSum = subtotal + deliveryFee;
+    const globalTotal = globalSubtotal + globalDeliveryTotal;
     
-    if (subtotalEl) subtotalEl.innerText = `${subtotal.toFixed(2)} ج.م`;
+    if (subtotalEl) subtotalEl.innerText = `${globalSubtotal.toFixed(2)} ج.م`;
+    if (totalSumEl) totalSumEl.innerText = `${globalTotal.toFixed(2)} ج.م`;
+}innerText = `${subtotal.toFixed(2)} ج.م`;
     if (totalSumEl) totalSumEl.innerText = `${totalSum.toFixed(2)} ج.م`;
 }
 

@@ -215,11 +215,11 @@ async function loadDriverOrders() {
         renderAvailableOrders(availableOrders);
 
         // 2. Active trips: assigned to this driver, not delivered/cancelled
-        const myActiveTrips = orders.filter(o => o.driver === currentDriver.id && ['ON_DELIVERY', 'ACCEPTED', 'PREPARING'].includes(o.status));
+        const myActiveTrips = orders.filter(o => o.driver == currentDriver.id && ['ON_DELIVERY', 'ACCEPTED', 'PREPARING'].includes(o.status));
         renderActiveTrips(myActiveTrips);
 
         // 3. Completed trips: assigned to this driver, status DELIVERED
-        const completedCount = orders.filter(o => o.driver === currentDriver.id && o.status === 'DELIVERED').length;
+        const completedCount = orders.filter(o => o.driver == currentDriver.id && o.status === 'DELIVERED').length;
         document.getElementById('statCompletedCount').innerText = completedCount;
 
     } catch (error) {

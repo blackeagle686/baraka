@@ -334,3 +334,71 @@ window.showBarakaPrompt = function(message, placeholder = '', title = 'إدخا�
         });
     });
 };
+
+window.showBarakaQRScanner = function(title = 'مسح رمز الاستجابة السريعة (QR)') {
+    return new Promise((resolve) => {
+        if (typeof Html5QrcodeScanner === 'undefined') {
+            console.error("Html5QrcodeScanner is not loaded.");
+            resolve(null);
+            return;
+        }
+
+        const overlay = document.createElement('div');
+        overlay.className = 'baraka-modal-overlay';
+        
+        overlay.innerHTML = `
+            <div class="baraka-modal-box" style="max-width: 500px;">
+                <div class="baraka-modal-icon info" style="background: rgba(194, 146, 64, 0.12); color: #c29240;"><i class="bi bi-qr-code-scan"></i></div>
+                <div class="baraka-modal-title">${title}</div>
+                <div class="baraka-modal-text">قم بتوجيه الكاميرا نحو رمز الاستجابة السريعة لمسحه تلقائياً</div>
+                
+                <div id="qr-reader" style="width: 100%; border-radius: 12px; overflow: hidden; margin-bottom: 1.6rem; border: 2px solid rgba(201, 153, 151, 0.2); direction: ltr !important; background: #fff;"></div>
+                
+                <div class="baraka-modal-footer">
+                    <button class="btn btn-outline-mesa baraka-modal-btn" id="barakaQRCancelBtn">إلغاء وإدخال يدوي</button>
+                </div>
+            </div>
+        `;
+        
+        applyBarakaModalStyles(overlay);
+        document.documentElement.appendChild(overlay);
+        
+        const cancelBtn = document.getElementById('barakaQRCancelBtn');
+        const box = overlay.querySelector('.baraka-modal-box');
+        
+        setTimeout(() => {
+            overlay.style.opacity = '1';
+            if (box) box.style.transform = 'translateY(0) scale(1)';
+        }, 50);
+        
+        let html5QrcodeScanner = new Html5QrcodeScanner(
+            "qr-reader", 
+            { fps: 10, qrbox: {width: 250, height: 250} },
+            /* verbose= */ false
+        );
+        
+        const closeScanner = (val) => {
+            html5QrcodeScanner.clear().catch(e => console.error("Failed to clear scanner", e));
+            overlay.style.opacity = '0';
+            if (box) box.style.transform = 'translateY(35px) scale(0.95)';
+            setTimeout(() => {
+                overlay.remove();
+                resolve(val);
+            }, 300);
+        };
+        
+        function onScanSuccess(decodedText, decodedResult) {
+            closeScanner(decodedText);
+        }
+        
+        function onScanFailure(error) {
+            // keep scanning
+        }
+        
+        html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+        
+        cancelBtn.addEventListener('click', () => {
+            closeScanner(null);
+        });
+    });
+};

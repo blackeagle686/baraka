@@ -29,7 +29,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 localStorage.setItem('user_name', profile.name || 'مستخدم بركة');
                 
                 // Role-based smart routing for best UX
-                if (profile.role === 'DRIVER') {
+                if (profile.role === 'ADMIN') {
+                    window.location.href = '/html/admin/dashboard.html';
+                } else if (profile.role === 'DRIVER') {
                     window.location.href = '/html/profile/driver.html';
                 } else if (profile.role === 'SHOP_OWNER') {
                     window.location.href = '/html/profile/shop.html';

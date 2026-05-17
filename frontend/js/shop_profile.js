@@ -97,11 +97,24 @@ async function initShopProfile() {
         if (shop) {
             currentShopId = shop.id;
             populateShopForm(shop);
-            document.getElementById('productsSection').style.display = 'block';
+            
+            const prodSection = document.getElementById('productsSection');
+            if (prodSection) prodSection.style.display = 'block';
+            const noShopState = document.getElementById('noShopProductsState');
+            if (noShopState) noShopState.style.display = 'none';
+            
             loadShopProducts(shop.id);
             loadShopOrders();
         } else {
             document.getElementById('shopTitle').innerText = 'إنشاء محل جديد';
+            
+            const prodSection = document.getElementById('productsSection');
+            if (prodSection) prodSection.style.display = 'none';
+            const noShopState = document.getElementById('noShopProductsState');
+            if (noShopState) noShopState.style.display = 'block';
+            
+            // BUG FIX: Initialize default map for new shop creator!
+            initShopMap(null, null);
         }
     } catch (error) {
         console.error("Error fetching shop profile:", error);
@@ -178,7 +191,14 @@ async function handleShopSubmit() {
             currentShopId = savedShop.id;
             statusMsg.innerText = 'تم إنشاء المحل بنجاح!';
             document.getElementById('shopTitle').innerText = 'إعدادات المحل';
-            document.getElementById('productsSection').style.display = 'block';
+            
+            const prodSec = document.getElementById('productsSection');
+            if (prodSec) prodSec.style.display = 'block';
+            const noState = document.getElementById('noShopProductsState');
+            if (noState) noState.style.display = 'none';
+            
+            loadShopProducts(savedShop.id);
+            loadShopOrders();
         }
         statusMsg.className = 'text-success text-center fw-bold mt-2';
         statusMsg.classList.remove('d-none');

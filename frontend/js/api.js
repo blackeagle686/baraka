@@ -179,5 +179,73 @@ const api = {
             if (!res.ok) throw await res.json();
             return await res.json();
         }
+    },
+    admin: {
+        getStats: async (token) => {
+            const res = await fetch(`${API_BASE}/auth/admin/stats/`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!res.ok) throw await res.json();
+            return await res.json();
+        },
+        getUsers: async (token, page = 1, search = '', role = '', approved = '', active = '') => {
+            const url = new URL(`${API_BASE}/auth/admin/users/`);
+            url.searchParams.append('page', page);
+            if (search) url.searchParams.append('search', search);
+            if (role) url.searchParams.append('role', role);
+            if (approved) url.searchParams.append('approved', approved);
+            if (active) url.searchParams.append('active', active);
+            const res = await fetch(url.toString(), {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!res.ok) throw await res.json();
+            return await res.json();
+        },
+        updateUser: async (token, userId, data) => {
+            const res = await fetch(`${API_BASE}/auth/admin/users/${userId}/`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(data)
+            });
+            if (!res.ok) throw await res.json();
+            return await res.json();
+        },
+        getOrders: async (token, page = 1, search = '', status = '') => {
+            const url = new URL(`${API_BASE}/admin/orders/`);
+            url.searchParams.append('page', page);
+            if (search) url.searchParams.append('search', search);
+            if (status) url.searchParams.append('status', status);
+            const res = await fetch(url.toString(), {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!res.ok) throw await res.json();
+            return await res.json();
+        },
+        getReports: async (token, page = 1, search = '', resolved = '') => {
+            const url = new URL(`${API_BASE}/admin/reports/`);
+            url.searchParams.append('page', page);
+            if (search) url.searchParams.append('search', search);
+            if (resolved) url.searchParams.append('resolved', resolved);
+            const res = await fetch(url.toString(), {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!res.ok) throw await res.json();
+            return await res.json();
+        },
+        updateReport: async (token, reportId, data) => {
+            const res = await fetch(`${API_BASE}/admin/reports/${reportId}/`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(data)
+            });
+            if (!res.ok) throw await res.json();
+            return await res.json();
+        }
     }
 };

@@ -199,3 +199,48 @@ class OrderViewSet(viewsets.ModelViewSet):
         order.disputed_by = request.user
         order.save()
         return Response(self.get_serializer(order).data)
+
+
+# ==========================================
+# Admin Dashboard - All Orders View
+# ==========================================
+from rest_framework import generics
+from rest_framework.pagination import PageNumberPagination
+from django.db.models import Q
+from users.permissions import IsAdminUserRole
+
+
+class AdminOrderPagination(PageNumberPagination):
+    page_size = 15
+    page_size_query_param = 'page_size'
+    max_page_size = 100
+
+
+class AdminOrderListView(generics.ListAPIView):
+    """Admin can view all orders with search and filter."""
+    serializer_class = OrderSerializer
+    permission_classes = [IsAdminUserRole]
+    pagination_class = AdminOrderPagination
+
+    def get_queryset(self):
+        qs = Order.objects.select_related(
+            'customer', 'driver', 'shop', 'shop__owner'
+        ).prefetch_related(
+            'items', 'items__product'
+        ).order_by('-created_at')
+
+        search = self.request.query_params.get('search', '')
+        order_status = self.request.query_params.get('status', '')
+
+        if search:
+            # Search by order ID or customer phone
+            if search.isdigit():
+                qs = qs.filter(Q(id=int(search)) | Q(customer__phone__icontains=search))
+            else:
+                qs = qs.filter(Q(customer__name__icontains=search) | Q(customer__phone__icontains=search))
+
+        if order_status:
+            qs = qs.filter(status=order_status)
+
+        return qs
+

@@ -10,3 +10,14 @@ class IsAdminUserRole(permissions.BasePermission):
             and request.user.is_authenticated
             and (request.user.role == 'ADMIN' or request.user.is_staff or request.user.is_superuser)
         )
+
+class IsApprovedUser(permissions.BasePermission):
+    """Only allow users with is_approved=True to access."""
+    message = "حسابك قيد المراجعة. يرجى الانتظار حتى يتم اعتماد الحساب من قبل الإدارة."
+
+    def has_permission(self, request, view):
+        return (
+            request.user
+            and request.user.is_authenticated
+            and request.user.is_approved
+        )

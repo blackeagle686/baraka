@@ -159,16 +159,17 @@ async function loadCustomerOrders() {
                 </div>
             `).join('');
             
-            let otpBlockHtml = '';
-            if (!isCompleted && order.customer_otp) {
-                otpBlockHtml = `
-                    <div class="bg-marigold bg-opacity-10 border border-marigold border-dashed rounded-3 p-3 text-center mt-3" style="border-style: dashed !important;">
-                        <span class="small text-espresso d-block mb-1 fw-bold"><i class="bi bi-shield-lock-fill me-1"></i>رمز التوصيل السري (OTP):</span>
-                        <strong class="fs-4 text-marigold tracking-wide" style="font-family: monospace; letter-spacing: 4px;">${order.customer_otp}</strong>
-                        <span class="d-block text-muted small mt-1" style="font-size: 0.75rem;">قم بإعطاء هذا الرمز للمندوب عند استلام طلبك ودفع المبلغ لتأكيد المعاملة.</span>
-                    </div>
-                `;
-            } else if (order.status === 'DELIVERED' && !order.is_paid_to_shop) {
+        let otpBlockHtml = '';
+        if (!isCompleted && order.customer_otp) {
+            otpBlockHtml = `
+                <div class="bg-marigold bg-opacity-10 border border-marigold border-dashed rounded-3 p-3 text-center mt-3" style="border-style: dashed !important;">
+                    <span class="small text-espresso d-block mb-1 fw-bold"><i class="bi bi-shield-lock-fill me-1"></i>رمز التوصيل السري (OTP):</span>
+                    <strong class="fs-4 text-marigold tracking-wide" style="font-family: monospace; letter-spacing: 4px;">${order.customer_otp}</strong>
+                    <div id="qrcode-customer-${order.id}" class="d-flex justify-content-center my-2"></div>
+                    <span class="d-block text-muted small mt-1" style="font-size: 0.75rem;">قم بإعطاء هذا الرمز أو إظهار رمز QR للمندوب عند استلام طلبك ودفع المبلغ لتأكيد المعاملة.</span>
+                </div>
+            `;
+        } else if (order.status === 'DELIVERED' && !order.is_paid_to_shop) {
                 otpBlockHtml = `
                     <div class="alert alert-warning py-2 rounded-3 small mb-0 border-0 fw-bold mt-3 text-espresso">
                         <i class="bi bi-clock-history me-1"></i>تم التوصيل بنجاح. بانتظار تصفية المندوب للمبلغ مع المحل.

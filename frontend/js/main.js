@@ -12,6 +12,7 @@ function renderHeader() {
     const userRole = localStorage.getItem('user_role');
     const userName = localStorage.getItem('user_name') || 'مستخدم بركة';
 
+    let rightSideHtml = '';
     const isCustomerOrGuest = !userRole || userRole === 'CUSTOMER';
 
     if (isCustomerOrGuest) {

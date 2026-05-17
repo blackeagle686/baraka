@@ -4,6 +4,10 @@
 
 let newImageFile = null;
 let allCustomerOrders = [];
+let autoRefreshTimer = null;
+let countdownInterval = null;
+let refreshSecondsLeft = 30;
+let currentFilter = 'all';
 
 document.addEventListener('DOMContentLoaded', () => {
     fetchProfile();
@@ -202,10 +206,57 @@ async function loadCustomerOrders() {
         document.getElementById('statPending').innerText = pending;
 
         // Render with current filter
-        renderOrders(orders);
+        renderOrders(allCustomerOrders.filter(o => applyFilterCondition(o, currentFilter)));
+        
+        startAutoRefresh();
     } catch (error) {
         console.error("Failed to load customer orders:", error);
     }
+}
+
+function applyFilterCondition(order, filter) {
+    if (filter === 'active') return ['PENDING', 'ACCEPTED', 'PREPARING', 'ON_DELIVERY'].includes(order.status);
+    if (filter === 'delivered') return order.status === 'DELIVERED';
+    if (filter === 'cancelled') return order.status === 'CANCELLED';
+    return true;
+}
+
+function startAutoRefresh() {
+    clearInterval(countdownInterval);
+    clearTimeout(autoRefreshTimer);
+    
+    refreshSecondsLeft = 30;
+    const countdownEl = document.getElementById('refreshCountdown');
+    const indicatorEl = document.getElementById('autoRefreshIndicator');
+    
+    if (!countdownEl || !indicatorEl) return;
+    
+    // Only auto-refresh if there are active orders
+    const hasActiveOrders = allCustomerOrders.some(o => ['PENDING', 'ACCEPTED', 'PREPARING', 'ON_DELIVERY'].includes(o.status));
+    
+    if (hasActiveOrders) {
+        indicatorEl.classList.remove('d-none');
+        countdownInterval = setInterval(() => {
+            refreshSecondsLeft--;
+            if (countdownEl) countdownEl.innerText = refreshSecondsLeft;
+            if (refreshSecondsLeft <= 0) {
+                clearInterval(countdownInterval);
+                loadCustomerOrders(); // This will restart the cycle
+            }
+        }, 1000);
+    } else {
+        indicatorEl.classList.add('d-none');
+    }
+}
+
+window.manualRefresh = function() {
+    const icon = document.getElementById('refreshIcon');
+    if (icon) icon.classList.add('bi-arrow-clockwise-spin');
+    
+    loadCustomerOrders().finally(() => {
+        if (icon) icon.classList.remove('bi-arrow-clockwise-spin');
+        if(window.showBarakaToast) window.showBarakaToast('تم تحديث الطلبات', 'success', 'bi-arrow-clockwise');
+    });
 }
 
 function renderOrders(orders) {
@@ -403,15 +454,8 @@ window.filterOrders = function(filter, btnElement) {
         btnElement.classList.add('active');
     }
     
-    let filtered = allCustomerOrders;
-    if (filter === 'active') {
-        filtered = allCustomerOrders.filter(o => ['PENDING', 'ACCEPTED', 'PREPARING', 'ON_DELIVERY'].includes(o.status));
-    } else if (filter === 'delivered') {
-        filtered = allCustomerOrders.filter(o => o.status === 'DELIVERED');
-    } else if (filter === 'cancelled') {
-        filtered = allCustomerOrders.filter(o => o.status === 'CANCELLED');
-    }
-    
+    currentFilter = filter;
+    let filtered = allCustomerOrders.filter(o => applyFilterCondition(o, currentFilter));
     renderOrders(filtered);
 };
 

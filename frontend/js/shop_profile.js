@@ -2,6 +2,7 @@ let currentShopId = null;
 let newShopImageFile = null;
 let newProdImageFile = null;
 let newEditProdImageFile = null;
+let currentProducts = [];
 
 document.addEventListener('DOMContentLoaded', () => {
     const token = localStorage.getItem('access_token');
@@ -179,6 +180,7 @@ async function loadShopProducts(shopId) {
 }
 
 function renderShopProductsManagement(products) {
+    currentProducts = products;
     const container = document.getElementById('shopProductsList');
     container.innerHTML = '';
 
@@ -188,8 +190,6 @@ function renderShopProductsManagement(products) {
     }
 
     products.forEach(product => {
-        const descEscaped = (product.description || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
-        const nameEscaped = product.name.replace(/'/g, "\\'").replace(/"/g, '&quot;');
         const html = `
             <div class="col-md-6 mb-3">
                 <div class="card border-0 shadow-sm rounded-4 h-100">
@@ -206,7 +206,7 @@ function renderShopProductsManagement(products) {
                                 <p class="text-marigold fw-bold mb-1">${product.price} ج.م</p>
                                 <span class="badge ${product.available ? 'bg-success' : 'bg-danger'} mb-2 w-fit-content">${product.available ? 'متوفر' : 'غير متوفر'}</span>
                                 <div class="d-flex gap-2 mt-auto">
-                                    <button onclick="openEditModal(${product.id}, '${nameEscaped}', ${product.price}, '${descEscaped}', ${product.available})" class="btn btn-sm btn-outline-mesa flex-grow-1">تعديل</button>
+                                    <button onclick="openEditModal(${product.id})" class="btn btn-sm btn-outline-mesa flex-grow-1">تعديل</button>
                                 </div>
                             </div>
                         </div>
@@ -218,12 +218,15 @@ function renderShopProductsManagement(products) {
     });
 }
 
-window.openEditModal = function(id, name, price, desc, available) {
-    document.getElementById('editProdId').value = id;
-    document.getElementById('editProdName').value = name;
-    document.getElementById('editProdPrice').value = price;
-    document.getElementById('editProdDesc').value = desc;
-    document.getElementById('editProdAvailable').checked = available;
+window.openEditModal = function(id) {
+    const product = currentProducts.find(p => p.id === id);
+    if (!product) return;
+
+    document.getElementById('editProdId').value = product.id;
+    document.getElementById('editProdName').value = product.name;
+    document.getElementById('editProdPrice').value = product.price;
+    document.getElementById('editProdDesc').value = product.description || '';
+    document.getElementById('editProdAvailable').checked = product.available;
     newEditProdImageFile = null;
     document.getElementById('editProdImage').value = '';
 

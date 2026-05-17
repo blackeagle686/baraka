@@ -1,5 +1,4 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Determine which page we are on
     const isDetailsPage = window.location.pathname.includes('details.html');
     
     if (isDetailsPage) {
@@ -25,22 +24,31 @@ function renderAllShops(shops) {
     container.innerHTML = '';
     
     if (shops.length === 0) {
-        container.innerHTML = '<p class="text-center text-mesa w-100">لا توجد محلات حالياً.</p>';
+        container.innerHTML = `
+            <div class="empty-state w-100 animate-up">
+                <div class="empty-state-icon"><i class="bi bi-shop"></i></div>
+                <p class="fw-bold">لا توجد محلات حالياً</p>
+                <p class="small text-mesa">ترقب... المحلات قادمة قريباً!</p>
+            </div>`;
         return;
     }
 
-    shops.forEach(shop => {
+    shops.forEach((shop, i) => {
         const shopHtml = `
-            <div class="col-md-3 mb-4 animate-up">
-                <div class="card shop-card border-0 h-100">
-                    <div class="card-img-top shop-img-placeholder d-flex align-items-center justify-content-center" style="height: 150px;">
-                        ${shop.image ? `<img src="${shop.image}" class="w-100 h-100 object-fit-cover">` : `<span class="text-white fs-2 fw-bold">${shop.name.charAt(0)}</span>`}
+            <div class="col-lg-3 col-md-4 col-sm-6 animate-up" style="animation-delay: ${i * 0.08}s;">
+                <a href="/html/shops/details.html?id=${shop.id}" class="text-decoration-none">
+                    <div class="shop-card h-100">
+                        <div class="shop-img-placeholder">
+                            ${shop.image ? `<img src="${shop.image}" class="w-100 h-100 object-fit-cover">` : `<span>${shop.name.charAt(0)}</span>`}
+                        </div>
+                        <div class="card-body text-center p-3">
+                            <h6 class="fw-bold text-espresso mb-2">${shop.name}</h6>
+                            <span class="btn btn-outline-primary btn-sm rounded-pill w-100">
+                                <i class="bi bi-box-seam me-1"></i>عرض المنتجات
+                            </span>
+                        </div>
                     </div>
-                    <div class="card-body text-center">
-                        <h5 class="card-title fw-bold text-espresso">${shop.name}</h5>
-                        <a href="/html/shops/details.html?id=${shop.id}" class="btn btn-outline-primary rounded-pill w-100 mt-3 btn-sm">عرض المنتجات</a>
-                    </div>
-                </div>
+                </a>
             </div>
         `;
         container.innerHTML += shopHtml;
@@ -60,10 +68,18 @@ async function initShopDetails() {
             renderShopProducts(products);
         } catch (error) {
             console.error("Error:", error);
-            document.getElementById('shopHeader').innerHTML = '<h2 class="text-danger">حدث خطأ أثناء تحميل المحل</h2>';
+            document.getElementById('shopHeader').innerHTML = `
+                <div class="text-center py-4">
+                    <i class="bi bi-exclamation-triangle text-danger fs-1"></i>
+                    <h4 class="text-danger mt-2">حدث خطأ أثناء تحميل المحل</h4>
+                </div>`;
         }
     } else {
-        document.getElementById('shopHeader').innerHTML = '<h2 class="text-danger">محل غير معروف</h2>';
+        document.getElementById('shopHeader').innerHTML = `
+            <div class="text-center py-4">
+                <i class="bi bi-question-circle text-mesa fs-1"></i>
+                <h4 class="text-mesa mt-2">محل غير معروف</h4>
+            </div>`;
     }
 }
 
@@ -72,11 +88,25 @@ function renderShopHeader(shop) {
     if (!header) return;
 
     header.innerHTML = `
-        <div class="d-flex align-items-center justify-content-center flex-column">
-            ${shop.image ? `<img src="${shop.image}" class="rounded-circle mb-3 shadow" style="width:120px;height:120px;object-fit:cover;">` : `<div class="rounded-circle mb-3 d-flex align-items-center justify-content-center bg-terracotta text-white fs-1 shadow" style="width:120px;height:120px;">${shop.name.charAt(0)}</div>`}
-            <h2 class="fw-bold text-espresso">${shop.name}</h2>
-            <p class="text-mesa mb-1">${shop.description || ''}</p>
-            <span class="badge ${shop.is_open ? 'bg-success' : 'bg-danger'} rounded-pill px-3 py-2 mt-2">${shop.is_open ? 'مفتوح الآن' : 'مغلق'}</span>
+        <div class="d-flex align-items-center justify-content-center flex-column animate-up">
+            ${shop.image 
+                ? `<img src="${shop.image}" class="rounded-circle mb-3 shadow-lg" style="width:110px;height:110px;object-fit:cover;border:4px solid rgba(255,255,255,0.8);">` 
+                : `<div class="rounded-circle mb-3 d-flex align-items-center justify-content-center text-white fs-1 shadow-lg" style="width:110px;height:110px;background:linear-gradient(135deg, var(--color-terracotta), var(--color-mesa));border:4px solid rgba(255,255,255,0.8);">${shop.name.charAt(0)}</div>`
+            }
+            <h2 class="shop-detail-name">${shop.name}</h2>
+            <p class="text-mesa mb-2">${shop.description || ''}</p>
+            <div class="shop-meta">
+                <div class="shop-meta-item">
+                    <i class="bi bi-geo-alt-fill text-marigold"></i>
+                    <span>${shop.address || 'غير محدد'}</span>
+                </div>
+                <div class="shop-meta-item">
+                    <span class="badge ${shop.is_open ? 'status-open' : 'status-closed'} rounded-pill px-3 py-2">
+                        <i class="bi ${shop.is_open ? 'bi-check-circle' : 'bi-x-circle'} me-1"></i>
+                        ${shop.is_open ? 'مفتوح الآن' : 'مغلق'}
+                    </span>
+                </div>
+            </div>
         </div>
     `;
 }
@@ -88,23 +118,31 @@ function renderShopProducts(products) {
     container.innerHTML = '';
     
     if (products.length === 0) {
-        container.innerHTML = '<p class="text-mesa w-100">لا توجد منتجات متوفرة حالياً.</p>';
+        container.innerHTML = `
+            <div class="empty-state w-100 animate-up">
+                <div class="empty-state-icon"><i class="bi bi-box-seam"></i></div>
+                <p class="fw-bold">لا توجد منتجات متوفرة حالياً</p>
+            </div>`;
         return;
     }
 
-    products.forEach(product => {
+    products.forEach((product, i) => {
         const html = `
-            <div class="col-md-4 mb-4 animate-up">
-                <div class="card shop-card border-0 h-100">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-start mb-2">
-                            <h5 class="fw-bold text-espresso">${product.name}</h5>
-                            <span class="text-marigold fw-bold">${product.price} ج.م</span>
+            <div class="col-lg-3 col-md-4 col-sm-6 animate-up" style="animation-delay: ${i * 0.06}s;">
+                <div class="product-card h-100">
+                    ${product.image 
+                        ? `<img src="${product.image}" class="product-img">` 
+                        : `<div class="product-img-placeholder"><i class="bi bi-image"></i></div>`
+                    }
+                    <div class="card-body p-3">
+                        <p class="product-name">${product.name}</p>
+                        <p class="text-mesa small mb-2" style="min-height: 2rem;">${product.description || ''}</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="product-price">${product.price} ج.م</span>
+                            <span class="badge ${product.available ? 'bg-success' : 'bg-danger'} rounded-pill small">
+                                ${product.available ? 'متوفر' : 'غير متوفر'}
+                            </span>
                         </div>
-                        <p class="text-mesa small mb-3">${product.description || ''}</p>
-                        <button class="btn btn-primary btn-sm rounded-pill w-100" ${!product.available ? 'disabled' : ''}>
-                            ${product.available ? 'أضف للسلة' : 'غير متوفر'}
-                        </button>
                     </div>
                 </div>
             </div>

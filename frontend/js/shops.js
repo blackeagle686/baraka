@@ -431,18 +431,22 @@ function updateCartUI() {
         }
     }
 
-    // 3. Render modern Checkout Sidebar Card
+    // 3. Render modern Checkout Sidebar Card (Filtered to current shop)
     const sidebar = document.getElementById('checkoutSidebar');
     if (!sidebar) return;
     
-    if (cart.length === 0) {
+    const params = new URLSearchParams(window.location.search);
+    const shopId = parseInt(params.get('id'));
+    const shopCart = cart.filter(item => item.shop === shopId);
+    
+    if (shopCart.length === 0) {
         sidebar.innerHTML = `
             <div class="checkout-sidebar-title border-0 mb-0">
                 <i class="bi bi-cart3 text-marigold"></i> سلة طلباتك
             </div>
             <div class="text-center py-5 text-mesa">
                 <i class="bi bi-cart-x fs-1 text-mesa-light mb-3 d-block" style="opacity: 0.35;"></i>
-                <p class="fw-bold mb-1 fs-6">سلتك فاضية دلوقتي</p>
+                <p class="fw-bold mb-1 fs-6">سلتك من المحل ده فاضية</p>
                 <p class="small mb-0 text-muted">ضيف حتة طماطم أو لبن طازة وابدأ طلبك!</p>
             </div>
         `;
@@ -452,7 +456,7 @@ function updateCartUI() {
     let itemsHtml = '';
     let subtotal = 0;
     
-    cart.forEach(item => {
+    shopCart.forEach(item => {
         const itemTotal = item.price * item.quantity;
         subtotal += itemTotal;
         
@@ -478,7 +482,7 @@ function updateCartUI() {
     
     sidebar.innerHTML = `
         <div class="checkout-sidebar-title">
-            <i class="bi bi-cart3 text-marigold"></i> طلباتك الفريش (${cart.length})
+            <i class="bi bi-cart3 text-marigold"></i> طلباتك الفريش (${shopCart.length})
         </div>
         <div class="checkout-sidebar-items-list">
             ${itemsHtml}
@@ -615,7 +619,13 @@ window.submitOrder = async function() {
     }
     
     const params = new URLSearchParams(window.location.search);
-    const shopId = params.get('id');
+    const shopId = parseInt(params.get('id'));
+    const shopCart = cart.filter(it => it.shop === shopId);
+    
+    if (shopCart.length === 0) {
+        alert('سلتك من هذا المحل فارغة!');
+        return;
+    }
     
     const submitBtn = document.getElementById('submitOrderBtn');
     if (submitBtn) {
@@ -624,9 +634,9 @@ window.submitOrder = async function() {
     }
     
     const orderData = {
-        shop: parseInt(shopId),
+        shop: shopId,
         address: address,
-        items: cart.map(it => ({ product: it.product, quantity: it.quantity }))
+        items: shopCart.map(it => ({ product: it.product, quantity: it.quantity }))
     };
     
     try {
@@ -637,7 +647,8 @@ window.submitOrder = async function() {
             alert('تم إرسال طلبك بنجاح! سيقوم المحل بمراجعته فوراً.');
         }
         
-        cart = [];
+        // Remove only this shop's items from the global cart
+        cart = cart.filter(it => it.shop !== shopId);
         updateCartUI();
         
         const modalEl = document.getElementById('cartModal');

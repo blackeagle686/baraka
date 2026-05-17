@@ -1,0 +1,60 @@
+/* Hero Section */
+.hero-section {
+    min-height: 100vh;
+    background: linear-gradient(135deg, var(--color-dune) 0%, #fff0e8 100%);
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-section::before {
+    content: '';
+    position: absolute;
+    top: -20%;
+    right: -10%;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, var(--color-terracotta) 0%, transparent 70%);
+    opacity: 0.15;
+    border-radius: 50%;
+    animation: float 10s infinite ease-in-out;
+}
+
+.hero-section::after {
+    content: '';
+    position: absolute;
+    bottom: -10%;
+    left: -10%;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, var(--color-marigold) 0%, transparent 70%);
+    opacity: 0.15;
+    border-radius: 50%;
+    animation: float 12s infinite ease-in-out reverse;
+}
+
+@keyframes float {
+    0% { transform: translate(0px, 0px) scale(1); }
+    33% { transform: translate(30px, -50px) scale(1.1); }
+    66% { transform: translate(-20px, 20px) scale(0.9); }
+    100% { transform: translate(0px, 0px) scale(1); }
+}
+
+/* Shop Cards Preview */
+.shop-card {
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+}
+
+.shop-card:hover {
+    transform: translateY(-10px) scale(1.02);
+    box-shadow: 0 20px 40px rgba(94, 44, 56, 0.15);
+}
+
+.shop-img-placeholder {
+    height: 200px;
+    background: linear-gradient(45deg, var(--color-terracotta), var(--color-mesa));
+}

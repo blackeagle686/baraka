@@ -53,6 +53,41 @@ const api = {
             const res = await fetch(`${API_BASE}/products/?shop_id=${shopId}`);
             if (!res.ok) throw await res.json();
             return await res.json();
+        },
+        getMyShop: async (token) => {
+            const res = await fetch(`${API_BASE}/shops/my_shop/`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.status === 404) return null;
+            if (!res.ok) throw await res.json();
+            return await res.json();
+        },
+        createShop: async (token, formData) => {
+            const res = await fetch(`${API_BASE}/shops/`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` },
+                body: formData
+            });
+            if (!res.ok) throw await res.json();
+            return await res.json();
+        },
+        updateShop: async (token, shopId, formData) => {
+            const res = await fetch(`${API_BASE}/shops/${shopId}/`, {
+                method: 'PATCH',
+                headers: { 'Authorization': `Bearer ${token}` },
+                body: formData
+            });
+            if (!res.ok) throw await res.json();
+            return await res.json();
+        },
+        addProduct: async (token, formData) => {
+            const res = await fetch(`${API_BASE}/products/`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` },
+                body: formData
+            });
+            if (!res.ok) throw await res.json();
+            return await res.json();
         }
     }
 };

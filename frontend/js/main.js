@@ -63,6 +63,8 @@ function checkAuth() {
         let manageShopHtml = '';
         if (userRole === 'SHOP_OWNER') {
             manageShopHtml = `<a href="/html/profile/shop.html" class="btn btn-marigold rounded-pill fw-bold text-white btn-sm"><i class="bi bi-shop-window me-1"></i>إدارة محلي</a>`;
+        } else if (userRole === 'DRIVER') {
+            manageShopHtml = `<a href="/html/profile/driver.html" class="btn btn-success rounded-pill fw-bold text-white btn-sm"><i class="bi bi-bicycle me-1"></i>لوحة الطيار</a>`;
         }
         
         authSection.innerHTML = `

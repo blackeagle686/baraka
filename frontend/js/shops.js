@@ -339,3 +339,98 @@ window.submitOrder = async function() {
         submitBtn.innerText = 'إرسال الطلب للمحل';
     }
 }
+
+// ==========================================
+// Interactive Pinned Shops Map Directory
+// ==========================================
+let directoryMapInstance = null;
+let directoryMarkersGroup = [];
+
+function renderShopsMap(shops) {
+    const mapContainer = document.getElementById('shopsDirectoryMap');
+    if (!mapContainer) return;
+
+    // Filter only shops that have a valid coordinate assigned
+    const pinnedShops = shops.filter(shop => shop.latitude && shop.longitude);
+
+    // Update count indicator
+    const countBadge = document.getElementById('activeShopsMapCount');
+    if (countBadge) {
+        countBadge.innerText = `${pinnedShops.length} محلات محددة على الخريطة`;
+    }
+
+    if (pinnedShops.length === 0) {
+        mapContainer.innerHTML = `
+            <div class="d-flex align-items-center justify-content-center h-100 bg-light text-muted">
+                <div class="text-center py-5">
+                    <i class="bi bi-geo-alt-fill fs-1 text-mesa mb-2 animate-up"></i>
+                    <p class="mb-0 fw-bold">لا توجد محلات محددة على الخريطة حالياً</p>
+                    <p class="small text-mesa mt-1">تصفح المحلات المتاحة في القائمة بالأسفل</p>
+                </div>
+            </div>`;
+        return;
+    }
+
+    // Centering default on the first pinned shop
+    const defaultLat = parseFloat(pinnedShops[0].latitude);
+    const defaultLon = parseFloat(pinnedShops[0].longitude);
+
+    if (directoryMapInstance) {
+        // Reset markers
+        directoryMarkersGroup.forEach(marker => directoryMapInstance.removeLayer(marker));
+        directoryMarkersGroup = [];
+    } else {
+        // Initialize Map
+        directoryMapInstance = L.map('shopsDirectoryMap').setView([defaultLat, defaultLon], 13);
+
+        // Load premium tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(directoryMapInstance);
+    }
+
+    const bounds = [];
+
+    pinnedShops.forEach(shop => {
+        const lat = parseFloat(shop.latitude);
+        const lon = parseFloat(shop.longitude);
+        bounds.push([lat, lon]);
+
+        // Custom high-fidelity popup layout matching Egypt warm dune brand
+        const popupContent = `
+            <div class="shop-map-popup text-end" style="font-family: 'Cairo', sans-serif; direction: rtl;">
+                <div class="d-flex align-items-center gap-2 mb-2 pb-2 border-bottom" style="border-color: rgba(201,153,151,0.12) !important;">
+                    <div style="width: 45px; height: 45px; border-radius: 50%; overflow: hidden; background: #eee; flex-shrink: 0; border: 2px solid rgba(194, 146, 64, 0.15);">
+                        ${shop.image 
+                            ? `<img src="${shop.image}" style="width:100%; height:100%; object-fit:cover;">` 
+                            : `<div class="d-flex align-items-center justify-content-center h-100 text-white fw-bold" style="background: linear-gradient(135deg, var(--color-terracotta), var(--color-mesa)); font-size: 0.9rem;">${shop.name.charAt(0)}</div>`
+                        }
+                    </div>
+                    <div>
+                        <h6 class="fw-bold text-espresso m-0" style="font-size: 0.95rem;">${shop.name}</h6>
+                        <span class="badge ${shop.is_open ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger'} rounded-pill px-2 py-0.5 mt-1" style="font-size: 0.7rem;">
+                            ${shop.is_open ? 'مفتوح الآن' : 'مغلق'}
+                        </span>
+                    </div>
+                </div>
+                <p class="text-mesa small mb-2" style="max-height: 3rem; overflow: hidden; font-size: 0.8rem;">${shop.description || 'لا يوجد وصف متاح للمحل.'}</p>
+                <div class="text-muted small mb-3" style="font-size: 0.8rem;"><i class="bi bi-geo-alt-fill text-marigold me-1"></i>${shop.address}</div>
+                <a href="/html/shops/details.html?id=${shop.id}" class="btn btn-marigold btn-sm rounded-pill w-100 py-2 fw-bold text-white shadow-sm text-decoration-none">
+                    <i class="bi bi-box-arrow-in-left me-1"></i>دخول المحل
+                </a>
+            </div>
+        `;
+
+        // Create Pin Marker
+        const marker = L.marker([lat, lon]).addTo(directoryMapInstance)
+            .bindPopup(popupContent, { minWidth: 220, closeButton: true });
+
+        directoryMarkersGroup.push(marker);
+    });
+
+    // Fit map bounds smoothly to fit all active shop pins
+    if (bounds.length > 0) {
+        directoryMapInstance.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
+    }
+}

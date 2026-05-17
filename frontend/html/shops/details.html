@@ -14,33 +14,44 @@
     <!-- Header Placeholder -->
     <div id="header-placeholder"></div>
 
-    <!-- Shop Header -->
-    <section class="shop-detail-hero">
-        <div class="container animate-up">
-            <nav aria-label="breadcrumb" class="pt-3 pb-2">
-                <ol class="breadcrumb m-0">
-                    <li class="breadcrumb-item"><a href="/html/shops/list.html" class="text-marigold text-decoration-none fw-bold"><i class="bi bi-arrow-right-short"></i> الرجوع للمحلات</a></li>
-                </ol>
-            </nav>
-            <div id="shopHeader">
-                <div class="text-center py-4">
-                    <div class="spinner-border text-marigold mb-3" role="status"></div>
-                    <p class="text-mesa">جاري تحميل بيانات المحل...</p>
+    <!-- Shop Cover Banner -->
+    <div id="shopCoverBanner">
+        <div class="shop-cover-banner" style="background-image: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.7)), url('https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=1200');">
+            <div class="container pb-4 w-100">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb m-0 mb-3">
+                        <li class="breadcrumb-item"><a href="/html/shops/list.html" class="text-white text-decoration-none fw-bold"><i class="bi bi-arrow-right-short"></i> الرجوع للمحلات</a></li>
+                    </ol>
+                </nav>
+                <div id="shopHeader">
+                    <h1 class="shop-cover-title text-white fw-bold mb-2">جاري التحميل...</h1>
                 </div>
             </div>
         </div>
-    </section>
+    </div>
 
-    <!-- Products Section -->
+    <!-- Main Content Section (Two Columns) -->
     <section class="py-5">
         <div class="container">
-            <h3 class="fw-bold text-espresso mb-4">
-                <i class="bi bi-box-seam me-2"></i>المنتجات
-            </h3>
-            <div class="row g-4" id="productsList">
-                <div class="text-center text-mesa py-4">
-                    <div class="spinner-border text-marigold mb-3" role="status"></div>
-                    <p>جاري تحميل المنتجات...</p>
+            <div class="row g-4">
+                <!-- Left Column (Products) -->
+                <div class="col-lg-8 col-md-7">
+                    <h3 class="fw-bold text-espresso mb-4">
+                        <i class="bi bi-box-seam me-2 text-marigold"></i>المنتجات الأكثر طلبًا 🔥
+                    </h3>
+                    <div class="row g-4" id="productsList">
+                        <div class="text-center text-mesa py-5">
+                            <div class="spinner-border text-marigold mb-3" role="status"></div>
+                            <p class="fw-bold">بنحضرلك المنتجات الطازة...</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Right Column (Checkout Card) -->
+                <div class="col-lg-4 col-md-5">
+                    <div class="checkout-sidebar-card animate-up" id="checkoutSidebar">
+                        <!-- Loaded dynamically via updateCartUI() -->
+                    </div>
                 </div>
             </div>
         </div>

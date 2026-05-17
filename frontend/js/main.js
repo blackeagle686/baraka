@@ -8,77 +8,103 @@ function renderHeader() {
     const headerPlaceholder = document.getElementById('header-placeholder');
     if (!headerPlaceholder) return;
 
-    const path = window.location.pathname;
-    const isIndexActive = path.endsWith('/index.html') || path.endsWith('/html/') ? 'active' : '';
-    const isShopsActive = path.includes('/shops/') ? 'active' : '';
+    const token = localStorage.getItem('access_token');
+    const userRole = localStorage.getItem('user_role');
+    const userName = localStorage.getItem('user_name') || 'مستخدم بركة';
+
+    let rightSideHtml = '';
+    
+    // Always include Explore / لف في المحلات
+    rightSideHtml += `
+        <a class="nav-link d-flex align-items-center gap-2 fw-bold text-espresso me-3" href="/html/shops/list.html" style="font-size: 0.95rem; color: var(--color-espresso) !important;">
+            <i class="bi bi-compass fs-5 text-mesa"></i>
+            <span>لف في المحلات</span>
+        </a>
+    `;
+
+    // Always include Cart Icon with badge
+    rightSideHtml += `
+        <a class="nav-link d-flex align-items-center position-relative me-4" href="#" onclick="event.preventDefault(); if(window.openCartModal) { window.openCartModal(); } else { window.location.href='/html/shops/list.html'; }" id="headerCartBtn" style="cursor: pointer; padding: 0.5rem;">
+            <i class="bi bi-cart3 fs-4 text-espresso"></i>
+            <span class="badge bg-success rounded-circle position-absolute top-0 start-100 translate-middle-y" id="headerCartCount" style="font-size: 0.65rem; padding: 0.25em 0.5em; min-width: 1.5em; display: none;">0</span>
+        </a>
+    `;
+
+    if (token) {
+        let roleBadge = '';
+        if (userRole === 'SHOP_OWNER') {
+            roleBadge = `<a href="/html/profile/shop.html" class="btn btn-marigold btn-sm rounded-pill fw-bold text-white px-3 py-1 me-2" style="font-size: 0.8rem;"><i class="bi bi-shop-window me-1"></i>إدارة محلي</a>`;
+        } else if (userRole === 'DRIVER') {
+            roleBadge = `<a href="/html/profile/driver.html" class="btn btn-success btn-sm rounded-pill fw-bold text-white px-3 py-1 me-2" style="font-size: 0.8rem;"><i class="bi bi-bicycle me-1"></i>لوحة الطيار</a>`;
+        }
+
+        rightSideHtml += `
+            <div class="d-flex align-items-center gap-2">
+                ${roleBadge}
+                <div class="vr mx-2 text-muted opacity-25 d-none d-lg-block"></div>
+                <a href="/html/profile/user.html" class="nav-link d-flex align-items-center gap-2 fw-bold text-espresso me-2" style="font-size: 0.95rem; color: var(--color-espresso) !important;">
+                    <i class="bi bi-person fs-5 text-mesa"></i>
+                    <span>${userName}</span>
+                </a>
+                <button onclick="logout()" class="btn btn-link text-mesa p-1 text-decoration-none d-flex align-items-center justify-content-center" title="خروج" style="cursor: pointer; border: none; background: none;">
+                    <i class="bi bi-box-arrow-right fs-4"></i>
+                </button>
+            </div>
+        `;
+    } else {
+        rightSideHtml += `
+            <div class="d-flex align-items-center gap-2">
+                <a href="/html/auth/login.html" class="btn btn-outline-mesa rounded-pill btn-sm fw-bold px-3 py-1.5"><i class="bi bi-box-arrow-in-left me-1"></i>دخول</a>
+                <a href="/html/auth/register.html" class="btn btn-primary rounded-pill btn-sm fw-bold px-3 py-1.5"><i class="bi bi-person-plus me-1"></i>حساب جديد</a>
+            </div>
+        `;
+    }
 
     headerPlaceholder.innerHTML = `
-    <nav class="navbar navbar-expand-lg glass-nav fixed-top">
+    <nav class="navbar navbar-expand-lg glass-nav fixed-top shadow-sm py-2" style="direction: rtl;">
         <div class="container">
-            <a class="navbar-brand fw-bold" href="/html/index.html">بركة</a>
+            <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="/html/index.html" style="font-size: 1.35rem; color: var(--color-espresso) !important;">
+                <i class="bi bi-shop text-success fs-3"></i>
+                <span class="text-espresso">سوق بركة</span>
+            </a>
             <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item"><a class="nav-link ${isIndexActive}" href="/html/index.html">الرئيسية</a></li>
-                    <li class="nav-item"><a class="nav-link ${isShopsActive}" href="/html/shops/list.html">المحلات</a></li>
-                </ul>
-                <div class="d-flex auth-buttons gap-2" id="authSection"></div>
+                <div class="d-flex align-items-center ms-auto gap-1 py-2 py-lg-0 w-100 justify-content-end navbar-nav-right">
+                    ${rightSideHtml}
+                </div>
             </div>
         </div>
     </nav>
     `;
 }
 
-function renderFooter() {
-    const footerPlaceholder = document.getElementById('footer-placeholder');
-    if (!footerPlaceholder) return;
-
-    footerPlaceholder.innerHTML = `
-    <footer class="app-footer">
-        <div class="container">
-            <div class="row align-items-center">
-                <div class="col-md-6 text-center text-md-start mb-3 mb-md-0">
-                    <span class="footer-brand">بركة</span>
-                    <p class="mb-0 mt-1 small">أسرع خدمة توصيل في قريتك</p>
-                </div>
-                <div class="col-md-6 text-center text-md-end">
-                    <p class="mb-0 small">© 2026 بركة. جميع الحقوق محفوظة.</p>
-                </div>
-            </div>
-        </div>
-    </footer>
-    `;
+function checkAuth() {
+    // Auth elements are now rendered dynamically inside renderHeader() for a premium, single-source header flow.
+    // Expose cart sync utility
+    updateHeaderCartUI();
 }
 
-function checkAuth() {
-    const token = localStorage.getItem('access_token');
-    const authSection = document.getElementById('authSection');
-    if (!authSection) return;
+function updateHeaderCartUI() {
+    const headerCount = document.getElementById('headerCartCount');
+    if (!headerCount) return;
     
-    const userRole = localStorage.getItem('user_role');
+    // We can count items in cart from window.cart or localStorage if persistent
+    // Since cart is globally active in shops.js, we can try to fetch it
+    const cartItems = window.cart || [];
+    const totalQty = cartItems.reduce((sum, item) => sum + item.quantity, 0);
     
-    if (token) {
-        let manageShopHtml = '';
-        if (userRole === 'SHOP_OWNER') {
-            manageShopHtml = `<a href="/html/profile/shop.html" class="btn btn-marigold rounded-pill fw-bold text-white btn-sm"><i class="bi bi-shop-window me-1"></i>إدارة محلي</a>`;
-        } else if (userRole === 'DRIVER') {
-            manageShopHtml = `<a href="/html/profile/driver.html" class="btn btn-success rounded-pill fw-bold text-white btn-sm"><i class="bi bi-bicycle me-1"></i>لوحة الطيار</a>`;
-        }
-        
-        authSection.innerHTML = `
-            ${manageShopHtml}
-            <a href="/html/profile/user.html" class="btn btn-outline-mesa rounded-pill fw-bold btn-sm"><i class="bi bi-person me-1"></i>حسابي</a>
-            <button onclick="logout()" class="btn rounded-pill fw-bold text-white btn-sm" style="background-color: var(--color-mesa);"><i class="bi bi-box-arrow-right me-1"></i>خروج</button>
-        `;
+    if (totalQty > 0) {
+        headerCount.innerText = totalQty;
+        headerCount.style.display = 'inline-block';
     } else {
-        authSection.innerHTML = `
-            <a href="/html/auth/login.html" class="btn btn-outline-mesa rounded-pill fw-bold btn-sm"><i class="bi bi-box-arrow-in-left me-1"></i>دخول</a>
-            <a href="/html/auth/register.html" class="btn btn-primary rounded-pill fw-bold btn-sm"><i class="bi bi-person-plus me-1"></i>حساب جديد</a>
-        `;
+        headerCount.style.display = 'none';
     }
 }
+
+// Expose globally
+window.updateHeaderCartUI = updateHeaderCartUI;
 
 window.logout = function() {
     localStorage.removeItem('access_token');

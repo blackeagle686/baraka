@@ -351,3 +351,111 @@ h1, h2, h3, h4, h5, h6 {
         padding: 0.4rem 0.8rem;
     }
 }
+
+/* ===== Baraka Premium Custom Alert & Prompt Modals ===== */
+.baraka-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(50, 4, 4, 0.45);
+    backdrop-filter: blur(12px) saturate(1.6);
+    -webkit-backdrop-filter: blur(12px) saturate(1.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    opacity: 0;
+    transition: opacity 0.3s ease-out;
+}
+.baraka-modal-overlay.active {
+    opacity: 1;
+}
+.baraka-modal-box {
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid rgba(201, 153, 151, 0.25);
+    border-radius: var(--radius-lg);
+    width: 92%;
+    max-width: 440px;
+    padding: 2.2rem;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(50, 4, 4, 0.25);
+    transform: translateY(35px) scale(0.95);
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    direction: rtl;
+}
+.baraka-modal-overlay.active .baraka-modal-box {
+    transform: translateY(0) scale(1);
+}
+.baraka-modal-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0 auto 1.2rem;
+    font-size: 1.8rem;
+    box-shadow: 0 8px 24px rgba(194, 146, 64, 0.2);
+}
+.baraka-modal-icon.info {
+    background: rgba(194, 146, 64, 0.12);
+    color: var(--color-marigold);
+    border: 1.5px solid rgba(194, 146, 64, 0.25);
+}
+.baraka-modal-icon.warning {
+    background: rgba(201, 153, 151, 0.12);
+    color: #b8574c;
+    border: 1.5px solid rgba(201, 153, 151, 0.25);
+    animation: pulseWarning 2s infinite;
+}
+@keyframes pulseWarning {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+.baraka-modal-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--color-espresso);
+    margin-bottom: 0.6rem;
+}
+.baraka-modal-text {
+    font-size: 0.98rem;
+    color: var(--color-mesa);
+    margin-bottom: 1.6rem;
+    line-height: 1.6;
+}
+.baraka-modal-input-wrapper {
+    margin-bottom: 1.6rem;
+}
+.baraka-modal-input {
+    width: 100%;
+    padding: 0.75rem 1.2rem !important;
+    font-size: 1.1rem !important;
+    text-align: center;
+    font-weight: 700;
+    letter-spacing: 1px;
+    border-radius: var(--radius-full) !important;
+    background: rgba(253, 245, 241, 0.9) !important;
+    border: 1.5px solid rgba(201, 153, 151, 0.2) !important;
+}
+.baraka-modal-input:focus {
+    border-color: var(--color-marigold) !important;
+    box-shadow: 0 0 0 4px var(--color-marigold-glow) !important;
+    background: #fff !important;
+}
+.baraka-modal-footer {
+    display: flex;
+    gap: 0.8rem;
+    justify-content: center;
+}
+.baraka-modal-btn {
+    padding: 0.6rem 1.8rem;
+    border-radius: var(--radius-full);
+    font-size: 0.92rem;
+    font-weight: 700;
+    transition: var(--transition-base);
+    min-width: 110px;
+}

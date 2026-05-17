@@ -1,18 +1,124 @@
-/* Shop Cards */
+/* ===========================
+   Shops List & Detail Styles
+   =========================== */
+
+/* Page Header */
+.shops-header {
+    background: linear-gradient(160deg, var(--color-dune-light) 0%, var(--color-dune) 100%);
+    padding: 7rem 0 2.5rem;
+    text-align: center;
+}
+
+.shops-header h2 {
+    font-weight: 800;
+    font-size: 2rem;
+}
+
+.shops-header p {
+    opacity: 0.75;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+/* Shop Card */
 .shop-card {
-    background: rgba(255, 255, 255, 0.6);
-    backdrop-filter: blur(10px);
-    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    border-radius: var(--radius-lg);
     overflow: hidden;
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    transition: var(--transition-base);
+    box-shadow: var(--shadow-sm);
 }
 
 .shop-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 15px 35px rgba(94, 44, 56, 0.15);
+    transform: translateY(-6px);
+    box-shadow: var(--shadow-lg);
+    border-color: rgba(194, 146, 64, 0.2);
 }
 
 .shop-img-placeholder {
-    background: linear-gradient(45deg, var(--color-terracotta), var(--color-mesa));
+    height: 160px;
+    background: linear-gradient(135deg, var(--color-terracotta), var(--color-mesa));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.shop-img-placeholder span {
+    font-size: 2rem;
+    font-weight: 800;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+/* Shop Detail Page */
+.shop-detail-hero {
+    background: linear-gradient(160deg, var(--color-dune-light), var(--color-dune));
+    padding: 7rem 0 3rem;
+}
+
+.shop-detail-name {
+    font-size: 2rem;
+    font-weight: 800;
+}
+
+.shop-meta {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    margin-top: 0.5rem;
+}
+
+.shop-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.9rem;
+    color: var(--color-mesa);
+}
+
+/* Product Cards */
+.product-card {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    transition: var(--transition-base);
+    box-shadow: var(--shadow-sm);
+}
+
+.product-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
+}
+
+.product-card .product-img {
+    height: 160px;
+    object-fit: cover;
+    width: 100%;
+}
+
+.product-card .product-img-placeholder {
+    height: 160px;
+    background: linear-gradient(135deg, var(--color-dune-dark), var(--color-terracotta));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 2rem;
+}
+
+.product-price {
+    font-weight: 700;
+    color: var(--color-marigold);
+    font-size: 1.1rem;
+}
+
+.product-name {
+    font-weight: 700;
+    color: var(--color-espresso);
+    font-size: 0.95rem;
+    margin-bottom: 0.25rem;
 }

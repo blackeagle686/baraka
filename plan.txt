@@ -1,0 +1,346 @@
+Software Requirements Specification (SRS)
+BARAKA SaaS Platform
+1. Introduction
+1.1 Purpose
+
+This document describes the requirements and architecture for a small-scale village delivery SaaS platform that connects:
+
+Customers
+Local shops/restaurants
+Delivery drivers (“طيارين”)
+
+The platform allows customers to order products from nearby shops using a web application, while drivers handle deliveries and shop owners manage orders and products.
+
+1.2 Project Goal
+
+Build a lightweight and scalable delivery platform for villages and small towns where digital ordering systems are limited or unavailable.
+
+1.3 Scope
+
+The system will provide:
+
+Online ordering
+Product browsing
+Cart & checkout
+Delivery assignment
+Order tracking
+Shop management dashboard
+Driver management system
+Admin dashboard
+
+Initial version will be web-based only.
+
+2. Technologies
+Backend
+Django
+Django REST Framework
+Frontend
+HTML5
+CSS3
+JavaScript
+Bootstrap 5
+Database
+PostgreSQL
+or SQLite for development.
+Authentication
+Django Authentication System
+Hosting
+VPS / Railway / Render
+3. System Users
+3.1 Customer
+
+Can:
+
+Register/Login
+Browse shops
+View products
+Add to cart
+Place orders
+Track orders
+View order history
+3.2 Shop Owner
+
+Can:
+
+Manage products
+Manage categories
+Accept/reject orders
+View earnings
+Update order status
+3.3 Driver (“طيار”)
+
+Can:
+
+View assigned orders
+Accept delivery
+Update delivery status
+View earnings
+3.4 Admin
+
+Can:
+
+Manage users
+Manage shops
+Manage drivers
+Monitor orders
+View analytics
+4. Functional Requirements
+4.1 Authentication Module
+Features
+User registration
+Login/logout
+Password reset
+Role-based accounts
+Roles
+Customer
+Shop Owner
+Driver
+Admin
+4.2 Shop Module
+Customer Features
+Browse all shops
+Search shops
+Filter by category
+Shop Owner Features
+Create shop
+Upload shop image
+Set working hours
+Set delivery availability
+4.3 Product Module
+Features
+Add products
+Edit products
+Delete products
+Product categories
+Product images
+Product prices
+Product availability
+4.4 Cart System
+Features
+Add item to cart
+Remove item
+Update quantity
+Calculate totals
+4.5 Order Management
+Order Status
+Pending
+Accepted
+Preparing
+On Delivery
+Delivered
+Cancelled
+Features
+Create order
+Assign driver
+View order details
+Update status
+4.6 Driver Module
+Features
+Driver dashboard
+Available orders
+Assigned orders
+Delivery status updates
+Earnings tracking
+4.7 Notifications
+Initial Version
+
+Use:
+
+WhatsApp links
+Browser notifications
+Future
+SMS integration
+Push notifications
+4.8 Admin Dashboard
+Features
+User management
+Shop approvals
+Driver approvals
+Order monitoring
+Reports
+Revenue analytics
+5. Non-Functional Requirements
+5.1 Performance
+Response time < 2 seconds
+Support at least 100 concurrent users initially
+5.2 Security
+CSRF protection
+Password hashing
+Authentication required
+Input validation
+5.3 Scalability
+
+System should support:
+
+Multiple villages
+Multiple shops
+Hundreds of drivers
+5.4 Availability
+99% uptime target
+5.5 Usability
+Mobile-friendly UI
+Simple Arabic interface
+Easy navigation
+6. Database Design
+6.1 User Table
+Field	Type
+id	Integer
+username	String
+email	String
+password	String
+phone	String
+role	Enum
+6.2 Shop Table
+Field	Type
+id	Integer
+owner_id	FK
+name	String
+description	Text
+image	Image
+address	String
+is_open	Boolean
+6.3 Category Table
+Field	Type
+id	Integer
+name	String
+6.4 Product Table
+Field	Type
+id	Integer
+shop_id	FK
+category_id	FK
+name	String
+description	Text
+price	Decimal
+image	Image
+available	Boolean
+6.5 Cart Table
+Field	Type
+id	Integer
+user_id	FK
+6.6 Cart Item Table
+Field	Type
+id	Integer
+cart_id	FK
+product_id	FK
+quantity	Integer
+6.7 Order Table
+Field	Type
+id	Integer
+customer_id	FK
+shop_id	FK
+driver_id	FK
+total_price	Decimal
+status	Enum
+address	Text
+created_at	DateTime
+6.8 Order Item Table
+Field	Type
+id	Integer
+order_id	FK
+product_id	FK
+quantity	Integer
+price	Decimal
+7. System Architecture
+Frontend (HTML/CSS/JS/Bootstrap)
+            |
+            v
+Django Views + Django REST API
+            |
+            v
+Business Logic Layer
+            |
+            v
+PostgreSQL Database
+8. User Flow
+Customer Flow
+Register/Login
+      ↓
+Browse Shops
+      ↓
+View Products
+      ↓
+Add to Cart
+      ↓
+Checkout
+      ↓
+Place Order
+      ↓
+Track Delivery
+Driver Flow
+Login
+   ↓
+View Orders
+   ↓
+Accept Delivery
+   ↓
+Deliver Order
+   ↓
+Update Status
+9. Future Enhancements
+Phase 2
+Mobile app
+Live GPS tracking
+Real-time chat
+Online payments
+AI recommendations
+Phase 3
+Multi-city support
+SaaS subscriptions
+Franchise system
+AI demand prediction
+Route optimization
+10. API Endpoints (Initial)
+Authentication
+POST /api/register/
+POST /api/login/
+POST /api/logout/
+Shops
+GET /api/shops/
+GET /api/shops/{id}/
+POST /api/shops/create/
+Products
+GET /api/products/
+POST /api/products/create/
+PUT /api/products/{id}/
+DELETE /api/products/{id}/
+Orders
+POST /api/orders/create/
+GET /api/orders/
+PUT /api/orders/{id}/status/
+11. Deployment Plan
+Development
+Local Django server
+Production
+Ubuntu VPS
+Gunicorn
+Nginx
+PostgreSQL
+12. Success Metrics
+Number of active users
+Number of daily orders
+Delivery completion rate
+Shop retention rate
+Average delivery time
+13. MVP Priorities
+Build First
+
+✅ Authentication
+✅ Shops
+✅ Products
+✅ Cart
+✅ Orders
+✅ Driver assignment
+✅ Admin dashboard
+
+Build Later
+
+❌ AI
+❌ GPS tracking
+❌ Online payments
+❌ Mobile app
+
+14. Conclusion
+
+The platform aims to digitize local village commerce by providing a lightweight delivery ecosystem connecting shops, customers, and delivery drivers in a scalable and cost-effective way.
+
+The MVP focuses on simplicity, fast deployment, and real-world usability while maintaining scalability for future SaaS expansion.

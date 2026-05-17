@@ -433,6 +433,15 @@ async function handleProductSubmit() {
     }
 }
 
+let currentOrdersPage = 1;
+const ORDERS_PAGE_SIZE = 4;
+let currentOrders = [];
+
+window.changeOrdersPage = function(page) {
+    currentOrdersPage = page;
+    renderShopOrders(currentOrders);
+};
+
 async function loadShopOrders() {
     const token = localStorage.getItem('access_token');
     try {
@@ -448,6 +457,7 @@ async function loadShopOrders() {
 }
 
 function renderShopOrders(orders) {
+    currentOrders = orders;
     const container = document.getElementById('shopOrdersList');
     if (!container) return;
     
@@ -476,10 +486,23 @@ function renderShopOrders(orders) {
                 <p class="fw-bold">لا توجد طلبات حالياً</p>
                 <p class="small text-mesa">عندما يقوم العملاء بالطلب من محلك، ستظهر هنا فوراً!</p>
             </div>`;
+        const paginationContainer = document.getElementById('shopOrdersPagination');
+        if (paginationContainer) paginationContainer.innerHTML = '';
         return;
     }
 
-    orders.forEach((order, i) => {
+    // Slicing for pagination
+    const totalItems = orders.length;
+    const totalPages = Math.ceil(totalItems / ORDERS_PAGE_SIZE);
+    if (currentOrdersPage > totalPages) {
+        currentOrdersPage = Math.max(1, totalPages);
+    }
+    
+    const startIndex = (currentOrdersPage - 1) * ORDERS_PAGE_SIZE;
+    const endIndex = Math.min(startIndex + ORDERS_PAGE_SIZE, totalItems);
+    const slicedOrders = orders.slice(startIndex, endIndex);
+
+    slicedOrders.forEach((order, i) => {
         // Status styling
         let statusClass = 'bg-secondary';
         let statusText = 'معلق';
@@ -615,6 +638,10 @@ function renderShopOrders(orders) {
         `;
         container.innerHTML += html;
     });
+
+    if (window.renderClientPagination) {
+        window.renderClientPagination('shopOrdersPagination', totalItems, currentOrdersPage, ORDERS_PAGE_SIZE, 'window.changeOrdersPage');
+    }
 }
 
 window.updateOrderStatus = async function(orderId, newStatus) {

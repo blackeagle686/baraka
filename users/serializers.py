@@ -6,15 +6,20 @@ User = get_user_model()
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'phone', 'name', 'location', 'latitude', 'longitude', 'image', 'role', 'password')
+        fields = ('id', 'phone', 'name', 'location', 'latitude', 'longitude', 'image', 'role', 'password', 'is_approved', 'is_active')
         extra_kwargs = {
             'password': {'write_only': True},
             'latitude': {'required': False, 'allow_null': True},
             'longitude': {'required': False, 'allow_null': True},
-            'image': {'required': False, 'allow_null': True}
+            'image': {'required': False, 'allow_null': True},
+            'is_approved': {'read_only': True},
+            'is_active': {'read_only': True},
         }
 
     def create(self, validated_data):
+        role = validated_data.get('role', 'CUSTOMER')
+        # Shop owners and drivers need admin approval
+        needs_approval = role in ('SHOP_OWNER', 'DRIVER')
         user = User.objects.create_user(
             phone=validated_data['phone'],
             password=validated_data['password'],
@@ -22,6 +27,16 @@ class UserSerializer(serializers.ModelSerializer):
             location=validated_data.get('location', ''),
             latitude=validated_data.get('latitude', None),
             longitude=validated_data.get('longitude', None),
-            role=validated_data.get('role', 'CUSTOMER')
+            role=role,
+            is_approved=not needs_approval
         )
         return user
+
+
+class AdminUserSerializer(serializers.ModelSerializer):
+    """Full serializer for admin to manage users (can write is_approved, is_active)."""
+    class Meta:
+        model = User
+        fields = ('id', 'phone', 'name', 'location', 'role', 'is_approved', 'is_active', 'date_joined', 'image')
+        read_only_fields = ('id', 'phone', 'date_joined')
+

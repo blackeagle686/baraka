@@ -28,8 +28,26 @@ class Order(models.Model):
     status = models.CharField(max_length=20, choices=OrderStatus.choices, default=OrderStatus.PENDING)
     address = models.TextField()
     is_paid_to_shop = models.BooleanField(default=False)
+    
+    # Mutual Trust Zero-Knowledge OTP Keys
+    customer_otp = models.CharField(max_length=4, blank=True, null=True)
+    driver_otp = models.CharField(max_length=4, blank=True, null=True)
+    
+    # Dispute Mediation Layer
+    dispute_status = models.CharField(max_length=20, default='NONE') # NONE, PENDING, RESOLVED
+    dispute_reason = models.TextField(blank=True, null=True)
+    disputed_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='raised_disputes')
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        import random
+        if not self.customer_otp:
+            self.customer_otp = f"{random.randint(1000, 9999)}"
+        if not self.driver_otp:
+            self.driver_otp = f"{random.randint(1000, 9999)}"
+        super().save(*args, **kwargs)
 
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')

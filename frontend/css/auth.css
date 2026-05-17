@@ -145,6 +145,7 @@ body[dir="ltr"] .auth-card.mode-register .switcher-slider {
 .form-container {
     display: flex;
     width: 200%;
+    align-items: flex-start;
     transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1);
 }
 

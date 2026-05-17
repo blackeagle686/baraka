@@ -126,6 +126,45 @@
                 </div>
             </div>
         </div>
+    <!-- Edit Product Modal -->
+    <div class="modal fade" id="editProductModal" tabindex="-1" aria-labelledby="editProductModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 rounded-4" style="background-color: var(--color-dune);">
+                <div class="modal-header border-terracotta">
+                    <h5 class="modal-title fw-bold text-espresso" id="editProductModalLabel">تعديل المنتج</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="editProductForm">
+                        <input type="hidden" id="editProdId">
+                        <div class="mb-3">
+                            <label class="form-label text-espresso fw-bold">اسم المنتج</label>
+                            <input type="text" class="form-control rounded-pill bg-light border-0 px-4 py-2" id="editProdName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-espresso fw-bold">السعر (ج.م)</label>
+                            <input type="number" step="0.01" class="form-control rounded-pill bg-light border-0 px-4 py-2" id="editProdPrice" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-espresso fw-bold">الوصف</label>
+                            <textarea class="form-control rounded-4 bg-light border-0 px-4 py-2" id="editProdDesc" rows="2"></textarea>
+                        </div>
+                        <div class="mb-3 form-check form-switch">
+                            <input class="form-check-input" type="checkbox" role="switch" id="editProdAvailable" checked>
+                            <label class="form-check-label text-espresso fw-bold ms-2" for="editProdAvailable">المنتج متوفر للبيع</label>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label text-espresso fw-bold">تغيير صورة المنتج</label>
+                            <input type="file" class="form-control rounded-pill bg-light border-0 px-4 py-2" id="editProdImage" accept="image/*">
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary flex-grow-1 rounded-pill py-2 fw-bold" id="saveEditProdBtn">حفظ التغييرات</button>
+                            <button type="button" class="btn btn-danger rounded-pill px-4 py-2 fw-bold" id="deleteProdBtn">حذف</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Custom JS -->

@@ -17,26 +17,36 @@ function renderShops(shops) {
     
     container.innerHTML = '';
     
-    // Only show up to 3 shops on the landing page
-    shops.slice(0, 3).forEach(shop => {
+    if (shops.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state w-100 animate-up">
+                <div class="empty-state-icon"><i class="bi bi-shop"></i></div>
+                <p class="fw-bold">لا توجد محلات حالياً</p>
+                <p class="small text-mesa">كن أول من يفتح محله على منصة بركة!</p>
+            </div>`;
+        return;
+    }
+
+    // Show up to 4 shops on landing page
+    shops.slice(0, 4).forEach((shop, i) => {
         const shopHtml = `
-            <div class="col-md-4 mb-4">
-                <div class="card shop-card border-0 h-100">
-                    <div class="card-img-top shop-img-placeholder d-flex align-items-center justify-content-center">
-                        ${shop.image ? `<img src="${shop.image}" class="w-100 h-100 object-fit-cover">` : `<span class="text-white fs-1 fw-bold">${shop.name.charAt(0)}</span>`}
+            <div class="col-md-3 col-sm-6 animate-up delay-${i + 1}">
+                <a href="/html/shops/details.html?id=${shop.id}" class="text-decoration-none">
+                    <div class="shop-card-home h-100">
+                        <div class="shop-img-placeholder">
+                            ${shop.image ? `<img src="${shop.image}" class="w-100 h-100 object-fit-cover">` : `<span>${shop.name.charAt(0)}</span>`}
+                        </div>
+                        <div class="card-body text-center p-3">
+                            <h6 class="fw-bold text-espresso mb-1">${shop.name}</h6>
+                            <p class="text-mesa small mb-2">${shop.description ? shop.description.substring(0, 50) : 'أفضل المنتجات وأسرع توصيل'}</p>
+                            <span class="btn btn-outline-primary btn-sm rounded-pill w-100">
+                                <i class="bi bi-arrow-left me-1"></i>تسوق الآن
+                            </span>
+                        </div>
                     </div>
-                    <div class="card-body text-center">
-                        <h5 class="card-title fw-bold text-espresso">${shop.name}</h5>
-                        <p class="card-text text-mesa">${shop.description || 'أفضل المنتجات وأسرع توصيل'}</p>
-                        <a href="/html/shops/details.html?id=${shop.id}" class="btn btn-outline-primary rounded-pill w-100 mt-2">تسوق الآن</a>
-                    </div>
-                </div>
+                </a>
             </div>
         `;
         container.innerHTML += shopHtml;
     });
-
-    if (shops.length === 0) {
-        container.innerHTML = '<p class="text-center text-mesa">لا توجد محلات حالياً. كن أول من يفتح محله!</p>';
-    }
 }

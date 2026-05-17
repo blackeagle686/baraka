@@ -26,8 +26,8 @@
     position: absolute;
     inset: 0;
     background: linear-gradient(135deg, rgba(50, 4, 4, 0.7) 0%, rgba(20, 2, 2, 0.85) 100%);
-    backdrop-filter: blur(3px);
-    -webkit-backdrop-filter: blur(3px);
+    backdrop-filter: blur(1px);
+    -webkit-backdrop-filter: blur(1px);
     z-index: 0;
     pointer-events: none;
 }

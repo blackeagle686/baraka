@@ -225,6 +225,14 @@ async function loadShopProducts(shopId) {
     }
 }
 
+let currentProductsPage = 1;
+const PRODUCTS_PAGE_SIZE = 4;
+
+window.changeProductsPage = function(page) {
+    currentProductsPage = page;
+    renderShopProductsManagement(currentProducts);
+};
+
 function renderShopProductsManagement(products) {
     currentProducts = products;
     
@@ -248,10 +256,23 @@ function renderShopProductsManagement(products) {
                 <p class="fw-bold">لا توجد منتجات حالياً</p>
                 <p class="small text-mesa">ابدأ بإضافة منتجاتك من الزر أعلاه</p>
             </div>`;
+        const paginationContainer = document.getElementById('shopProductsPagination');
+        if (paginationContainer) paginationContainer.innerHTML = '';
         return;
     }
 
-    products.forEach(product => {
+    // Calculate pagination slice
+    const totalItems = products.length;
+    const totalPages = Math.ceil(totalItems / PRODUCTS_PAGE_SIZE);
+    if (currentProductsPage > totalPages) {
+        currentProductsPage = Math.max(1, totalPages);
+    }
+    
+    const startIndex = (currentProductsPage - 1) * PRODUCTS_PAGE_SIZE;
+    const endIndex = Math.min(startIndex + PRODUCTS_PAGE_SIZE, totalItems);
+    const slicedProducts = products.slice(startIndex, endIndex);
+
+    slicedProducts.forEach(product => {
         const html = `
             <div class="col-md-6 mb-3">
                 <div class="product-manage-card h-100">
@@ -285,6 +306,10 @@ function renderShopProductsManagement(products) {
         `;
         container.innerHTML += html;
     });
+
+    if (window.renderClientPagination) {
+        window.renderClientPagination('shopProductsPagination', totalItems, currentProductsPage, PRODUCTS_PAGE_SIZE, 'window.changeProductsPage');
+    }
 }
 
 window.openEditModal = function(id) {

@@ -230,9 +230,9 @@ function initInteractiveNet() {
                 
                 if (distance < 15000) { // Connect distance squared
                     ctx.beginPath();
-                    let opacity = 0.2 - (distance / 15000) * 0.2;
+                    let opacity = 0.38 - (distance / 15000) * 0.38;
                     ctx.strokeStyle = `rgba(194, 146, 64, ${opacity})`;
-                    ctx.lineWidth = 1;
+                    ctx.lineWidth = 1.2;
                     ctx.moveTo(particles[i].x, particles[i].y);
                     ctx.lineTo(particles[j].x, particles[j].y);
                     ctx.stroke();

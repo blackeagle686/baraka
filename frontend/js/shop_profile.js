@@ -185,28 +185,40 @@ function renderShopProductsManagement(products) {
     container.innerHTML = '';
 
     if (products.length === 0) {
-        container.innerHTML = '<p class="text-mesa text-center w-100 mt-3">لا توجد منتجات حالياً. ابدأ بإضافة منتجاتك.</p>';
+        container.innerHTML = `
+            <div class="empty-state w-100 animate-up">
+                <div class="empty-state-icon"><i class="bi bi-box-seam"></i></div>
+                <p class="fw-bold">لا توجد منتجات حالياً</p>
+                <p class="small text-mesa">ابدأ بإضافة منتجاتك من الزر أعلاه</p>
+            </div>`;
         return;
     }
 
     products.forEach(product => {
         const html = `
             <div class="col-md-6 mb-3">
-                <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="product-manage-card h-100">
                     <div class="row g-0 h-100">
                         <div class="col-4 p-2">
                             ${product.image ? 
                                 `<img src="${product.image}" class="img-fluid rounded-3 h-100 object-fit-cover w-100">` : 
-                                `<div class="bg-light rounded-3 h-100 d-flex align-items-center justify-content-center fw-bold text-mesa">صورة</div>`
+                                `<div class="rounded-3 h-100 d-flex align-items-center justify-content-center" style="background: linear-gradient(135deg, var(--color-dune-dark), var(--color-terracotta)); min-height: 100px;">
+                                    <i class="bi bi-image text-white fs-4"></i>
+                                </div>`
                             }
                         </div>
                         <div class="col-8">
                             <div class="card-body py-2 pe-3 ps-1 d-flex flex-column h-100">
                                 <h6 class="fw-bold text-espresso mb-1">${product.name}</h6>
-                                <p class="text-marigold fw-bold mb-1">${product.price} ج.م</p>
-                                <span class="badge ${product.available ? 'bg-success' : 'bg-danger'} mb-2 w-fit-content">${product.available ? 'متوفر' : 'غير متوفر'}</span>
+                                <p class="product-price mb-1">${product.price} ج.م</p>
+                                <span class="badge ${product.available ? 'bg-success' : 'bg-danger'} mb-2 w-fit-content rounded-pill">
+                                    <i class="bi ${product.available ? 'bi-check-circle' : 'bi-x-circle'} me-1"></i>
+                                    ${product.available ? 'متوفر' : 'غير متوفر'}
+                                </span>
                                 <div class="d-flex gap-2 mt-auto">
-                                    <button onclick="openEditModal(${product.id})" class="btn btn-sm btn-outline-mesa flex-grow-1">تعديل</button>
+                                    <button onclick="openEditModal(${product.id})" class="btn btn-sm btn-outline-mesa flex-grow-1 rounded-pill">
+                                        <i class="bi bi-pencil me-1"></i>تعديل
+                                    </button>
                                 </div>
                             </div>
                         </div>

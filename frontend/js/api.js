@@ -139,10 +139,14 @@ const api = {
             if (!res.ok) throw await res.json();
             return await res.json();
         },
-        acceptDelivery: async (token, orderId) => {
+        acceptDelivery: async (token, orderId, deliveryPrice) => {
             const res = await fetch(`${API_BASE}/orders/${orderId}/accept_delivery/`, {
                 method: 'POST',
-                headers: { 'Authorization': `Bearer ${token}` }
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ delivery_price: deliveryPrice })
             });
             if (!res.ok) throw await res.json();
             return await res.json();

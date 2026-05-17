@@ -225,6 +225,7 @@
     flex-shrink: 0;
     z-index: 10;
     box-shadow: -4px 0 15px rgba(50, 4, 4, 0.03);
+    height: 100%;
 }
 
 .shops-list-scroll {

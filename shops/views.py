@@ -5,6 +5,7 @@ from rest_framework.pagination import PageNumberPagination
 from .models import Shop, Category, Product
 from .serializers import ShopSerializer, CategorySerializer, ProductSerializer
 from .permissions import IsOwnerOrReadOnly
+from users.permissions import IsApprovedOrReadOnly
 
 class ShopPagination(PageNumberPagination):
     page_size = 6
@@ -14,7 +15,7 @@ class ShopPagination(PageNumberPagination):
 class ShopViewSet(viewsets.ModelViewSet):
     queryset = Shop.objects.all()
     serializer_class = ShopSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsApprovedOrReadOnly, IsOwnerOrReadOnly]
     pagination_class = ShopPagination
     filter_backends = [filters.SearchFilter]
     search_fields = ['name', 'description', 'address']

@@ -109,6 +109,8 @@ window.logout = function() {
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
     localStorage.removeItem('user_role');
+    localStorage.removeItem('baraka_cart');
+    localStorage.removeItem('current_shop_name');
     window.location.reload();
 }
 

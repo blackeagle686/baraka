@@ -111,6 +111,13 @@ const api = {
             return true;
         }
     },
+    categories: {
+        getAll: async () => {
+            const res = await fetch(`${API_BASE}/categories/`);
+            if (!res.ok) throw await res.json();
+            return await res.json();
+        }
+    },
     orders: {
         getAll: async (token) => {
             const res = await fetch(`${API_BASE}/orders/`, {

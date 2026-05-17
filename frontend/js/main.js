@@ -481,3 +481,70 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
+// ==========================================
+// Reusable Premium Client-Side Pagination
+// ==========================================
+window.renderClientPagination = function(containerId, totalItems, currentPage, pageSize, onPageChangeFunctionName) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    const totalPages = Math.ceil(totalItems / pageSize);
+    if (totalPages <= 1) {
+        container.innerHTML = '';
+        return;
+    }
+
+    let html = `
+        <nav aria-label="Page navigation" class="mt-4 animate-up">
+            <ul class="pagination justify-content-center gap-1 border-0">
+    `;
+
+    // Previous Button (RTL: Chevron Right moves to previous / right direction)
+    const prevDisabled = currentPage === 1;
+    html += `
+        <li class="page-item ${prevDisabled ? 'disabled' : ''}">
+            <button class="page-link rounded-circle d-flex align-items-center justify-content-center shadow-sm" 
+                    style="width: 38px; height: 38px; color: ${prevDisabled ? 'var(--color-mesa)' : 'var(--color-marigold)'}; border-color: rgba(201,153,151,0.12); background: ${prevDisabled ? 'transparent' : 'white'};"
+                    onclick="${onPageChangeFunctionName}(${currentPage - 1})" ${prevDisabled ? 'disabled' : ''}>
+                <i class="bi bi-chevron-right"></i>
+            </button>
+        </li>
+    `;
+
+    // Pages Numbers
+    for (let i = 1; i <= totalPages; i++) {
+        const isCurrent = i === currentPage;
+        html += `
+            <li class="page-item ${isCurrent ? 'active' : ''}">
+                <button class="page-link rounded-circle d-flex align-items-center justify-content-center fw-bold shadow-sm" 
+                        style="width: 38px; height: 38px; 
+                               background: ${isCurrent ? 'var(--color-marigold)' : 'white'}; 
+                               color: ${isCurrent ? 'white' : 'var(--color-espresso)'}; 
+                               border-color: ${isCurrent ? 'var(--color-marigold)' : 'rgba(201,153,151,0.12)'};"
+                        onclick="${onPageChangeFunctionName}(${i})">
+                    ${i}
+                </button>
+            </li>
+        `;
+    }
+
+    // Next Button (RTL: Chevron Left moves to next / left direction)
+    const nextDisabled = currentPage === totalPages;
+    html += `
+        <li class="page-item ${nextDisabled ? 'disabled' : ''}">
+            <button class="page-link rounded-circle d-flex align-items-center justify-content-center shadow-sm" 
+                    style="width: 38px; height: 38px; color: ${nextDisabled ? 'var(--color-mesa)' : 'var(--color-marigold)'}; border-color: rgba(201,153,151,0.12); background: ${nextDisabled ? 'transparent' : 'white'};"
+                    onclick="${onPageChangeFunctionName}(${currentPage + 1})" ${nextDisabled ? 'disabled' : ''}>
+                <i class="bi bi-chevron-left"></i>
+            </button>
+        </li>
+    `;
+
+    html += `
+            </ul>
+        </nav>
+    `;
+
+    container.innerHTML = html;
+};
+

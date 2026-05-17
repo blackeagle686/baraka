@@ -27,6 +27,7 @@ class Order(models.Model):
     delivery_price = models.DecimalField(max_digits=6, decimal_places=2, default=0.00)
     status = models.CharField(max_length=20, choices=OrderStatus.choices, default=OrderStatus.PENDING)
     address = models.TextField()
+    is_paid_to_shop = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

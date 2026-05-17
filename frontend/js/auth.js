@@ -7,7 +7,6 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             const phone = document.getElementById('phone').value;
             const password = document.getElementById('password').value;
-            const password = document.getElementById('password').value;
             const btn = document.getElementById('loginBtn');
             const btnText = btn.querySelector('.btn-text');
             const spinner = btn.querySelector('.spinner-border');
@@ -62,7 +61,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const phone = document.getElementById('phone').value;
             const location = document.getElementById('location').value;
             const role = document.getElementById('role').value;
-            const password = document.getElementById('password').value;
             const password = document.getElementById('password').value;
             const btn = document.getElementById('registerBtn');
             const btnText = btn.querySelector('.btn-text');

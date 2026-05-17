@@ -148,7 +148,6 @@ function applyBarakaModalStyles(overlay) {
             icon.style.border = '1.5px solid rgba(194, 146, 64, 0.25)';
         }
     });
-}
     
     overlay.querySelectorAll('.baraka-modal-title').forEach(t => {
         t.style.cssText = `

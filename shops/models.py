@@ -7,6 +7,8 @@ class Shop(models.Model):
     description = models.TextField(blank=True, null=True)
     image = models.ImageField(upload_to='shops/', blank=True, null=True)
     address = models.CharField(max_length=255)
+    latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     is_open = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 

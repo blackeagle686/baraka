@@ -23,25 +23,163 @@
 
     <!-- Hero Section -->
     <section class="hero-section">
-        <!-- Interactive Canvas Net -->
-        <canvas id="interactive-net" class="hero-canvas"></canvas>
+        <!-- Ambient Glowing Background Blobs -->
+        <div class="hero-glow-orb hero-orb-orange"></div>
+        <div class="hero-glow-orb hero-orb-red"></div>
         
-        <div class="hero-overlay"></div>
-        
-        <!-- Giant Background Text -->
-        <div class="hero-giant-text">BARAKA</div>
-        
-        <!-- Decorative floating orbs -->
-        <div class="hero-orb hero-orb-1"></div>
-        <div class="hero-orb hero-orb-2"></div>
-        
-        <div class="container text-center position-relative z-1 d-flex justify-content-center">
-            <div class="hero-content-card p-4 p-md-5 rounded-4 animate-up">
-                <h1 class="text-white mb-4 text-shadow">اطلب كل اللي تحتاجه، <br><span class="text-marigold glow-text">في أي وقت!</span></h1>
-                <p class="lead text-white opacity-75 mb-5 animate-up delay-1 text-shadow">أسرع خدمة توصيل في قريتك. من المحل لباب بيتك.</p>
-                <a href="/html/shops/list.html" class="btn btn-primary btn-lg rounded-pill px-5 py-3 fw-bold fs-4 animate-up delay-2 pulse-btn">
-                    <i class="bi bi-cart4 me-2"></i>اطلب الآن
-                </a>
+        <div class="container position-relative z-2">
+            <div class="row align-items-center g-5 min-vh-90 py-5">
+                <!-- Right Column: Premium Arabic Content & Action Forms -->
+                <div class="col-lg-6 hero-text-col text-lg-start text-center animate-up">
+                    <div class="hero-badge mb-3">
+                        <span class="badge-icon">✨</span>
+                        <span class="badge-text shimmer-text">أول منصة تسوق وتوصيل ذكية لقريتك</span>
+                    </div>
+                    
+                    <h1 class="hero-title text-white mb-3">
+                        كل اللي تحتاجه من محلات قريتك،
+                        <span class="highlight-gradient d-block mt-2">يوصلك لحد باب بيتك!</span>
+                    </h1>
+                    
+                    <p class="hero-subtitle text-white opacity-75 mb-4 max-w-550 mx-lg-0 mx-auto">
+                        اطلب الخضار، الفاكهة، البقالة، الأدوية، وكل اللي ناقصك بسهولة وسرعة. نظام توصيل مصمم خصيصاً ليناسب الكبار والشباب بكل أمان.
+                    </p>
+                    
+                    <!-- Premium Search Bar -->
+                    <form id="heroSearchForm" class="hero-search-wrapper mb-4">
+                        <div class="hero-search-input-group">
+                            <i class="bi bi-search search-icon"></i>
+                            <input type="text" id="heroSearchInput" class="form-control" placeholder="بتدور على محل أو منتج معين؟..." required>
+                            <button type="submit" class="btn btn-primary hero-search-btn">
+                                <span class="d-none d-sm-inline">دور هنا</span>
+                                <i class="bi bi-arrow-left-short fs-4 ms-1"></i>
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <!-- Quick Categories -->
+                    <div class="hero-quick-categories mb-5">
+                        <span class="text-white opacity-50 me-2 d-block d-sm-inline mb-2 mb-sm-0">تصفح سريع:</span>
+                        <div class="d-flex flex-wrap gap-2 justify-content-lg-start justify-content-center">
+                            <button type="button" class="btn btn-category-tag" data-category="سوبرماركت">
+                                <i class="bi bi-shop me-1 text-marigold"></i>سوبرماركت
+                            </button>
+                            <button type="button" class="btn btn-category-tag" data-category="خضار">
+                                <i class="bi bi-egg-fried me-1 text-marigold"></i>خضار وفاكهة
+                            </button>
+                            <button type="button" class="btn btn-category-tag" data-category="ألبان">
+                                <i class="bi bi-cup-hot me-1 text-marigold"></i>منتجات ألبان
+                            </button>
+                            <button type="button" class="btn btn-category-tag" data-category="صيدلية">
+                                <i class="bi bi-capsule me-1 text-marigold"></i>صيدلية
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Trust Badges -->
+                    <div class="hero-trust-badges d-flex flex-wrap gap-4 justify-content-lg-start justify-content-center border-top pt-4 border-white-10">
+                        <div class="trust-badge">
+                            <i class="bi bi-lightning-charge-fill text-marigold fs-4"></i>
+                            <div>
+                                <span class="d-block fw-bold text-white fs-6">أسرع طيارين</span>
+                                <span class="d-block text-white opacity-50 small">توصيل في أقل من 30 دقيقة</span>
+                            </div>
+                        </div>
+                        <div class="trust-badge">
+                            <i class="bi bi-shield-lock-fill text-marigold fs-4"></i>
+                            <div>
+                                <span class="d-block fw-bold text-white fs-6">أمان واستلام</span>
+                                <span class="d-block text-white opacity-50 small">كود OTP لكل طلب</span>
+                            </div>
+                        </div>
+                        <div class="trust-badge">
+                            <i class="bi bi-star-fill text-marigold fs-4"></i>
+                            <div>
+                                <span class="d-block fw-bold text-white fs-6">تقييم 4.9★</span>
+                                <span class="d-block text-white opacity-50 small">من أهالي قريتك</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Left Column: Highly Premium Floating Glass Mockups (HTML/CSS Showcase) -->
+                <div class="col-lg-6 hero-visual-col d-flex justify-content-center align-items-center position-relative">
+                    <div class="hero-visual-wrapper animate-up delay-2">
+                        <!-- Background Glow behind cards -->
+                        <div class="visual-glow"></div>
+                        
+                        <!-- Floating Card A: The Store Card -->
+                        <div class="hero-floating-card card-store float-slow">
+                            <div class="card-glass-header">
+                                <div class="store-avatar">
+                                    <i class="bi bi-bag-heart-fill"></i>
+                                </div>
+                                <div class="store-info text-start">
+                                    <h6 class="store-title text-white">مخبز وحلواني البركة</h6>
+                                    <span class="store-badge-open">
+                                        <span class="pulse-dot"></span>مفتوح الآن
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="card-glass-body mt-3">
+                                <div class="d-flex justify-content-between text-white-50 small mb-2">
+                                    <span>⭐ 4.8 (120 تقييم)</span>
+                                    <span>⏱️ 15-20 دقيقة</span>
+                                </div>
+                                <div class="d-flex gap-1 mt-2">
+                                    <span class="badge bg-white-10 text-white-80">فطير مشلتت</span>
+                                    <span class="badge bg-white-10 text-white-80">عيش بلدي</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Floating Card B: Live Delivery Tracker -->
+                        <div class="hero-floating-card card-tracker float-medium">
+                            <div class="tracker-header d-flex justify-content-between align-items-center">
+                                <span class="text-white fw-bold"><i class="bi bi-bicycle me-1 text-marigold"></i>الطيار في الطريق إليك</span>
+                                <span class="badge bg-marigold-solid text-white">تتبع مباشر</span>
+                            </div>
+                            <div class="tracker-body mt-3 text-start">
+                                <div class="tracker-progress-wrapper mb-2">
+                                    <div class="tracker-progress-bar">
+                                        <div class="tracker-progress-fill"></div>
+                                        <i class="bi bi-bicycle tracker-icon-rider"></i>
+                                    </div>
+                                    <div class="d-flex justify-content-between text-white-50 small mt-1">
+                                        <span>من: سوبرماركت الأمل</span>
+                                        <span>إلى: بيتك 🏠</span>
+                                    </div>
+                                </div>
+                                <div class="d-flex align-items-center gap-2 border-top border-white-10 pt-2 mt-2">
+                                    <div class="rider-avatar">أ</div>
+                                    <div class="rider-info">
+                                        <span class="d-block text-white fw-semibold small">أحمد محمد (الطيار)</span>
+                                        <span class="d-block text-white-50 micro">توصيل سريع وآمن</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Floating Card C: Fresh Produce Add -->
+                        <div class="hero-floating-card card-product float-fast">
+                            <div class="product-visual">
+                                <div class="product-emoji">🍎🥬</div>
+                            </div>
+                            <div class="product-details mt-2">
+                                <h6 class="product-title text-white">سلة خضار طازة</h6>
+                                <div class="d-flex justify-content-between align-items-center mt-2">
+                                    <div>
+                                        <span class="d-block text-marigold fw-bold text-start">120 جنيه</span>
+                                        <span class="d-block text-white-50 micro text-start">توصيل: 10 جنيه</span>
+                                    </div>
+                                    <button type="button" class="btn btn-add-micro">
+                                        <i class="bi bi-plus-lg"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </section>

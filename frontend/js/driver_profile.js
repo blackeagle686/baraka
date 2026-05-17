@@ -232,7 +232,17 @@ async function loadDriverOrders() {
     }
 }
 
+let currentAvailablePage = 1;
+const AVAILABLE_PAGE_SIZE = 4;
+let currentAvailableOrders = [];
+
+window.changeAvailablePage = function(page) {
+    currentAvailablePage = page;
+    renderAvailableOrders(currentAvailableOrders);
+};
+
 function renderAvailableOrders(orders) {
+    currentAvailableOrders = orders;
     const container = document.getElementById('availableOrdersList');
     const badge = document.getElementById('sidebarAvailableBadge');
     const statVal = document.getElementById('statAvailableCount');
@@ -251,10 +261,23 @@ function renderAvailableOrders(orders) {
                 <p class="small text-mesa">كل الطلبات تم استلامها بواسطة الطيارين الآخرين! عمل رائع.</p>
             </div>
         `;
+        const paginationContainer = document.getElementById('driverAvailablePagination');
+        if (paginationContainer) paginationContainer.innerHTML = '';
         return;
     }
 
-    orders.forEach((order, i) => {
+    // Slicing for pagination
+    const totalItems = orders.length;
+    const totalPages = Math.ceil(totalItems / AVAILABLE_PAGE_SIZE);
+    if (currentAvailablePage > totalPages) {
+        currentAvailablePage = Math.max(1, totalPages);
+    }
+    
+    const startIndex = (currentAvailablePage - 1) * AVAILABLE_PAGE_SIZE;
+    const endIndex = Math.min(startIndex + AVAILABLE_PAGE_SIZE, totalItems);
+    const slicedOrders = orders.slice(startIndex, endIndex);
+
+    slicedOrders.forEach((order, i) => {
         const dateFormatted = new Date(order.created_at).toLocaleString('ar-EG', {
             hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short'
         });
@@ -309,9 +332,23 @@ function renderAvailableOrders(orders) {
         `;
         container.innerHTML += html;
     });
+
+    if (window.renderClientPagination) {
+        window.renderClientPagination('driverAvailablePagination', totalItems, currentAvailablePage, AVAILABLE_PAGE_SIZE, 'window.changeAvailablePage');
+    }
 }
 
+let currentTripsPage = 1;
+const TRIPS_PAGE_SIZE = 4;
+let currentActiveTrips = [];
+
+window.changeTripsPage = function(page) {
+    currentTripsPage = page;
+    renderActiveTrips(currentActiveTrips);
+};
+
 function renderActiveTrips(trips) {
+    currentActiveTrips = trips;
     const container = document.getElementById('activeTripsList');
     const badge = document.getElementById('sidebarTripsBadge');
 
@@ -328,12 +365,25 @@ function renderActiveTrips(trips) {
                 <p class="small text-mesa">اذهب لقسم الطلبات المتاحة واقبل طلب توصيل جديد!</p>
             </div>
         `;
+        const paginationContainer = document.getElementById('driverTripsPagination');
+        if (paginationContainer) paginationContainer.innerHTML = '';
         return;
     }
 
+    // Slicing for pagination
+    const totalItems = trips.length;
+    const totalPages = Math.ceil(totalItems / TRIPS_PAGE_SIZE);
+    if (currentTripsPage > totalPages) {
+        currentTripsPage = Math.max(1, totalPages);
+    }
+    
+    const startIndex = (currentTripsPage - 1) * TRIPS_PAGE_SIZE;
+    const endIndex = Math.min(startIndex + TRIPS_PAGE_SIZE, totalItems);
+    const slicedTrips = trips.slice(startIndex, endIndex);
+
     let allHtml = '';
 
-    trips.forEach((trip, i) => {
+    slicedTrips.forEach((trip, i) => {
         const dateFormatted = new Date(trip.created_at).toLocaleString('ar-EG', {
             hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short'
         });
@@ -431,8 +481,8 @@ function renderActiveTrips(trips) {
 
     container.innerHTML = allHtml;
 
-    // Generate QR Codes
-    trips.forEach((trip) => {
+    // Generate QR Codes for sliced trips
+    slicedTrips.forEach((trip) => {
         const isDeliveredUnpaid = (trip.status === 'DELIVERED' && !trip.is_paid_to_shop);
         if (isDeliveredUnpaid && trip.driver_otp) {
             const qrContainer = document.getElementById(`qrcode-driver-${trip.id}`);
@@ -449,6 +499,10 @@ function renderActiveTrips(trips) {
             }
         }
     });
+
+    if (window.renderClientPagination) {
+        window.renderClientPagination('driverTripsPagination', totalItems, currentTripsPage, TRIPS_PAGE_SIZE, 'window.changeTripsPage');
+    }
 }
 
 window.acceptDeliveryTrip = async function(orderId) {

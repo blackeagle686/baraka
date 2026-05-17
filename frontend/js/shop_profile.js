@@ -684,7 +684,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
 window.confirmShopPaymentReceived = async function(orderId, totalPrice) {
     const token = localStorage.getItem('access_token');
-    const driverOtp = await showBarakaPrompt(`برجاء إدخال رمز تصفية الحساب المكون من 4 أرقام الموضح على شاشة الطيار لتأكيد استلام مبلغ (${totalPrice} ج.م) والتحقق من المعاملة:`, 'مثال: 5678', 'تأكيد تصفية الحساب مع الطيار 💰');
+    
+    // Attempt QR Code Scan first
+    let driverOtp = await showBarakaQRScanner('مسح رمز QR الخاص بالطيار 💰');
+    
+    // Fallback to manual entry if cancelled or unavailable
+    if (!driverOtp) {
+        driverOtp = await showBarakaPrompt(`برجاء إدخال رمز تصفية الحساب المكون من 4 أرقام الموضح على شاشة الطيار لتأكيد استلام مبلغ (${totalPrice} ج.م) والتحقق من المعاملة:`, 'مثال: 5678', 'تأكيد تصفية الحساب مع الطيار 💰');
+    }
+    
     if (!driverOtp) return;
     
     try {

@@ -1,0 +1,82 @@
+:root {
+    --color-dune: #f7e3da;
+    --color-terracotta: #c99997;
+    --color-marigold: #c29240;
+    --color-bronze: #9f811f;
+    --color-mesa: #5e2c38;
+    --color-espresso: #320404;
+}
+
+body {
+    font-family: 'Cairo', sans-serif;
+    background-color: var(--color-dune);
+    color: var(--color-espresso);
+    overflow-x: hidden;
+}
+
+/* Custom Text Colors & Backgrounds */
+.text-espresso { color: var(--color-espresso) !important; }
+.text-mesa { color: var(--color-mesa) !important; }
+.text-marigold { color: var(--color-marigold) !important; }
+.bg-dune { background-color: var(--color-dune) !important; }
+.bg-terracotta { background-color: var(--color-terracotta) !important; }
+
+/* Buttons */
+.btn-primary {
+    background-color: var(--color-marigold);
+    border-color: var(--color-marigold);
+    color: #fff;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    background-color: var(--color-bronze);
+    border-color: var(--color-bronze);
+    transform: translateY(-3px);
+    box-shadow: 0 10px 20px rgba(159, 129, 31, 0.3);
+}
+
+.btn-outline-primary {
+    color: var(--color-mesa);
+    border-color: var(--color-mesa);
+    transition: all 0.3s ease;
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--color-mesa);
+    color: #fff;
+    transform: translateY(-2px);
+}
+
+/* Glassmorphism Navbar */
+.glass-nav {
+    background: rgba(247, 227, 218, 0.8);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
+}
+
+/* Animations */
+@keyframes slideUpFade {
+    0% { opacity: 0; transform: translateY(40px); }
+    100% { opacity: 1; transform: translateY(0); }
+}
+
+.animate-up {
+    animation: slideUpFade 0.8s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
+    opacity: 0;
+}
+
+.delay-1 { animation-delay: 0.2s; }
+.delay-2 { animation-delay: 0.4s; }
+
+.pulse-btn {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(194, 146, 64, 0.4); }
+    70% { box-shadow: 0 0 0 15px rgba(194, 146, 64, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(194, 146, 64, 0); }
+}

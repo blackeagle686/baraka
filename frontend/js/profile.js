@@ -57,7 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
 async function fetchProfile() {
     const token = localStorage.getItem('access_token');
     if (!token) {
-        window.location.href = '../auth/login.html';
+        window.location.href = '/html/auth/login.html';
         return;
     }
 
@@ -86,7 +86,7 @@ async function fetchProfile() {
     } catch (error) {
         if (error.message === 'Unauthorized') {
             localStorage.removeItem('access_token');
-            window.location.href = '../auth/login.html';
+            window.location.href = '/html/auth/login.html';
         } else {
             console.error("Failed to fetch profile:", error);
         }

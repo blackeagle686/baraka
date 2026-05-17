@@ -32,6 +32,12 @@ document.addEventListener('DOMContentLoaded', () => {
             formData.append('name', document.getElementById('name').value);
             formData.append('phone', document.getElementById('phone').value);
             formData.append('location', document.getElementById('location').value);
+            
+            const lat = document.getElementById('latitude').value;
+            const lon = document.getElementById('longitude').value;
+            if (lat) formData.append('latitude', lat);
+            if (lon) formData.append('longitude', lon);
+
             if (newImageFile) {
                 formData.append('image', newImageFile);
             }
@@ -67,6 +73,8 @@ async function fetchProfile() {
         document.getElementById('name').value = data.name || '';
         document.getElementById('phone').value = data.phone || '';
         document.getElementById('location').value = data.location || '';
+        document.getElementById('latitude').value = data.latitude || '';
+        document.getElementById('longitude').value = data.longitude || '';
         
         const roleMap = {
             'CUSTOMER': 'مشتري',

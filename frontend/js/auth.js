@@ -17,7 +17,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 const profile = await api.auth.getProfile(data.access);
                 localStorage.setItem('user_role', profile.role);
                 
-                window.location.href = '/html/index.html';
+                // Role-based smart routing for best UX
+                if (profile.role === 'DRIVER') {
+                    window.location.href = '/html/profile/driver.html';
+                } else if (profile.role === 'SHOP_OWNER') {
+                    window.location.href = '/html/profile/shop.html';
+                } else {
+                    window.location.href = '/html/index.html';
+                }
             } catch (error) {
                 document.getElementById('errorMsg').classList.remove('d-none');
                 console.error("Login failed:", error);
@@ -36,7 +43,22 @@ document.addEventListener('DOMContentLoaded', () => {
             
             try {
                 await api.auth.register({ name, phone, location, role, password });
-                window.location.href = '/html/auth/login.html';
+                
+                // Premium Auto-Login after Registration
+                const data = await api.auth.login(phone, password);
+                localStorage.setItem('access_token', data.access);
+                localStorage.setItem('refresh_token', data.refresh);
+                
+                const profile = await api.auth.getProfile(data.access);
+                localStorage.setItem('user_role', profile.role);
+                
+                if (profile.role === 'DRIVER') {
+                    window.location.href = '/html/profile/driver.html';
+                } else if (profile.role === 'SHOP_OWNER') {
+                    window.location.href = '/html/profile/shop.html';
+                } else {
+                    window.location.href = '/html/index.html';
+                }
             } catch (error) {
                 const errorMsg = document.getElementById('errorMsg');
                 errorMsg.innerText = "خطأ: " + JSON.stringify(error);

@@ -406,6 +406,7 @@ async function handleProductSubmit() {
     const formData = new FormData();
     formData.append('name', document.getElementById('prodName').value);
     formData.append('price', document.getElementById('prodPrice').value);
+    formData.append('quantity', document.getElementById('prodQuantity').value);
     formData.append('description', document.getElementById('prodDesc').value);
     formData.append('available', document.getElementById('prodAvailable').checked);
     formData.append('shop', currentShopId);

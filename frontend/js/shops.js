@@ -326,12 +326,16 @@ function renderShopProducts(products) {
                     <div class="card-body p-3 d-flex flex-column justify-content-between flex-grow-1">
                         <div>
                             <p class="product-name mb-1">${product.name}</p>
-                            <p class="text-mesa small mb-3" style="min-height: 2rem; font-size: 0.85rem;">${product.description || 'من منتجات بركة الطازة والجميلة.'}</p>
+                            <p class="text-mesa small mb-2" style="min-height: 2rem; font-size: 0.85rem;">${product.description || 'من منتجات بركة الطازة والجميلة.'}</p>
+                            ${(product.available && product.quantity > 0)
+                                ? `<span class="badge bg-success-subtle text-success rounded-pill px-2.5 py-1 mb-2 fw-bold" style="font-size:0.72rem; border: 1px solid rgba(25, 135, 84, 0.15);"><i class="bi bi-box-seam me-1"></i>المتاح: ${product.quantity} قطع</span>`
+                                : `<span class="badge bg-danger-subtle text-danger rounded-pill px-2.5 py-1 mb-2 fw-bold" style="font-size:0.72rem; border: 1px solid rgba(220, 53, 69, 0.15);"><i class="bi bi-x-circle me-1"></i>نفذت الكمية</span>`
+                            }
                         </div>
                         <div class="d-flex justify-content-between align-items-center mt-auto">
                             <span class="product-price">${product.price} ج.م</span>
-                            ${product.available 
-                                ? `<button onclick="addToCart(${product.id}, '${product.name}', ${product.price}, '${product.image || ''}')" class="btn-add-circle" title="أضف للسلة">
+                            ${(product.available && product.quantity > 0)
+                                ? `<button onclick="addToCart(${product.id}, '${product.name}', ${product.price}, '${product.image || ''}', ${product.quantity})" class="btn-add-circle" title="أضف للسلة">
                                        <i class="bi bi-plus-lg"></i>
                                    </button>`
                                 : `<span class="badge bg-danger rounded-pill small">خلصان</span>`
@@ -350,7 +354,7 @@ function renderShopProducts(products) {
 // ==========================================
 let cart = JSON.parse(localStorage.getItem('baraka_cart')) || [];
 
-window.addToCart = function(id, name, price, image = '') {
+window.addToCart = function(id, name, price, image = '', maxQty = 999) {
     const token = localStorage.getItem('access_token');
     if (!token) {
         if(window.showBarakaToast) {
@@ -378,9 +382,21 @@ window.addToCart = function(id, name, price, image = '') {
     
     const existing = cart.find(it => it.product === id);
     if (existing) {
+        if (existing.quantity >= maxQty) {
+            if(window.showBarakaToast) {
+                window.showBarakaToast(`عذراً، الكمية المطلوبة تتخطى المتاح في المخزن (${maxQty} قطع).`, 'error', 'bi-exclamation-triangle');
+            } else {
+                alert(`عذراً، لا يوجد سوى ${maxQty} قطع متاحة فقط من هذا المنتج.`);
+            }
+            return;
+        }
         existing.quantity += 1;
     } else {
-        cart.push({ product: id, name: name, price: price, quantity: 1, image: image, shop: shopId, shopName: currentShopName });
+        if (maxQty <= 0) {
+            alert('هذا المنتج غير متوفر حالياً.');
+            return;
+        }
+        cart.push({ product: id, name: name, price: price, quantity: 1, image: image, shop: shopId, shopName: currentShopName, maxQty: maxQty });
     }
     updateCartUI();
     

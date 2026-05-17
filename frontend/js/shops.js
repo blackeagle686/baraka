@@ -308,6 +308,141 @@ function renderShopHeader(shop) {
     `;
 }
 
+function initProductFilters() {
+    const searchInput = document.getElementById('productSearchInput');
+    const clearBtn = document.getElementById('clearProductSearch');
+    
+    if (searchInput) {
+        searchInput.value = ''; // Clear value on fresh load
+        searchInput.oninput = () => {
+            currentProductSearch = searchInput.value;
+            if (currentProductSearch.trim().length > 0) {
+                clearBtn.classList.remove('d-none');
+            } else {
+                clearBtn.classList.add('d-none');
+            }
+            filterAndRenderProducts();
+        };
+    }
+    
+    if (clearBtn) {
+        clearBtn.onclick = () => {
+            searchInput.value = '';
+            currentProductSearch = '';
+            clearBtn.classList.add('d-none');
+            searchInput.focus();
+            filterAndRenderProducts();
+        };
+    }
+    
+    renderProductCategoryTabs();
+}
+
+function renderProductCategoryTabs() {
+    const container = document.getElementById('shopCategoriesTabs');
+    if (!container) return;
+    
+    const categoryCounts = {};
+    let totalCount = 0;
+    
+    allShopProducts.forEach(product => {
+        const category = product.category_name ? product.category_name.trim() : 'أخرى';
+        categoryCounts[category] = (categoryCounts[category] || 0) + 1;
+        totalCount++;
+    });
+    
+    const iconMapping = {
+        'الكل': 'bi-grid-fill',
+        'بقالة': 'bi-shop',
+        'سوبرماركت': 'bi-shop',
+        'بقالة وسوبرماركت': 'bi-shop',
+        'ألبان': 'bi-egg-fried',
+        'أجبان': 'bi-egg-fried',
+        'خضار': 'bi-basket',
+        'خضروات': 'bi-basket',
+        'فاكهة': 'bi-apple',
+        'مخبز': 'bi-egg',
+        'مخبوزات': 'bi-egg',
+        'حلويات': 'bi-cake',
+        'لحوم': 'bi-fire',
+        'جزارة': 'bi-fire',
+        'مشروبات': 'bi-cup-straw',
+        'عصائر': 'bi-cup-hot',
+        'منظفات': 'bi-stars',
+        'صيدلية': 'bi-capsule',
+        'أدوية': 'bi-heart-pulse',
+        'أخرى': 'bi-tag-fill'
+    };
+    
+    const getCategoryIcon = (catName) => {
+        const key = Object.keys(iconMapping).find(k => catName.toLowerCase().includes(k.toLowerCase()) || k.toLowerCase().includes(catName.toLowerCase()));
+        return key ? iconMapping[key] : 'bi-tag-fill';
+    };
+    
+    let tabsHtml = `
+        <div class="shop-category-tab ${currentProductCategory === 'all' ? 'active' : ''}" onclick="selectProductCategory('all')">
+            <span class="tab-icon"><i class="bi bi-grid-fill"></i></span>
+            <span>الكل</span>
+            <span class="tab-count">${totalCount}</span>
+        </div>
+    `;
+    
+    Object.keys(categoryCounts).sort().forEach(category => {
+        const isActive = currentProductCategory === category;
+        const iconClass = getCategoryIcon(category);
+        tabsHtml += `
+            <div class="shop-category-tab ${isActive ? 'active' : ''}" onclick="selectProductCategory('${category}')">
+                <span class="tab-icon"><i class="bi ${iconClass}"></i></span>
+                <span>${category}</span>
+                <span class="tab-count">${categoryCounts[category]}</span>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = tabsHtml;
+}
+
+window.selectProductCategory = function(category) {
+    currentProductCategory = category;
+    renderProductCategoryTabs();
+    
+    const sectionTitle = document.getElementById('productsSectionTitle');
+    if (sectionTitle) {
+        if (category === 'all') {
+            sectionTitle.innerText = currentProductSearch ? 'نتائج البحث 🔍' : 'المنتجات الأكثر طلبًا 🔥';
+        } else {
+            sectionTitle.innerText = `قسم ${category} 📦`;
+        }
+    }
+    
+    filterAndRenderProducts();
+};
+
+function filterAndRenderProducts() {
+    const query = currentProductSearch.toLowerCase().trim();
+    
+    const filtered = allShopProducts.filter(product => {
+        const matchCategory = currentProductCategory === 'all' || 
+            (product.category_name && product.category_name.trim() === currentProductCategory.trim()) ||
+            (!product.category_name && currentProductCategory === 'أخرى');
+            
+        const matchSearch = !query || 
+            product.name.toLowerCase().includes(query) || 
+            (product.description && product.description.toLowerCase().includes(query)) ||
+            (product.category_name && product.category_name.toLowerCase().includes(query));
+            
+        return matchCategory && matchSearch;
+    });
+    
+    const countBadge = document.getElementById('productsCountBadge');
+    if (countBadge) {
+        countBadge.innerText = `${filtered.length} منتج`;
+        countBadge.classList.remove('d-none');
+    }
+    
+    renderShopProducts(filtered);
+}
+
 function renderShopProducts(products) {
     const container = document.getElementById('productsList');
     if (!container) return;
@@ -315,19 +450,32 @@ function renderShopProducts(products) {
     container.innerHTML = '';
     
     if (products.length === 0) {
-        container.innerHTML = `
-            <div class="col-12 text-center text-mesa py-5 animate-up">
-                <i class="bi bi-box-seam fs-1 text-mesa-light mb-3 d-block" style="opacity: 0.5;"></i>
-                <p class="fw-bold mb-0 fs-5">المحل لسه ماضافش منتجات!</p>
-                <p class="small text-muted">تابعنا قريب، هننزل كل المنتجات المتاحة هنا</p>
-            </div>`;
+        if (currentProductSearch.trim().length > 0) {
+            container.innerHTML = `
+                <div class="col-12 text-center text-mesa py-5 animate-up">
+                    <i class="bi bi-search-heart fs-1 text-marigold mb-3 d-block animate-pulse" style="opacity: 0.85; font-size: 3.5rem !important;"></i>
+                    <p class="fw-bold mb-1 fs-5 text-espresso">مالقينّاش منتجات تطابق بحثك!</p>
+                    <p class="small text-mesa">جرب تدور بكلمة تانية أو اتأكد من القسم اللي واقف فيه</p>
+                </div>`;
+        } else {
+            container.innerHTML = `
+                <div class="col-12 text-center text-mesa py-5 animate-up">
+                    <i class="bi bi-box-seam fs-1 text-mesa-light mb-3 d-block" style="opacity: 0.5;"></i>
+                    <p class="fw-bold mb-0 fs-5">المحل لسه ماضافش منتجات!</p>
+                    <p class="small text-muted">تابعنا قريب، هننزل كل المنتجات المتاحة هنا</p>
+                </div>`;
+        }
         return;
     }
 
     products.forEach((product, i) => {
         const html = `
-            <div class="col-lg-4 col-md-6 animate-up" style="animation-delay: ${i * 0.05}s;">
+            <div class="col-lg-4 col-md-6 fade-stagger" style="animation-delay: ${i * 0.05}s;">
                 <div class="product-card h-100">
+                    ${product.category_name 
+                        ? `<span class="product-card-category-badge">${product.category_name}</span>`
+                        : ''
+                    }
                     ${product.image 
                         ? `<img src="${product.image}" class="product-img">` 
                         : `<div class="product-img-placeholder"><i class="bi bi-image"></i></div>`

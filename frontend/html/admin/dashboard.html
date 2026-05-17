@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة التحكم - بركة</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/main_style.css">
+    <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+    <!-- Mobile Sidebar Toggle -->
+    <button class="sidebar-toggle" onclick="document.querySelector('.admin-sidebar').classList.toggle('open')">
+        <i class="bi bi-list"></i>
+    </button>
+
+    <div class="admin-layout">
+        <!-- Sidebar -->
+        <aside class="admin-sidebar">
+            <div class="sidebar-brand">
+                <div class="logo-text">بركة</div>
+                <div class="subtitle">لوحة التحكم الإدارية</div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a class="sidebar-link active" data-section="dashboard" onclick="switchSection('dashboard')">
+                    <i class="bi bi-grid-1x2-fill"></i> الرئيسية
+                </a>
+                <a class="sidebar-link" data-section="users" onclick="switchSection('users')">
+                    <i class="bi bi-people-fill"></i> المستخدمين
+                    <span class="sidebar-badge" id="pendingBadge" style="display:none;">0</span>
+                </a>
+                <a class="sidebar-link" data-section="orders" onclick="switchSection('orders')">
+                    <i class="bi bi-receipt-cutoff"></i> الطلبات
+                </a>
+                <a class="sidebar-link" data-section="reports" onclick="switchSection('reports')">
+                    <i class="bi bi-flag-fill"></i> التقارير
+                    <span class="sidebar-badge" id="reportsBadge" style="display:none;">0</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <button class="sidebar-logout" onclick="adminLogout()">
+                    <i class="bi bi-box-arrow-right"></i> تسجيل الخروج
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="admin-main">
+
+            <!-- ==========================================
+                 DASHBOARD SECTION
+                 ========================================== -->
+            <div class="admin-section active" id="section-dashboard">
+                <div class="admin-header">
+                    <div>
+                        <h1><i class="bi bi-shield-lock-fill me-2" style="color: var(--color-marigold);"></i>لوحة التحكم</h1>
+                        <span class="welcome-text" id="welcomeText">مرحباً، أدمن بركة</span>
+                    </div>
+                </div>
+
+                <div class="stats-grid" id="statsGrid">
+                    <!-- Stats cards rendered by JS -->
+                </div>
+            </div>
+
+            <!-- ==========================================
+                 USERS SECTION
+                 ========================================== -->
+            <div class="admin-section" id="section-users">
+                <div class="admin-header">
+                    <h1><i class="bi bi-people-fill me-2" style="color: var(--color-marigold);"></i>إدارة المستخدمين</h1>
+                </div>
+
+                <div class="section-toolbar">
+                    <input type="text" class="search-input" id="userSearch" placeholder="🔍 بحث بالاسم أو رقم الهاتف ..." oninput="debounceUserSearch()">
+                    <select id="userRoleFilter" onchange="loadUsers(1)">
+                        <option value="">كل الأدوار</option>
+                        <option value="CUSTOMER">مشتري</option>
+                        <option value="SHOP_OWNER">صاحب محل</option>
+                        <option value="DRIVER">طيار</option>
+                        <option value="ADMIN">أدمن</option>
+                    </select>
+                    <select id="userApprovedFilter" onchange="loadUsers(1)">
+                        <option value="">الكل</option>
+                        <option value="false">في انتظار الموافقة</option>
+                        <option value="true">معتمد</option>
+                    </select>
+                    <select id="userActiveFilter" onchange="loadUsers(1)">
+                        <option value="">الكل</option>
+                        <option value="true">نشط</option>
+                        <option value="false">محظور</option>
+                    </select>
+                </div>
+
+                <div class="data-table-wrapper">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>الاسم</th>
+                                <th>الهاتف</th>
+                                <th>الدور</th>
+                                <th>الحالة</th>
+                                <th>الموافقة</th>
+                                <th>تاريخ الانضمام</th>
+                                <th>إجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTableBody">
+                        </tbody>
+                    </table>
+                    <div class="pagination-controls" id="usersPagination"></div>
+                </div>
+            </div>
+
+            <!-- ==========================================
+                 ORDERS SECTION
+                 ========================================== -->
+            <div class="admin-section" id="section-orders">
+                <div class="admin-header">
+                    <h1><i class="bi bi-receipt-cutoff me-2" style="color: var(--color-marigold);"></i>إدارة الطلبات</h1>
+                </div>
+
+                <div class="section-toolbar">
+                    <input type="text" class="search-input" id="orderSearch" placeholder="🔍 بحث برقم الطلب أو رقم هاتف العميل ..." oninput="debounceOrderSearch()">
+                    <select id="orderStatusFilter" onchange="loadOrders(1)">
+                        <option value="">كل الحالات</option>
+                        <option value="PENDING">معلق</option>
+                        <option value="ACCEPTED">مقبول</option>
+                        <option value="PREPARING">قيد التحضير</option>
+                        <option value="ON_DELIVERY">في التوصيل</option>
+                        <option value="DELIVERED">تم التوصيل</option>
+                        <option value="CANCELLED">ملغي</option>
+                    </select>
+                </div>
+
+                <div class="data-table-wrapper">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>العميل</th>
+                                <th>المحل</th>
+                                <th>الطيار</th>
+                                <th>المبلغ</th>
+                                <th>الحالة</th>
+                                <th>التاريخ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ordersTableBody">
+                        </tbody>
+                    </table>
+                    <div class="pagination-controls" id="ordersPagination"></div>
+                </div>
+            </div>
+
+            <!-- ==========================================
+                 REPORTS SECTION
+                 ========================================== -->
+            <div class="admin-section" id="section-reports">
+                <div class="admin-header">
+                    <h1><i class="bi bi-flag-fill me-2" style="color: var(--color-marigold);"></i>التقارير والشكاوى</h1>
+                </div>
+
+                <div class="section-toolbar">
+                    <input type="text" class="search-input" id="reportSearch" placeholder="🔍 بحث بالموضوع أو رقم الهاتف ..." oninput="debounceReportSearch()">
+                    <select id="reportResolvedFilter" onchange="loadReports(1)">
+                        <option value="">الكل</option>
+                        <option value="false">غير محلولة</option>
+                        <option value="true">تم الحل</option>
+                    </select>
+                </div>
+
+                <div class="data-table-wrapper">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>المرسل</th>
+                                <th>الموضوع</th>
+                                <th>التفاصيل</th>
+                                <th>الحالة</th>
+                                <th>التاريخ</th>
+                                <th>إجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reportsTableBody">
+                        </tbody>
+                    </table>
+                    <div class="pagination-controls" id="reportsPagination"></div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/admin.js"></script>
+</body>
+</html>

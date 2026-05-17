@@ -148,55 +148,7 @@ function applyBarakaModalStyles(overlay) {
             icon.style.border = '1.5px solid rgba(194, 146, 64, 0.25)';
         }
     });
-
-    // ==========================================
-    // Global Toast Notification System
-    // ==========================================
-    window.showBarakaToast = function(message, type = 'success', icon = 'bi-check-circle-fill') {
-        let container = document.getElementById('toast-container');
-        if (!container) {
-            container = document.createElement('div');
-            container.id = 'toast-container';
-            container.className = 'toast-container';
-            document.body.appendChild(container);
-        }
-
-        const toast = document.createElement('div');
-        toast.className = `baraka-toast toast-${type}`;
-        toast.innerHTML = `<i class="bi ${icon} fs-5"></i> <span>${message}</span>`;
-        
-        container.appendChild(toast);
-
-        setTimeout(() => {
-            toast.style.animation = 'toastExit 0.3s var(--ease-out-expo) forwards';
-            setTimeout(() => toast.remove(), 300);
-        }, 3000);
-    };
-
-    // ==========================================
-    // Global Intersection Observer for Animations
-    // ==========================================
-    document.addEventListener('DOMContentLoaded', () => {
-        const observerOptions = {
-            root: null,
-            rootMargin: '0px',
-            threshold: 0.1
-        };
-
-        const observer = new IntersectionObserver((entries, observer) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('visible');
-                    // Optional: stop observing once animated
-                    // observer.unobserve(entry.target); 
-                }
-            });
-        }, observerOptions);
-
-        document.querySelectorAll('.fade-in-up').forEach(el => {
-            observer.observe(el);
-        });
-    });    
+}
     
     overlay.querySelectorAll('.baraka-modal-title').forEach(t => {
         t.style.cssText = `
@@ -451,3 +403,52 @@ window.showBarakaQRScanner = function(title = 'مسح رمز الاستجابة 
         });
     });
 };
+
+// ==========================================
+// Global Toast Notification System
+// ==========================================
+window.showBarakaToast = function(message, type = 'success', icon = 'bi-check-circle-fill') {
+    let container = document.getElementById('toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        container.className = 'toast-container';
+        document.body.appendChild(container);
+    }
+
+    const toast = document.createElement('div');
+    toast.className = `baraka-toast toast-${type}`;
+    toast.innerHTML = `<i class="bi ${icon} fs-5"></i> <span>${message}</span>`;
+    
+    container.appendChild(toast);
+
+    setTimeout(() => {
+        toast.style.animation = 'toastExit 0.3s var(--ease-out-expo) forwards';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+};
+
+// ==========================================
+// Global Intersection Observer for Animations
+// ==========================================
+document.addEventListener('DOMContentLoaded', () => {
+    const observerOptions = {
+        root: null,
+        rootMargin: '0px',
+        threshold: 0.1
+    };
+
+    const observer = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('visible');
+            }
+        });
+    }, observerOptions);
+
+    // Initial check for elements
+    document.querySelectorAll('.fade-in-up').forEach(el => {
+        observer.observe(el);
+    });
+});
+

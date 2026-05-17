@@ -416,6 +416,10 @@ function buildVisualStepper(currentStatus) {
         if (isCurrent) circleClass = 'stepper-current';
         
         html += `
+            <div class="stepper-step ${isCurrent ? 'stepper-step-active' : ''}">
+                <div class="stepper-circle ${circleClass}" style="${isCurrent ? 'background:' + step.color + '; border-color:' + step.color + ';' : isDone ? 'background:#22c55e; border-color:#22c55e;' : ''}">
+                    <i class="bi ${isDone ? 'bi-check-lg' : step.icon}" style="font-size: ${isCurrent ? '1rem' : '0.8rem'};"></i>
+                </div>
                 <div class="stepper-label ${isCurrent ? 'fw-bold' : ''}" style="${isCurrent ? 'color:' + step.color + ';' : ''}">${step.label}</div>
             </div>
         `;

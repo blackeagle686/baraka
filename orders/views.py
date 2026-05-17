@@ -18,9 +18,10 @@ class OrderViewSet(viewsets.ModelViewSet):
             'items', 'items__product', 'items__product__shop'
         ).order_by('-created_at')
 
-        if user.is_staff or user.role == 'ADMIN':
-            return base_qs
-        elif user.role == 'SHOP_OWNER':
+        # Admins have their own dedicated AdminOrderListView (/api/admin/orders/) for global access.
+        # When an admin uses the standard order endpoint (e.g. from their personal cart),
+        # they should only see their own personal orders.
+        if user.role == 'SHOP_OWNER':
             return base_qs.filter(shop__owner=user)
         elif user.role == 'DRIVER':
             from django.db.models import Q

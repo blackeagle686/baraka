@@ -168,6 +168,12 @@ window.addToCart = function(id, name, price) {
         return;
     }
     
+    const role = localStorage.getItem('user_role');
+    if (role && role !== 'CUSTOMER') {
+        alert('عذراً، الحسابات التجارية (أصحاب المحلات والطيارين) لا يمكنها تقديم طلبات شراء من المتجر. يرجى استخدام حساب مشتري.');
+        return;
+    }
+    
     const existing = cart.find(it => it.product === id);
     if (existing) {
         existing.quantity += 1;

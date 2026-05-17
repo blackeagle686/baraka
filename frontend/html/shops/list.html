@@ -16,57 +16,46 @@
     <!-- Header Placeholder -->
     <div id="header-placeholder"></div>
 
-    <!-- Header -->
-    <section class="shops-header">
-        <div class="container animate-up">
-            <h2 class="text-espresso"><i class="bi bi-shop me-2"></i>كل المحلات</h2>
-            <p class="text-mesa">تصفح جميع المحلات في منطقتك واطلب كل اللي تحتاجه</p>
-        </div>
-    </section>
-
-    <!-- Interactive Map Section -->
-    <section class="mb-5">
-        <div class="container animate-up">
-            <div class="dashboard-card p-0 overflow-hidden border" style="border-radius: var(--radius-lg); border-color: rgba(201,153,151,0.15) !important;">
-                <div class="p-3 d-flex justify-content-between align-items-center bg-white border-bottom" style="border-color: rgba(201,153,151,0.08) !important;">
-                    <h5 class="fw-bold text-espresso m-0"><i class="bi bi-map-fill text-marigold me-2"></i>خريطة المحلات التفاعلية</h5>
-                    <span class="badge rounded-pill px-3 py-2 small" style="background-color: var(--color-dune); color: var(--color-espresso);" id="activeShopsMapCount">جاري تحديد المحلات...</span>
-                </div>
-                <div id="shopsDirectoryMap" style="height: 380px; z-index: 5;"></div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Shops Grid & Filters -->
-    <section class="py-5">
-        <div class="container">
-            <!-- Search & Filters -->
-            <div class="row mb-4 align-items-center animate-up">
-                <div class="col-md-8 mb-3 mb-md-0">
-                    <div class="position-relative">
+    <!-- Main Split Layout Container -->
+    <div class="shops-split-container">
+        <!-- Sidebar on Left -->
+        <aside class="shops-sidebar animate-up">
+            <div class="sidebar-header p-4 pb-0">
+                <h3 class="fw-bold text-espresso mb-1">المحلات اللي حواليك</h3>
+                <p class="text-mesa mb-3 small">لف في محلات قرية بركة واشتري كل اللي ناقصك</p>
+                
+                <!-- Search & Filters -->
+                <div class="search-filter-section mb-3">
+                    <div class="position-relative mb-3">
                         <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-mesa"></i>
-                        <input type="text" id="shopSearchInput" class="form-control rounded-pill py-2 ps-5 pe-4" placeholder="ابحث عن اسم المحل أو المنتجات...">
+                        <input type="text" id="shopSearchInput" class="form-control rounded-pill py-2 ps-5 pe-3" placeholder="دور على محل أو سوبرماركت...">
                     </div>
-                </div>
-                <div class="col-md-4 text-start">
-                    <div class="form-check form-switch d-inline-block p-0">
-                        <label class="form-check-label fw-bold text-espresso me-2" for="openNowFilter">مفتوح الآن فقط</label>
-                        <input class="form-check-input float-end ms-2" type="checkbox" role="switch" id="openNowFilter" style="width: 3rem; height: 1.5rem;">
+                    <div class="d-flex justify-content-between align-items-center bg-white p-2 px-3 rounded-pill border shadow-sm" style="border-color: rgba(201,153,151,0.15) !important;">
+                        <span class="fw-bold text-espresso small"><i class="bi bi-clock-history text-marigold me-1"></i>مفتوح دلوقتي بس</span>
+                        <div class="form-check form-switch p-0 m-0">
+                            <input class="form-check-input m-0" type="checkbox" role="switch" id="openNowFilter" style="width: 2.5rem; height: 1.25rem; cursor: pointer;">
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div class="row g-4" id="allShopsList">
-                <div class="text-center text-mesa py-4">
+            <!-- Shops List Container -->
+            <div class="shops-list-scroll p-4 pt-2 animate-up" id="allShopsList">
+                <div class="text-center text-mesa py-5">
                     <div class="spinner-border text-marigold mb-3" role="status"></div>
-                    <p>جاري تحميل المحلات...</p>
+                    <p class="fw-bold">بنحمل المحلات عشانك...</p>
                 </div>
             </div>
-        </div>
-    </section>
+        </aside>
 
-    <!-- Footer Placeholder -->
-    <div id="footer-placeholder"></div>
+        <!-- Map View on Right -->
+        <main class="shops-map-wrapper">
+            <div class="map-status-overlay">
+                <span class="badge rounded-pill px-3 py-2 shadow-sm" id="activeShopsMapCount">بيحدد المحلات...</span>
+            </div>
+            <div id="shopsDirectoryMap" style="width: 100%; height: 100%;"></div>
+        </main>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Leaflet JS Library -->

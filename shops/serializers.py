@@ -12,6 +12,7 @@ class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = '__all__'
+        read_only_fields = ['shop']
 
 class ShopSerializer(serializers.ModelSerializer):
     products = ProductSerializer(many=True, read_only=True)
@@ -19,3 +20,4 @@ class ShopSerializer(serializers.ModelSerializer):
     class Meta:
         model = Shop
         fields = '__all__'
+        read_only_fields = ['owner']

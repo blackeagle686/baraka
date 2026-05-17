@@ -111,7 +111,7 @@ window.showBarakaAlert = function(message, type = 'info', title = 'تنبيه') 
             </div>
         `;
         
-        document.body.appendChild(overlay);
+        document.documentElement.appendChild(overlay);
         
         // Trigger active animations
         setTimeout(() => overlay.classList.add('active'), 50);
@@ -158,7 +158,7 @@ window.showBarakaPrompt = function(message, placeholder = '', title = 'إدخا�
             </div>
         `;
         
-        document.body.appendChild(overlay);
+        document.documentElement.appendChild(overlay);
         
         const input = document.getElementById('barakaPromptInput');
         const submitBtn = document.getElementById('barakaPromptSubmitBtn');

@@ -12,6 +12,7 @@ async function initShopsList() {
     try {
         const shops = await api.shops.getAll();
         renderAllShops(shops);
+        renderShopsMap(shops);
     } catch (error) {
         console.error("Error fetching shops:", error);
     }

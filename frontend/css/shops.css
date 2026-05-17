@@ -165,3 +165,41 @@
     font-weight: bold;
     border: 2px solid white;
 }
+
+/* ==========================================
+   Interactive Map Leaflet Popup Styling
+   ========================================== */
+.leaflet-popup-content-wrapper {
+    background: rgba(255, 255, 255, 0.9) !important;
+    backdrop-filter: blur(12px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.6) !important;
+    border-radius: var(--radius-md) !important;
+    box-shadow: var(--shadow-lg) !important;
+    padding: 2px !important;
+}
+
+.leaflet-popup-tip {
+    background: rgba(255, 255, 255, 0.9) !important;
+}
+
+.shop-map-popup {
+    line-height: 1.4;
+}
+
+.shop-map-popup h6 {
+    font-size: 0.95rem;
+    color: var(--color-espresso);
+    font-weight: 700;
+}
+
+.shop-map-popup .btn-marigold {
+    background: linear-gradient(135deg, var(--color-marigold) 0%, var(--color-terracotta) 100%) !important;
+    border: none !important;
+    font-size: 0.8rem !important;
+    transition: var(--transition-base) !important;
+}
+
+.shop-map-popup .btn-marigold:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(194, 146, 64, 0.3) !important;
+}

@@ -11,19 +11,25 @@ class OrderViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
+        # High-Performance Query Optimization: join related objects in a single query
+        base_qs = Order.objects.select_related(
+            'customer', 'driver', 'shop', 'shop__owner'
+        ).prefetch_related(
+            'items', 'items__product', 'items__product__shop'
+        ).order_by('-created_at')
+
         if user.is_staff or user.role == 'ADMIN':
-            return Order.objects.all().order_by('-created_at')
+            return base_qs
         elif user.role == 'SHOP_OWNER':
-            return Order.objects.filter(shop__owner=user).order_by('-created_at')
+            return base_qs.filter(shop__owner=user)
         elif user.role == 'DRIVER':
-            # Drivers can see their own assigned orders or accepted/preparing/pending orders that need a driver
             from django.db.models import Q
-            return Order.objects.filter(
+            return base_qs.filter(
                 Q(driver=user) | Q(driver__isnull=True, status__in=['PENDING', 'ACCEPTED', 'PREPARING', 'ON_DELIVERY'])
-            ).order_by('-created_at')
+            )
         else:
             # Customer
-            return Order.objects.filter(customer=user).order_by('-created_at')
+            return base_qs.filter(customer=user)
 
     def create(self, request, *args, **kwargs):
         if request.user.role != 'CUSTOMER' and not request.user.is_staff:

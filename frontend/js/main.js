@@ -6,8 +6,16 @@ function checkAuth() {
     const token = localStorage.getItem('access_token');
     const authSection = document.getElementById('authSection');
     
+    const userRole = localStorage.getItem('user_role');
+    
     if (token) {
+        let manageShopHtml = '';
+        if (userRole === 'SHOP_OWNER') {
+            manageShopHtml = `<a href="/html/profile/shop.html" class="btn btn-marigold me-2 rounded-pill fw-bold text-white" style="background-color: var(--color-marigold);">إدارة محلي</a>`;
+        }
+        
         authSection.innerHTML = `
+            ${manageShopHtml}
             <a href="/html/profile/user.html" class="btn btn-outline-mesa me-2 rounded-pill fw-bold">حسابي</a>
             <button onclick="logout()" class="btn btn-mesa rounded-pill fw-bold text-white" style="background-color: var(--color-mesa);">تسجيل خروج</button>
         `;

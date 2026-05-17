@@ -448,12 +448,29 @@
     z-index: 10;
     box-shadow: -4px 0 15px rgba(50, 4, 4, 0.03);
     height: 100%;
+    overflow: hidden;
 }
 
 .shops-list-scroll {
     flex-grow: 1;
     overflow-y: auto;
+    min-height: 0;
     padding-bottom: 2rem !important;
+}
+
+/* Premium Scrollbar for Shop List */
+.shops-list-scroll::-webkit-scrollbar {
+    width: 6px;
+}
+.shops-list-scroll::-webkit-scrollbar-track {
+    background: transparent;
+}
+.shops-list-scroll::-webkit-scrollbar-thumb {
+    background: rgba(194, 146, 64, 0.2);
+    border-radius: 10px;
+}
+.shops-list-scroll::-webkit-scrollbar-thumb:hover {
+    background: rgba(194, 146, 64, 0.4);
 }
 
 /* Map Wrapper Styling */

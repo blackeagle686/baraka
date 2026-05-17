@@ -10,6 +10,11 @@ class ShopViewSet(viewsets.ModelViewSet):
     serializer_class = ShopSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
 
+    def create(self, request, *args, **kwargs):
+        if request.user.role != 'SHOP_OWNER' and not request.user.is_staff:
+            return Response({"detail": "Only users with the SHOP_OWNER role can create a shop."}, status=status.HTTP_403_FORBIDDEN)
+        return super().create(request, *args, **kwargs)
+
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
 
@@ -30,6 +35,14 @@ class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
+
+    def create(self, request, *args, **kwargs):
+        if request.user.role != 'SHOP_OWNER' and not request.user.is_staff:
+            return Response({"detail": "Only shop owners can add products."}, status=status.HTTP_403_FORBIDDEN)
+        shop = Shop.objects.filter(owner=request.user).first()
+        if not shop:
+            return Response({"detail": "You must create a shop first before adding products."}, status=status.HTTP_400_BAD_REQUEST)
+        return super().create(request, *args, **kwargs)
 
     def perform_create(self, serializer):
         shop = Shop.objects.filter(owner=self.request.user).first()

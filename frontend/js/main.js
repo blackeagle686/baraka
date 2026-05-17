@@ -71,9 +71,11 @@ function renderHeader() {
     headerPlaceholder.innerHTML = `
     <nav class="navbar navbar-expand-lg glass-nav fixed-top shadow-sm py-2" style="direction: rtl;">
         <div class="container">
-            <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="/html/index.html" style="font-size: 1.35rem; color: var(--color-espresso) !important;">
-                <i class="bi bi-shop text-success fs-3"></i>
-                <span class="text-espresso">سوق بركة</span>
+            <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="/html/index.html" style="font-size: 1.5rem; text-decoration: none;">
+                <div class="d-flex align-items-center justify-content-center rounded-circle shadow-sm" style="width: 36px; height: 36px; background: linear-gradient(135deg, var(--color-marigold), var(--color-bronze)); color: white;">
+                    <i class="bi bi-gem fs-6"></i>
+                </div>
+                <span style="background: linear-gradient(135deg, var(--color-espresso), var(--color-mesa)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 1px; font-weight: 900; font-family: 'Inter', sans-serif;">BARAKA</span>
             </a>
             <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>

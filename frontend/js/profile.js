@@ -225,14 +225,14 @@ async function loadCustomerOrders() {
 
 window.raiseCustomerDispute = async function(orderId) {
     const token = localStorage.getItem('access_token');
-    const reason = prompt('يرجى كتابة سبب تقديم الشكوى بالتفصيل (مثلاً: لم أستلم الطلب، المندوب أخذ مبلغاً إضافياً، إلخ):');
+    const reason = await showBarakaPrompt('يرجى كتابة سبب تقديم الشكوى بالتفصيل (مثلاً: لم أستلم الطلب، المندوب أخذ مبلغاً إضافياً، إلخ):', 'اكتب سبب الشكوى هنا...', 'تقديم شكوى بخصوص الطلب ⚖️');
     if (!reason) return;
     
     try {
         await api.orders.raiseDispute(token, orderId, reason);
-        alert('تم تقديم الشكوى للإدارة بنجاح! سيتم التحقق فوراً للفصل في النزاع.');
+        await showBarakaAlert('تم تقديم الشكوى للإدارة بنجاح! سيتم التحقق فوراً للفصل في النزاع.', 'info', 'تم تسجيل الشكوى ⚖️');
         loadCustomerOrders();
     } catch (error) {
-        alert('فشل تقديم الشكوى: ' + JSON.stringify(error));
+        await showBarakaAlert('فشل تقديم الشكوى: ' + JSON.stringify(error), 'warning', 'خطأ ⚠️');
     }
 }

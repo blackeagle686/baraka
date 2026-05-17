@@ -59,7 +59,11 @@ function loadLocalCart() {
     
     // Sync navbar badge
     if (window.updateHeaderCartUI) {
-        window.updfunction renderActiveCart() {
+        window.updateHeaderCartUI();
+    }
+}
+
+function renderActiveCart() {
     const listContainer = document.getElementById('activeCartItemsList');
     const tabBadge = document.getElementById('cartTabBadge');
     
@@ -198,8 +202,6 @@ function loadLocalCart() {
     
     if (subtotalEl) subtotalEl.innerText = `${globalSubtotal.toFixed(2)} ج.م`;
     if (totalSumEl) totalSumEl.innerText = `${globalTotal.toFixed(2)} ج.م`;
-}innerText = `${subtotal.toFixed(2)} ج.م`;
-    if (totalSumEl) totalSumEl.innerText = `${totalSum.toFixed(2)} ج.م`;
 }
 
 window.changeCartItemQty = function(productId, delta) {

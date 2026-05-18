@@ -12,4 +12,4 @@ __pycache__/
 *.log
 *.env
 *.sqlite
-ظ
+chroma_db/

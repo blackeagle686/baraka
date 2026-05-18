@@ -1,4 +1,6 @@
-const API_BASE = 'http://127.0.0.1:8000/api';
+const API_BASE = window.location.origin.includes('127.0.0.1') || window.location.origin.includes('localhost')
+    ? (window.location.port === '8080' ? 'http://127.0.0.1:8000/api' : '/api')
+    : '/api';
 
 const api = {
     auth: {

@@ -964,6 +964,7 @@ function renderShopsMap(shops) {
     });
 
     // Fit map bounds smoothly to fit all active shop pins
+    window.directoryMapBounds = bounds;
     if (bounds.length > 0) {
         directoryMapInstance.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
     }

@@ -797,3 +797,57 @@
     }
 }
 
+/* ==========================================
+   Shop Ratings & Reviews Section CSS
+   ========================================== */
+.ratings-list-scroll::-webkit-scrollbar {
+    width: 5px;
+}
+.ratings-list-scroll::-webkit-scrollbar-track {
+    background: transparent;
+}
+.ratings-list-scroll::-webkit-scrollbar-thumb {
+    background: rgba(194, 146, 64, 0.2);
+    border-radius: 10px;
+}
+.ratings-list-scroll::-webkit-scrollbar-thumb:hover {
+    background: rgba(194, 146, 64, 0.4);
+}
+
+.review-item {
+    border-bottom: 1px dashed rgba(201, 153, 151, 0.15) !important;
+}
+.review-item:last-child {
+    border-bottom: none !important;
+}
+
+.rating-restricted-box {
+    background: rgba(94, 44, 56, 0.04);
+    border: 1px dashed rgba(201, 153, 151, 0.25) !important;
+    border-radius: 16px;
+    padding: 1.25rem !important;
+}
+
+.star-rating-selector i {
+    transition: transform 0.2s ease, color 0.2s ease;
+}
+.star-rating-selector i:hover {
+    transform: scale(1.2);
+}
+
+.bg-white-10 {
+    background-color: rgba(255, 255, 255, 0.45) !important;
+}
+.bg-white-5 {
+    background-color: rgba(255, 255, 255, 0.2) !important;
+}
+.border-white-10 {
+    border-color: rgba(201, 153, 151, 0.15) !important;
+}
+.fw-extrabold {
+    font-weight: 800 !important;
+}
+.micro {
+    font-size: 0.72rem !important;
+}
+

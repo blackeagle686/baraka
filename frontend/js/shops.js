@@ -210,6 +210,9 @@ async function initShopDetails() {
             
             // Render initial Cart inside Checkout Sidebar Card
             updateCartUI();
+            
+            // Initialize Rating System and verified buyer check
+            initShopRatings(shop);
         } catch (error) {
             console.error("Error:", error);
             const banner = document.getElementById('shopCoverBanner');
@@ -949,4 +952,239 @@ function renderShopsMap(shops) {
     if (bounds.length > 0) {
         directoryMapInstance.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
     }
+}
+
+async function initShopRatings(shop) {
+    const card = document.getElementById('shopRatingsCard');
+    if (!card) return;
+
+    const token = localStorage.getItem('access_token');
+    let canRate = false;
+    let existingRating = null;
+
+    if (token) {
+        try {
+            const statusRes = await api.shops.getRatingStatus(token, shop.id);
+            canRate = statusRes.can_rate;
+            existingRating = statusRes.existing_rating;
+        } catch (err) {
+            console.error("Error fetching rating status:", err);
+        }
+    }
+
+    renderRatingsCard(shop, canRate, existingRating);
+}
+
+function renderRatingsCard(shop, canRate, existingRating) {
+    const card = document.getElementById('shopRatingsCard');
+    if (!card) return;
+
+    const avgRating = shop.average_rating || 0.0;
+    const totalRatings = shop.total_ratings || 0;
+    const ratingsList = shop.ratings_list || [];
+
+    // Calculate rating percentages for bars
+    let starCounts = [0, 0, 0, 0, 0];
+    ratingsList.forEach(r => {
+        if (r.rating >= 1 && r.rating <= 5) {
+            starCounts[r.rating - 1]++;
+        }
+    });
+
+    let starsProgressHtml = '';
+    for (let i = 5; i >= 1; i--) {
+        const count = starCounts[i - 1];
+        const pct = totalRatings > 0 ? (count / totalRatings) * 100 : 0;
+        starsProgressHtml += `
+            <div class="d-flex align-items-center gap-2 mb-1" style="font-size: 0.8rem; direction: ltr;">
+                <span class="text-espresso fw-bold" style="width: 12px; text-align: right;">${i}</span>
+                <i class="bi bi-star-fill text-warning" style="font-size: 0.75rem;"></i>
+                <div class="progress flex-grow-1" style="height: 6px; background-color: rgba(0,0,0,0.06); border-radius: 10px;">
+                    <div class="progress-bar bg-warning" role="progressbar" style="width: ${pct}%; border-radius: 10px;" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+                <span class="text-muted" style="width: 25px; text-align: left;">${count}</span>
+            </div>
+        `;
+    }
+
+    // Dynamic Header
+    let ratingStarsHtml = '';
+    const fullStars = Math.floor(avgRating);
+    const halfStar = avgRating % 1 >= 0.5;
+    for (let i = 1; i <= 5; i++) {
+        if (i <= fullStars) {
+            ratingStarsHtml += '<i class="bi bi-star-fill text-warning me-1"></i>';
+        } else if (i === fullStars + 1 && halfStar) {
+            ratingStarsHtml += '<i class="bi bi-star-half text-warning me-1"></i>';
+        } else {
+            ratingStarsHtml += '<i class="bi bi-star text-muted me-1"></i>';
+        }
+    }
+
+    // Generate ratings list items
+    let reviewsListHtml = '';
+    if (ratingsList.length === 0) {
+        reviewsListHtml = `
+            <div class="text-center py-4 text-mesa">
+                <i class="bi bi-chat-left-text fs-2 opacity-50 mb-2 d-block"></i>
+                <span class="small fw-semibold">مفيش تقييمات للمحل ده لسه.</span>
+            </div>
+        `;
+    } else {
+        reviewsListHtml = `
+            <div class="ratings-list-scroll pe-1 mb-2" style="max-height: 250px; overflow-y: auto;">
+                ${ratingsList.map(r => `
+                    <div class="review-item border-bottom border-white-10 py-3 text-start">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="fw-bold text-espresso small">${r.customer_name || 'مشتري بركة'}</span>
+                            <div class="d-flex gap-1" style="direction: ltr;">
+                                ${Array.from({length: r.rating}).map(() => '<i class="bi bi-star-fill text-warning" style="font-size: 0.7rem;"></i>').join('')}
+                                ${Array.from({length: 5 - r.rating}).map(() => '<i class="bi bi-star text-muted" style="font-size: 0.7rem;"></i>').join('')}
+                            </div>
+                        </div>
+                        <p class="text-mesa mb-0 small lh-base" style="font-size: 0.85rem;">${r.review || 'تقييم بدون تعليق'}</p>
+                        <span class="text-muted d-block mt-1" style="font-size: 0.65rem;">${new Date(r.created_at).toLocaleDateString('ar-EG')}</span>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }
+
+    // Dynamic rating form block
+    let ratingFormHtml = '';
+    if (canRate) {
+        const hasRated = !!existingRating;
+        const formTitle = hasRated ? 'عدّل تقييمك للمحل' : 'تقييم تجربتك مع المحل';
+        const ratingVal = existingRating ? existingRating.rating : 5;
+        const reviewText = existingRating ? existingRating.review : '';
+
+        ratingFormHtml = `
+            <div class="rating-form-section border-top border-white-10 pt-4 mt-4 text-start">
+                <h6 class="fw-bold text-espresso mb-3"><i class="bi bi-pencil-square text-marigold me-1"></i>${formTitle}</h6>
+                <form id="shopSubmitRatingForm">
+                    <div class="mb-3">
+                        <label class="form-label text-espresso small fw-semibold mb-2">اختار عدد النجوم:</label>
+                        <div class="star-rating-selector d-flex gap-2 justify-content-center py-2" style="font-size: 2rem; cursor: pointer; direction: ltr;">
+                            <i class="bi bi-star-fill text-warning shop-form-star" data-value="1"></i>
+                            <i class="bi bi-star-fill text-warning shop-form-star" data-value="2"></i>
+                            <i class="bi bi-star-fill text-warning shop-form-star" data-value="3"></i>
+                            <i class="bi bi-star-fill text-warning shop-form-star" data-value="4"></i>
+                            <i class="bi bi-star-fill text-warning shop-form-star" data-value="5"></i>
+                        </div>
+                        <input type="hidden" id="formRatingVal" value="${ratingVal}">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label text-espresso small fw-semibold">اكتب رأيك (اختياري):</label>
+                        <textarea class="form-control rounded-4 p-3 small lh-base" id="formReviewText" rows="3" placeholder="ملاحظاتك على المنتجات وسرعة التوصيل...">${reviewText}</textarea>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-100 rounded-pill fw-bold py-2" id="submitRatingBtn">
+                        <i class="bi bi-send me-1"></i>حفظ التقييم
+                    </button>
+                </form>
+            </div>
+        `;
+    } else {
+        const token = localStorage.getItem('access_token');
+        if (!token) {
+            ratingFormHtml = `
+                <div class="rating-restricted-box text-center p-3 rounded-4 bg-white-5 border border-white-10 mt-4">
+                    <i class="bi bi-lock-fill text-mesa fs-4 mb-2 d-block"></i>
+                    <span class="small text-espresso fw-semibold d-block">سجل دخول عشان تقدر تقيم</span>
+                    <a href="/html/auth/login.html" class="btn btn-outline-primary btn-sm rounded-pill mt-2 px-4 py-1.5 fw-bold">تسجيل الدخول</a>
+                </div>
+            `;
+        } else {
+            ratingFormHtml = `
+                <div class="rating-restricted-box text-center p-3 rounded-4 bg-white-5 border border-white-10 mt-4">
+                    <i class="bi bi-shield-exclamation text-mesa fs-4 mb-2 d-block"></i>
+                    <span class="small text-espresso fw-semibold d-block">التقييم متاح فقط للمشترين</span>
+                    <span class="micro text-mesa d-block mt-1">لازم تشتري وتستلم طلب من المحل ده أولاً</span>
+                </div>
+            `;
+        }
+    }
+
+    card.innerHTML = `
+        <h5 class="fw-bold text-espresso mb-3 d-flex align-items-center gap-2 border-bottom border-white-10 pb-3">
+            <i class="bi bi-star-fill text-warning"></i>
+            <span>التقييمات والآراء</span>
+        </h5>
+        
+        <!-- Summary Stats -->
+        <div class="d-flex align-items-center gap-3 mb-4">
+            <div class="text-center p-3 rounded-4 bg-white-10 border border-white-10" style="min-width: 90px;">
+                <span class="d-block fw-extrabold text-espresso fs-1" style="line-height: 1.1;">${avgRating}</span>
+                <div class="d-flex justify-content-center mb-1 text-warning" style="font-size: 0.65rem; direction: ltr;">
+                    ${ratingStarsHtml}
+                </div>
+                <span class="text-muted micro d-block">${totalRatings} تقييم</span>
+            </div>
+            <div class="flex-grow-1">
+                ${starsProgressHtml}
+            </div>
+        </div>
+        
+        <!-- Reviews List -->
+        ${reviewsListHtml}
+        
+        <!-- Rating Form / Restricted Box -->
+        ${ratingFormHtml}
+    `;
+
+    // Hook listeners for rating form if present
+    if (canRate) {
+        const formRatingInput = document.getElementById('formRatingVal');
+        const formRatingVal = parseInt(formRatingInput.value);
+        updateFormStars(formRatingVal);
+
+        const stars = document.querySelectorAll('.shop-form-star');
+        stars.forEach(star => {
+            star.addEventListener('click', () => {
+                const val = parseInt(star.getAttribute('data-value'));
+                formRatingInput.value = val;
+                updateFormStars(val);
+            });
+        });
+
+        const ratingForm = document.getElementById('shopSubmitRatingForm');
+        ratingForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const rating = parseInt(formRatingInput.value);
+            const review = document.getElementById('formReviewText').value.trim();
+            const token = localStorage.getItem('access_token');
+            const submitBtn = document.getElementById('submitRatingBtn');
+
+            if (!token) return;
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> جاري الحفظ...`;
+
+            try {
+                await api.shops.rateShop(token, shop.id, rating, review);
+                showBarakaToast('تم حفظ تقييمك بنجاح!', 'success');
+                // Refresh shop details to show updated averages and ratings list
+                const updatedShop = await api.shops.getById(shop.id);
+                initShopRatings(updatedShop);
+            } catch (err) {
+                console.error("Error submitting rating:", err);
+                showBarakaToast(err.detail || 'حدث خطأ أثناء حفظ التقييم', 'danger', 'bi-exclamation-triangle-fill');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = `<i class="bi bi-send me-1"></i>حفظ التقييم`;
+            }
+        });
+    }
+}
+
+function updateFormStars(value) {
+    const stars = document.querySelectorAll('.shop-form-star');
+    stars.forEach(star => {
+        const val = parseInt(star.getAttribute('data-value'));
+        if (val <= value) {
+            star.className = 'bi bi-star-fill text-warning shop-form-star';
+        } else {
+            star.className = 'bi bi-star text-muted shop-form-star';
+        }
+    });
 }

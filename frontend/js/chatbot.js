@@ -475,8 +475,9 @@ let speechRecognitionInstance = null;
 let isSpeechRecording = false;
 
 window.toggleChatbotAudio = function(url, btn) {
-    // Resolve absolute path to ensure correct comparisons
-    const absoluteUrl = new URL(url, window.location.origin).href;
+    const mediaBase = (window.location.port === '8080') ? 'http://127.0.0.1:8000' : '';
+    // Resolve absolute path using the backend mediaBase if running on dev server (8080)
+    const absoluteUrl = new URL(url, mediaBase || window.location.origin).href;
 
     if (window.currentChatbotAudio && window.currentChatbotAudio.src === absoluteUrl) {
         if (!window.currentChatbotAudio.paused) {
@@ -498,8 +499,8 @@ window.toggleChatbotAudio = function(url, btn) {
         b.title = "تشغيل الصوت";
     });
 
-    // Create and play new audio
-    window.currentChatbotAudio = new Audio(url);
+    // Create and play new audio from the resolved absolute URL
+    window.currentChatbotAudio = new Audio(absoluteUrl);
     btn.innerHTML = '<i class="bi bi-stop-fill fs-5 text-danger"></i>';
     btn.title = "إيقاف الصوت";
 

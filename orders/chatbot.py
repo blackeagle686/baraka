@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework import permissions, status
 from django.db.models import Q, Min, Max, Avg
 from shops.models import Product, Shop, Category
+from .models import Order
 from openai import OpenAI
 
 import logging
@@ -17,14 +18,15 @@ _client = OpenAI(
 
 SYSTEM_PROMPT = (
     "أنت مساعد بركة الذكي — مساعد تسوق إلكتروني لمنصة بركة لتوصيل الطلبات في القرى المصرية.\n"
-    "ستحصل على بيانات حقيقية من قاعدة البيانات عن المنتجات والمحلات المتاحة.\n"
+    "ستحصل على بيانات حقيقية عن المنتجات والمحلات المتاحة، بالإضافة إلى محتويات سلة المستخدم الحالية وطلباته السابقة أو النشطة.\n"
     "مهمتك:\n"
-    "1. أجب فقط بناءً على البيانات الحقيقية المقدمة لك — لا تخترع منتجات أو أسعار.\n"
-    "2. إذا سأل المستخدم عن منتج غير موجود، أخبره بوضوح.\n"
-    "3. إذا سأل عن أفضل سعر أو عرض، قارن الأسعار من البيانات وأخبره.\n"
-    "4. أجب بالعربية بشكل ودود ومختصر واستخدم إيموجي مناسبة.\n"
-    "5. إذا وجدت منتجات مناسبة، اقترح على المستخدم إضافتها للسلة بكتابة 'أضف [اسم المنتج]'.\n"
-    "6. لا تزد عن 5 أسطر في الرد."
+    "1. أجب فقط بناءً على البيانات الحقيقية المقدمة لك.\n"
+    "2. إذا سأل المستخدم عن سلة مشترياته، أخبره بالمنتجات الموجودة فيها وإجمالي السعر بدقة من البيانات المرفقة.\n"
+    "3. إذا سأل عن طلباته، أخبره بحالة طلباته النشطة أو السابقة بناءً على البيانات.\n"
+    "4. إذا سأل عن أفضل سعر أو عرض، قارن الأسعار من البيانات وأخبره.\n"
+    "5. أجب بالعربية بشكل ودود ومختصر واستخدم إيموجي مناسبة.\n"
+    "6. إذا وجدت منتجات مناسبة ليست في سلة المستخدم، اقترح عليه إضافتها.\n"
+    "7. لا تزد عن 5 أسطر في الرد إلا إذا كنت تسرد تفاصيل السلة."
 )
 
 
@@ -42,8 +44,6 @@ def _detect_intent(message_lower):
         return "HELP"
     if any(kw in message_lower for kw in CHECKOUT_KEYWORDS):
         return "CHECKOUT"
-    if any(kw in message_lower for kw in CART_KEYWORDS):
-        return "VIEW_CART"
     if any(kw in message_lower for kw in ADD_KEYWORDS):
         return "ADD_TO_CART"
     return None
@@ -103,7 +103,7 @@ def _handle_add_to_cart(message):
     return None, None, None
 
 
-def _build_db_context(message):
+def _build_db_context(message, user, cart_data):
     """Query the database and build context for the LLM."""
     products_data = []
 
@@ -182,6 +182,28 @@ def _build_db_context(message):
         for p in newest:
             ctx.append(f"- {p.name}: {p.price} ج.م من {p.shop.name}")
 
+    # Add Cart Info
+    if cart_data:
+        ctx.append("\n--- سلة مشتريات المستخدم الحالية ---")
+        total_cart = 0
+        for item in cart_data:
+            qty = item.get('quantity', 1)
+            price = float(item.get('price', 0))
+            subtotal = qty * price
+            total_cart += subtotal
+            ctx.append(f"- {item.get('name')} | الكمية: {qty} | السعر: {price} | الإجمالي: {subtotal} ج.م")
+        ctx.append(f"إجمالي سلة المشتريات: {total_cart} ج.م")
+    else:
+        ctx.append("\n--- سلة مشتريات المستخدم الحالية ---")
+        ctx.append("السلة فارغة حالياً.")
+
+    # Add Orders Info
+    recent_orders = Order.objects.filter(customer=user).order_by('-created_at')[:3]
+    if recent_orders.exists():
+        ctx.append("\n--- طلبات المستخدم السابقة/النشطة ---")
+        for o in recent_orders:
+            ctx.append(f"- طلب رقم #{o.id} | الحالة: {o.get_status_display()} | الإجمالي: {o.total_price} ج.م | التاريخ: {o.created_at.strftime('%Y-%m-%d %H:%M')}")
+
     return "\n".join(ctx), products_data
 
 
@@ -190,6 +212,8 @@ class ChatbotView(APIView):
 
     def post(self, request):
         message = request.data.get('message', '').strip()
+        cart_data = request.data.get('cart', [])
+        
         if not message:
             return Response({"detail": "المسج مطلوب"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -213,11 +237,6 @@ class ChatbotView(APIView):
                 "حاضر يا فندم! 🛒✨ يرجى مراجعة سلتك وتأكيد عنوان التوصيل."
             ), "action": {"type": "CHECKOUT"}, "products": []})
 
-        if intent == "VIEW_CART":
-            return Response({"response": (
-                "بالتأكيد! 🛒 إليك المنتجات في سلتك حالياً."
-            ), "action": {"type": "VIEW_CART"}, "products": []})
-
         if intent == "ADD_TO_CART":
             text, action, prods = _handle_add_to_cart(message)
             if text:
@@ -225,7 +244,7 @@ class ChatbotView(APIView):
             # Product not found — fall through to LLM for a helpful answer
 
         # ── Layer 2: LLM with real database context ──
-        db_context, products_data = _build_db_context(message)
+        db_context, products_data = _build_db_context(message, request.user, cart_data)
 
         response_text = ""
         action = None

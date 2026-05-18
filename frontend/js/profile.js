@@ -353,6 +353,13 @@ function renderOrders(orders) {
         // Total price calculation
         const totalPrice = (parseFloat(order.total_price) + (order.driver ? parseFloat(order.delivery_price) : 0)).toFixed(2);
         
+        let driverRatingActionHtml = '';
+        if (order.status === 'DELIVERED' && order.driver_details) {
+            driverRatingActionHtml = `
+                <div id="driver-rating-container-${order.id}" class="mt-3"></div>
+            `;
+        }
+
         const html = `
             <div class="dashboard-card mb-4 animate-up order-card" 
                  data-status="${order.status}"
@@ -411,6 +418,9 @@ function renderOrders(orders) {
                 <!-- OTP Block -->
                 ${otpBlockHtml}
 
+                <!-- Driver Rating Block -->
+                ${driverRatingActionHtml}
+
                 <!-- Dispute Action -->
                 ${disputeActionHtml}
             </div>
@@ -420,7 +430,7 @@ function renderOrders(orders) {
     
     container.innerHTML = allHtml;
     
-    // Generate QR Codes
+    // Generate QR Codes & Initialize Ratings
     orders.forEach((order) => {
         const isCompleted = ['DELIVERED', 'CANCELLED'].includes(order.status);
         if (!isCompleted && order.customer_otp) {
@@ -436,6 +446,10 @@ function renderOrders(orders) {
                     correctLevel : QRCode.CorrectLevel.H
                 });
             }
+        }
+        
+        if (order.status === 'DELIVERED' && order.driver_details) {
+            initDriverOrderRating(order.id);
         }
     });
 }
@@ -469,9 +483,112 @@ window.raiseCustomerDispute = async function(orderId) {
     
     try {
         await api.orders.raiseDispute(token, orderId, reason);
-        await showBarakaAlert('تم تقديم الشكوى للإدارة بنجاح! سيتم التحقق فوراً للفصل في النزاع.', 'info', 'تم تسجيل الشكوى ⚖️');
+        await showBarakaAlert('تم تقديم الشكوى للإدارة بنجاح! سيتم التحقق فوراً للفصل in النزاع.', 'info', 'تم تسجيل الشكوى ⚖️');
         loadCustomerOrders();
     } catch (error) {
         await showBarakaAlert('فشل تقديم الشكوى: ' + JSON.stringify(error), 'warning', 'خطأ ⚠️');
+    }
+}
+
+// ==========================================
+// Delivery Driver Rating System
+// ==========================================
+async function initDriverOrderRating(orderId) {
+    const token = localStorage.getItem('access_token');
+    const container = document.getElementById(`driver-rating-container-${orderId}`);
+    if (!container) return;
+
+    try {
+        const statusData = await api.orders.getDriverRatingStatus(token, orderId);
+        if (!statusData.can_rate) {
+            container.innerHTML = '';
+            return;
+        }
+
+        if (statusData.existing_rating) {
+            let stars = '';
+            for (let i = 1; i <= 5; i++) {
+                stars += `<i class="bi ${i <= statusData.existing_rating.rating ? 'bi-star-fill text-warning' : 'bi-star'} mx-1 fs-5"></i>`;
+            }
+            container.innerHTML = `
+                <div class="p-3 rounded-4 text-center mt-2 border-white-10" style="background: rgba(194, 146, 64, 0.05); border: 1px dashed rgba(194, 146, 64, 0.15) !important;">
+                    <div class="fw-bold text-espresso small mb-1"><i class="bi bi-patch-check-fill text-success me-1"></i>تقييمك للطيار (${statusData.driver_name})</div>
+                    <div class="mb-1">${stars}</div>
+                    ${statusData.existing_rating.review ? `<p class="text-mesa mb-0 small mt-1" style="font-style: italic;">"${statusData.existing_rating.review}"</p>` : ''}
+                </div>
+            `;
+        } else {
+            container.innerHTML = `
+                <div class="p-3 rounded-4 mt-2 border-white-10" style="background: rgba(194, 146, 64, 0.04); border: 1px dashed rgba(194, 146, 64, 0.2) !important;">
+                    <div class="fw-bold text-espresso small mb-2 text-center">🏆 قيم خدمة توصيل الطيار: ${statusData.driver_name}</div>
+                    <div class="d-flex justify-content-center gap-2 mb-3 star-rating-selector" id="driverStars-${orderId}">
+                        <i class="bi bi-star cursor-pointer text-muted fs-4" data-value="1" onclick="setDriverStars(${orderId}, 1)"></i>
+                        <i class="bi bi-star cursor-pointer text-muted fs-4" data-value="2" onclick="setDriverStars(${orderId}, 2)"></i>
+                        <i class="bi bi-star cursor-pointer text-muted fs-4" data-value="3" onclick="setDriverStars(${orderId}, 3)"></i>
+                        <i class="bi bi-star cursor-pointer text-muted fs-4" data-value="4" onclick="setDriverStars(${orderId}, 4)"></i>
+                        <i class="bi bi-star cursor-pointer text-muted fs-4" data-value="5" onclick="setDriverStars(${orderId}, 5)"></i>
+                    </div>
+                    <input type="hidden" id="driverRatingValue-${orderId}" value="0">
+                    <div class="input-group shadow-none" style="direction: ltr;">
+                        <button onclick="submitDriverRating(${orderId})" class="btn btn-sm btn-primary rounded-end-3 px-3 shadow-sm fw-bold border-0" id="driverSubmitBtn-${orderId}">إرسال</button>
+                        <input type="text" id="driverReviewText-${orderId}" class="form-control form-control-sm rounded-start-3 shadow-none border-white-10 text-end" style="font-size: 0.85rem;" placeholder="اكتب رأيك بالتوصيل (اختياري)...">
+                    </div>
+                </div>
+            `;
+        }
+    } catch (err) {
+        console.error("Error loading driver rating status for order " + orderId, err);
+    }
+}
+
+window.setDriverStars = function(orderId, val) {
+    const starsContainer = document.getElementById(`driverStars-${orderId}`);
+    if (!starsContainer) return;
+    
+    document.getElementById(`driverRatingValue-${orderId}`).value = val;
+    
+    const stars = starsContainer.querySelectorAll('i');
+    stars.forEach(star => {
+        const starVal = parseInt(star.getAttribute('data-value'));
+        if (starVal <= val) {
+            star.className = 'bi bi-star-fill text-warning cursor-pointer fs-4';
+        } else {
+            star.className = 'bi bi-star text-muted cursor-pointer fs-4';
+        }
+    });
+}
+
+window.submitDriverRating = async function(orderId) {
+    const token = localStorage.getItem('access_token');
+    const ratingVal = parseInt(document.getElementById(`driverRatingValue-${orderId}`).value);
+    const reviewText = document.getElementById(`driverReviewText-${orderId}`).value;
+    const submitBtn = document.getElementById(`driverSubmitBtn-${orderId}`);
+
+    if (!ratingVal || ratingVal < 1 || ratingVal > 5) {
+        if (window.showBarakaToast) {
+            window.showBarakaToast('يرجى اختيار عدد النجوم أولاً!', 'warning', 'bi-star');
+        } else {
+            alert('يرجى اختيار عدد النجوم أولاً!');
+        }
+        return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = `<span class="spinner-border spinner-border-sm" role="status"></span>`;
+
+    try {
+        await api.orders.rateDriver(token, orderId, ratingVal, reviewText);
+        if (window.showBarakaToast) {
+            window.showBarakaToast('تم تقييم الطيار بنجاح! شكراً لمشاركتك.', 'success', 'bi-check-circle-fill');
+        }
+        initDriverOrderRating(orderId);
+    } catch (error) {
+        if (window.showBarakaToast) {
+            window.showBarakaToast(error.detail || 'فشل إرسال التقييم.', 'warning', 'bi-exclamation-triangle');
+        } else {
+            alert(error.detail || 'فشل إرسال التقييم.');
+        }
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = `إرسال`;
     }
 }

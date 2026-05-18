@@ -18,6 +18,7 @@ class OrderStatus(models.TextChoices):
     ON_DELIVERY = 'ON_DELIVERY', 'On Delivery'
     DELIVERED = 'DELIVERED', 'Delivered'
     CANCELLED = 'CANCELLED', 'Cancelled'
+    PENDING_RETURN = 'PENDING_RETURN', 'Pending Return'
 
 class Order(models.Model):
     customer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='customer_orders')

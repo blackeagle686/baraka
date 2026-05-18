@@ -1,13 +1,17 @@
+import logging
+import os
+import uuid
 import re
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import permissions, status
 from django.db.models import Q, Min, Max, Avg
+from django.conf import settings
 from shops.models import Product, Shop, Category
 from .models import Order
 from openai import OpenAI
+from gtts import gTTS
 
-import logging
 logger = logging.getLogger("Baraka.Chatbot")
 
 # ── Singleton OpenAI client ──
@@ -105,6 +109,26 @@ def _handle_add_to_cart(message):
         return text, action, prod_data
 
     return None, None, None
+
+
+def _generate_tts_audio(text):
+    """Generate Arabic TTS audio and return the media URL."""
+    try:
+        # Clean text from markdown for better speech
+        clean_text = text.replace('*', '').replace('`', '').replace('#', '').replace('|', ' ')
+        tts = gTTS(text=clean_text, lang='ar')
+        filename = f"chat_{uuid.uuid4().hex[:8]}.mp3"
+        
+        audio_dir = os.path.join(settings.MEDIA_ROOT, 'chatbot_audio')
+        os.makedirs(audio_dir, exist_ok=True)
+        
+        filepath = os.path.join(audio_dir, filename)
+        tts.save(filepath)
+        
+        return f"{settings.MEDIA_URL}chatbot_audio/{filename}"
+    except Exception as e:
+        logger.error(f"TTS generation failed: {e}")
+        return None
 
 
 def _build_db_context(message, user, cart_data):
@@ -222,35 +246,32 @@ class ChatbotView(APIView):
             return Response({"detail": "المسج مطلوب"}, status=status.HTTP_400_BAD_REQUEST)
 
         message_lower = message.lower()
+        response_data = {}
 
         # ── Layer 1: Local Intent Detection for cart actions ──
         intent = _detect_intent(message_lower)
-
+        
         if intent == "HELP":
-            return Response({"response": (
+            response_data = {"response": (
                 "مرحباً بك في مساعد بركة الذكي! 🍎🤖\n\n"
                 "اكتب لي أي حاجة زي:\n"
                 "• 'ايه المنتجات الجديدة؟' أو 'ايه أرخص حاجة؟'\n"
                 "• 'منتجات محل [اسم المحل]'\n"
                 "• 'أضف 2 طماطم' لإضافة منتج للسلة\n"
                 "• 'إتمام الطلب' لتأكيد الشراء 😊"
-            ), "action": {"type": "HELP"}, "products": []})
+            ), "action": {"type": "HELP"}, "products": []}
 
-        if intent == "CHECKOUT":
-            return Response({"response": (
+        elif intent == "CHECKOUT":
+            response_data = {"response": (
                 "حاضر يا فندم! 🛒✨ يرجى مراجعة سلتك وتأكيد عنوان التوصيل."
-            ), "action": {"type": "CHECKOUT"}, "products": []})
+            ), "action": {"type": "CHECKOUT"}, "products": []}
 
-        if intent == "ADD_TO_CART":
+        elif intent == "ADD_TO_CART":
             text, action, prods = _handle_add_to_cart(message)
             if text:
-                return Response({"response": text, "action": action, "products": prods})
+                response_data = {"response": text, "action": action, "products": prods}
             # Product not found — fall through to LLM for a helpful answer
 
-        # ── Layer 2: LLM with real database context ──
-        db_context, products_data = _build_db_context(message, request.user, cart_data)
-
-        response_text = ""
         action = None
         try:
             completion = _client.chat.completions.create(

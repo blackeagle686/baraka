@@ -22,7 +22,6 @@ class ProductLiteSerializer(serializers.ModelSerializer):
         model = Product
         fields = ['id', 'name', 'price', 'image', 'category_name', 'available']
 
-
 class ShopLiteSerializer(serializers.ModelSerializer):
     """Minimal shop info for order responses — skips products & ratings."""
     owner_phone = serializers.ReadOnlyField(source='owner.phone')
@@ -30,7 +29,6 @@ class ShopLiteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Shop
         fields = ['id', 'name', 'owner', 'owner_phone', 'address', 'image']
-
 
 class OrderItemSerializer(serializers.ModelSerializer):
     product_details = ProductLiteSerializer(source='product', read_only=True)

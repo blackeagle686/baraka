@@ -216,7 +216,7 @@
 
 /* --- Map Area Enhancements --- */
 .shops-map-wrapper {
-    flex-grow: 1;
+    width: 42%;
     position: relative;
     height: 100%;
 }
@@ -276,25 +276,37 @@
 }
 
 /* --- Responsive Layout Override --- */
-@media (max-width: 768px) {
+@media (max-width: 991.98px) {
     .shops-split-container {
         flex-direction: column;
         position: relative;
     }
     .shops-sidebar {
-        width: 100%;
+        width: 100% !important;
         height: 100% !important;
         max-height: none;
-        display: flex;
+        display: flex !important;
     }
     .shops-map-wrapper {
-        width: 100%;
+        width: 100% !important;
         height: 100% !important;
         min-height: none;
-        display: none; /* Hidden by default on mobile, toggled via JS */
+        display: none !important; /* Hidden by default on mobile, toggled via JS */
     }
     /* Set Leaflet zoom control layout for mobile */
     .leaflet-control-zoom {
         margin-bottom: 90px !important;
+    }
+}
+
+/* --- Desktop Layout Safeguard --- */
+@media (min-width: 992px) {
+    .shops-sidebar {
+        width: 58% !important;
+        display: flex !important;
+    }
+    .shops-map-wrapper {
+        width: 42% !important;
+        display: block !important;
     }
 }

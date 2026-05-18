@@ -54,3 +54,22 @@ class OrderItem(models.Model):
     product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True)
     quantity = models.PositiveIntegerField(default=1)
     price = models.DecimalField(max_digits=10, decimal_places=2) # Snapshot of price at the time of order
+
+class DriverRating(models.Model):
+    class RaterType(models.TextChoices):
+        CUSTOMER = 'CUSTOMER', 'Customer'
+        SHOP_OWNER = 'SHOP_OWNER', 'Shop Owner'
+
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='driver_ratings')
+    driver = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='driver_received_ratings')
+    rater = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='driver_given_ratings')
+    rater_type = models.CharField(max_length=20, choices=RaterType.choices)
+    rating = models.PositiveSmallIntegerField() # 1 to 5
+    review = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('order', 'rater', 'rater_type')
+
+    def __str__(self):
+        return f"{self.rater_type} rated driver {self.driver.phone} - {self.rating}★"

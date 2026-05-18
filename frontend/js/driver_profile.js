@@ -669,16 +669,27 @@ function renderActiveTrips(trips) {
                         if (unpaidShops.length > 0) {
                             shopOtpsHtml = unpaidShops.map(s => {
                                 const shopOtp = (trip.shop_otps_map && trip.shop_otps_map[String(s.id)]) || trip.driver_otp || '----';
+                                const postponedShopsList = trip.postponed_shops ? trip.postponed_shops.split(',') : [];
+                                const isPostponed = postponedShopsList.includes(String(s.id));
+                                
                                 return `
                                     <div class="d-flex justify-content-between align-items-center bg-light p-2.5 rounded-3 mb-2 border" style="border-color: rgba(201,153,151,0.08) !important;">
                                         <div>
                                             <span class="fw-bold text-espresso small"><i class="bi bi-shop text-marigold me-1"></i>${s.name}:</span>
+                                            ${isPostponed ? '<span class="badge bg-warning-subtle text-warning ms-1 small">مؤجل 🚪</span>' : ''}
                                         </div>
                                         <div class="d-flex align-items-center gap-2">
-                                            <strong class="fs-6 text-success" style="font-family: monospace; letter-spacing: 2px;">${shopOtp}</strong>
-                                            <button class="btn btn-sm btn-outline-success p-1 border-0" onclick="event.stopPropagation(); showQrCodeForShopOtp('${trip.id}', '${s.name}', '${shopOtp}')" title="عرض رمز QR">
-                                                <i class="bi bi-qr-code fs-6"></i>
-                                            </button>
+                                            ${isPostponed ? `
+                                                <span class="text-muted small">بانتظار الفتح والتسوية</span>
+                                            ` : `
+                                                <strong class="fs-6 text-success" style="font-family: monospace; letter-spacing: 2px;">${shopOtp}</strong>
+                                                <button class="btn btn-sm btn-outline-success p-1 border-0" onclick="event.stopPropagation(); showQrCodeForShopOtp('${trip.id}', '${s.name}', '${shopOtp}')" title="عرض رمز QR">
+                                                    <i class="bi bi-qr-code fs-6"></i>
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-warning p-1 border-0" onclick="event.stopPropagation(); postponeShopSettlement('${trip.id}', '${s.id}', '${s.name}')" title="المحل مغلق - تأجيل السداد">
+                                                    <i class="bi bi-door-closed fs-6"></i>
+                                                </button>
+                                            `}
                                         </div>
                                     </div>
                                 `;
@@ -984,4 +995,25 @@ window.showQrCodeForShopOtp = function(tripId, shopName, shopOtp) {
             });
         }
     }, 150);
+}
+
+
+// ==========================================
+// Shop Settlement Postponement Action
+// ==========================================
+window.postponeShopSettlement = async function(orderId, shopId, shopName) {
+    const confirmPostpone = await showBarakaConfirm(
+        `هل تريد تأجيل سداد مستحقات محل (${shopName}) بسبب إغلاق المحل أو عدم تواجد صاحب المحل؟ \n\nسيقوم النظام بإخطار صاحب المحل وإيقاف مهلة الـ 5 ساعات لتجنب تعليق حسابك.`,
+        'تأكيد تأجيل السداد 🚪'
+    );
+    if (!confirmPostpone) return;
+    
+    const token = localStorage.getItem('access_token');
+    try {
+        await api.orders.postponeShopSettlement(token, orderId, shopId);
+        await showBarakaAlert(`تم تأجيل تصفية مستحقات محل (${shopName}) بنجاح وتجميد مهلة السداد لهذا المحل مؤقتاً!`, 'info', 'تم التأجيل بنجاح 🚪');
+        loadDriverTrips(); // Reload trips
+    } catch (error) {
+        await showBarakaAlert('فشل تأجيل التسوية: ' + (error.detail || JSON.stringify(error)), 'warning', 'خطأ ⚠️');
+    }
 }

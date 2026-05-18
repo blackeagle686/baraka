@@ -145,11 +145,12 @@ def _build_db_context(message):
 
     # Build context
     ctx = []
-    ctx.append(f"المحلات المفتوحة ({open_shops.count()}): {', '.join(shop_names) or 'لا توجد'}")
+    shop_info_list = [f"{s.name} (العنوان: {s.address})" for s in open_shops]
+    ctx.append(f"المحلات المفتوحة ({open_shops.count()}): {', '.join(shop_info_list) or 'لا توجد'}")
     ctx.append(f"إجمالي المنتجات المتاحة: {all_products.count()}")
 
     if target_shop:
-        ctx.append(f"\nالمستخدم يسأل عن محل: {target_shop.name}")
+        ctx.append(f"\nالمستخدم يسأل عن محل: {target_shop.name} (العنوان: {target_shop.address})")
 
     product_list = list(matched[:15])
     if product_list:

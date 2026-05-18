@@ -23,19 +23,20 @@ function injectChatbotHTML() {
         <!-- Chat Toggle Button -->
         <button class="ai-chat-toggle-btn shadow" onclick="toggleBarakaAIChat()" id="aiChatToggleBtn">
             <span class="ai-badge-pulse"></span>
-            <i class="bi bi-robot fs-4"></i>
+            <i class="bi bi-stars fs-4"></i>
         </button>
         
         <!-- Chat Window -->
         <div class="ai-chat-window glass-panel" id="barakaAIChatWindow">
+            <div class="ai-chat-bg-glow"></div>
             <div class="ai-chat-inner">
                 <div class="ai-chat-header d-flex justify-content-between align-items-center">
                     <div class="d-flex align-items-center gap-3">
-                        <div class="ai-avatar-circle">
-                            <i class="bi bi-robot fs-4 text-white"></i>
+                        <div class="ai-avatar-circle ai-float-anim">
+                            <i class="bi bi-stars fs-4 text-white"></i>
                         </div>
                         <div>
-                            <span class="d-block fw-bold text-espresso fs-5">مساعد بركة الذكي 🤖</span>
+                            <span class="d-block fw-bold text-espresso fs-5">مساعد بركة الذكي ✨</span>
                             <span class="d-block micro text-success fw-bold mt-1"><span class="pulse-dot"></span>متصل الآن - جاهز للتسوق</span>
                         </div>
                     </div>

@@ -292,7 +292,7 @@
         width: 100% !important;
         height: 100% !important;
         min-height: none;
-        display: none !important; /* Hidden by default on mobile, toggled via JS */
+        display: none; /* Hidden by default on mobile, toggled via JS */
     }
     /* Set Leaflet zoom control layout for mobile */
     .leaflet-control-zoom {

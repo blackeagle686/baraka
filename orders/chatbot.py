@@ -114,8 +114,28 @@ def _handle_add_to_cart(message):
 def _generate_tts_audio(text):
     """Generate Arabic TTS audio and return the media URL."""
     try:
-        # Clean text from markdown for better speech
-        clean_text = text.replace('*', '').replace('`', '').replace('#', '').replace('|', ' ')
+        if not text:
+            return None
+            
+        # 1. Strip emojis and miscellaneous symbols
+        emoji_pattern = re.compile(
+            "["
+            "\U00010000-\U0010ffff" # high unicode emojis
+            "\u2600-\u27BF"        # dingbats, misc symbols
+            "\u2b50"               # star emoji etc
+            "]+", flags=re.UNICODE
+        )
+        clean_text = emoji_pattern.sub(r'', text)
+
+        # 2. Replace markdown symbols, operators, bullet points, and punctuation with spaces
+        clean_text = re.sub(r'[\+\-\*\/_#`\|\[\]\(\):;~،,.\•\!]', ' ', clean_text)
+
+        # 3. Clean up multiple spaces
+        clean_text = re.sub(r'\s+', ' ', clean_text).strip()
+
+        if not clean_text:
+            return None
+
         tts = gTTS(text=clean_text, lang='ar')
         filename = f"chat_{uuid.uuid4().hex[:8]}.mp3"
         

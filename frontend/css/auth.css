@@ -97,14 +97,25 @@
     color: var(--color-espresso);
     border-radius: 50px;
     cursor: pointer;
-    transition: color 0.3s ease;
+    transition: all 0.3s ease;
+    position: relative;
     z-index: 2;
     font-size: 0.95rem;
     font-family: 'Cairo', sans-serif;
 }
 
+.switcher-btn:hover {
+    color: var(--color-marigold);
+    transform: scale(1.02);
+}
+
 .switcher-btn.active {
     color: #ffffff;
+}
+
+.switcher-btn.active:hover {
+    color: #ffffff;
+    transform: none;
 }
 
 .switcher-slider {

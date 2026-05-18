@@ -263,7 +263,8 @@ function renderShopHeader(shop) {
         coverPhoto = shop.image;
     }
 
-    const rating = (4.4 + (shop.id % 6) * 0.1).toFixed(1);
+    const rating = shop.average_rating !== undefined ? Number(shop.average_rating).toFixed(1) : '0.0';
+    const totalRatings = shop.total_ratings !== undefined ? shop.total_ratings : 0;
     const deliveryTime = (15 + (shop.id % 4) * 5) + '-' + (25 + (shop.id % 4) * 5) + ' دقيقة';
     
     let category = 'محل في قريتك';
@@ -290,8 +291,8 @@ function renderShopHeader(shop) {
                 <h1 class="shop-cover-title text-white fw-bold mb-3">${shop.name}</h1>
                 <div class="shop-cover-badges">
                     <span class="shop-cover-badge-item">
-                        <i class="bi bi-star-fill"></i>
-                        <span>${rating} (120+ تقييم)</span>
+                        <i class="bi bi-star-fill text-warning me-1"></i>
+                        <span>${rating} (${totalRatings} تقييم)</span>
                     </span>
                     <span class="shop-cover-badge-item">
                         <i class="bi bi-clock-fill"></i>

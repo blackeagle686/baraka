@@ -501,6 +501,11 @@ window.toggleChatbotAudio = function(url, btn) {
 
     // Create and play new audio from the resolved absolute URL
     window.currentChatbotAudio = new Audio(absoluteUrl);
+    
+    // Snappy speed adjustment (25% faster)
+    window.currentChatbotAudio.defaultPlaybackRate = 1.25;
+    window.currentChatbotAudio.playbackRate = 1.25;
+
     btn.innerHTML = '<i class="bi bi-stop-fill fs-5 text-danger"></i>';
     btn.title = "إيقاف الصوت";
 

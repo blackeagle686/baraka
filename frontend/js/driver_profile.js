@@ -801,22 +801,13 @@ window.acceptCombinedDeliveryTrip = async function(orderIdsText, priceInputId = 
         const sharedPriceInput = priceInputId ? document.getElementById(priceInputId) : fallbackPriceInput;
         const deliveryPrice = parseFloat(sharedPriceInput?.value) || 15.00;
 
-        if (api.orders.acceptCombinedDelivery) {
-            await api.orders.acceptCombinedDelivery(token, orderIds, deliveryPrice);
-        } else {
-            await api.orders.acceptDelivery(token, orderIds[0], deliveryPrice);
-            for (const orderId of orderIds.slice(1)) {
-                await api.orders.acceptDelivery(token, orderId, 15.00);
-            }
-        }
+        await api.orders.acceptDelivery(token, orderIds[0], deliveryPrice);
 
-        const message = orderIds.length > 1
-            ? `تم قبول ${orderIds.length} طلبات لنفس العميل في رحلة واحدة بسعر توصيل واحد (${deliveryPrice.toFixed(2)} ج.م). اذهب للمحلات بالترتيب واجمع حساب كل محل، ثم سلّم للعميل.`
-            : 'تم قبول الرحلة وتعيينك طياراً للتوصيل بنجاح!';
+        const message = 'تم قبول الرحلة وتعيينك طياراً للتوصيل بنجاح!';
         await showBarakaAlert(message, 'info', 'تم القبول ✅');
         loadDriverOrders();
     } catch (error) {
-        await showBarakaAlert('حدث خطأ أثناء قبول الرحلة المجمعة: ' + (error.detail || JSON.stringify(error)), 'warning', 'خطأ في القبول ⚠️');
+        await showBarakaAlert('حدث خطأ أثناء قبول الرحلة: ' + (error.detail || JSON.stringify(error)), 'warning', 'خطأ في القبول ⚠️');
         loadDriverOrders();
     }
 }

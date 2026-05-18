@@ -33,6 +33,8 @@ document.addEventListener('DOMContentLoaded', () => {
             btnText.classList.add('invisible');
             spinner.classList.remove('d-none');
             errorMsg.classList.add('d-none');
+            errorMsg.classList.remove('d-block');
+            errorMsg.style.display = 'none';
             
             try {
                 const data = await api.auth.login(phone, password);
@@ -61,6 +63,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 errorMsg.innerHTML = `<i class="bi bi-exclamation-triangle me-1"></i>${displayError}`;
                 errorMsg.classList.remove('d-none');
+                errorMsg.classList.add('d-block');
+                errorMsg.style.setProperty('display', 'block', 'important');
+                errorMsg.style.opacity = '1';
                 
                 // Shake animation
                 const card = document.querySelector('.auth-card');
@@ -96,6 +101,8 @@ document.addEventListener('DOMContentLoaded', () => {
             btnText.classList.add('invisible');
             spinner.classList.remove('d-none');
             errorMsg.classList.add('d-none');
+            errorMsg.classList.remove('d-block');
+            errorMsg.style.display = 'none';
             
             try {
                 await api.auth.register({ name, phone, location, role, password });
@@ -128,6 +135,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 errorMsg.innerHTML = `<i class="bi bi-exclamation-triangle me-1"></i>${displayError}`;
                 errorMsg.classList.remove('d-none');
+                errorMsg.classList.add('d-block');
+                errorMsg.style.setProperty('display', 'block', 'important');
+                errorMsg.style.opacity = '1';
                 
                 // Shake animation
                 const card = document.querySelector('.auth-card');

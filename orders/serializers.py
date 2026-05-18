@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from .models import Order, OrderItem, DriverRating
-from shops.serializers import ProductSerializer, ShopSerializer
+from shops.models import Shop, Product
 from users.serializers import UserSerializer
 
 class DriverRatingSerializer(serializers.ModelSerializer):
@@ -13,8 +13,27 @@ class DriverRatingSerializer(serializers.ModelSerializer):
         fields = ['id', 'order', 'driver', 'driver_name', 'rater', 'rater_name', 'rater_phone', 'rater_type', 'rating', 'review', 'created_at']
         read_only_fields = ['rater', 'driver', 'rater_type']
 
+# ── Lightweight serializers for order context (avoid loading full shop catalog) ──
+class ProductLiteSerializer(serializers.ModelSerializer):
+    """Minimal product info for order items — no shop/category overhead."""
+    category_name = serializers.ReadOnlyField(source='category.name')
+
+    class Meta:
+        model = Product
+        fields = ['id', 'name', 'price', 'image', 'category_name', 'available']
+
+
+class ShopLiteSerializer(serializers.ModelSerializer):
+    """Minimal shop info for order responses — skips products & ratings."""
+    owner_phone = serializers.ReadOnlyField(source='owner.phone')
+
+    class Meta:
+        model = Shop
+        fields = ['id', 'name', 'owner', 'owner_phone', 'location', 'image', 'is_approved']
+
+
 class OrderItemSerializer(serializers.ModelSerializer):
-    product_details = ProductSerializer(source='product', read_only=True)
+    product_details = ProductLiteSerializer(source='product', read_only=True)
 
     class Meta:
         model = OrderItem
@@ -24,7 +43,7 @@ class OrderSerializer(serializers.ModelSerializer):
     items = OrderItemSerializer(many=True, read_only=True)
     customer_details = UserSerializer(source='customer', read_only=True)
     driver_details = UserSerializer(source='driver', read_only=True)
-    shop_details = ShopSerializer(source='shop', read_only=True)
+    shop_details = ShopLiteSerializer(source='shop', read_only=True)
 
     class Meta:
         model = Order

@@ -32,20 +32,21 @@ SYSTEM_PROMPT = (
 
 # ── Intent Detection ──
 
-ADD_KEYWORDS = ["أضف", "اضف", "ضيف", "حط", "أريد", "اريد", "عايز اشتري"]
+ADD_KEYWORDS = ["أضف", "اضف", "ضيف", "حط", "أريد", "اريد", "عايز اشتري", "اطلبلي", "اطلب", "اشتري", "هات", "زود", "عايز"]
 CART_KEYWORDS = ["سلة", "سلتي", "العربة", "cart", "basket"]
-CHECKOUT_KEYWORDS = ["إتمام", "تأكيد", "طلب", "اطلب", "checkout", "confirm", "order", "اشتري كل"]
+CHECKOUT_KEYWORDS = ["إتمام", "تأكيد", "checkout", "confirm", "order", "اشتري كل", "تنفيذ الطلب", "حاسب"]
 HELP_KEYWORDS = ["مساعدة", "help", "تعليمات", "ماذا تفعل"]
 
 
 def _detect_intent(message_lower):
     """Detect user intent from message keywords. Returns (intent, None) or None."""
-    if any(kw in message_lower for kw in HELP_KEYWORDS):
-        return "HELP"
-    if any(kw in message_lower for kw in CHECKOUT_KEYWORDS):
-        return "CHECKOUT"
+    # Check ADD_TO_CART first because words like "اطلب" and "اشتري" are more common for adding items
     if any(kw in message_lower for kw in ADD_KEYWORDS):
         return "ADD_TO_CART"
+    if any(kw in message_lower for kw in CHECKOUT_KEYWORDS):
+        return "CHECKOUT"
+    if any(kw in message_lower for kw in HELP_KEYWORDS):
+        return "HELP"
     return None
 
 
@@ -59,7 +60,9 @@ def _handle_add_to_cart(message):
 
     # Clean message to extract product name
     clean = message
-    for kw in ADD_KEYWORDS + ["كيلو", "حبة", "قطعة", "من", "محل", "شراء", "المنتج", "رقم", "للسلة", "في", "السلة"]:
+    # Sort keywords by length descending so longer phrases get replaced first
+    clean_words = sorted(ADD_KEYWORDS + ["كيلو", "حبة", "قطعة", "من", "محل", "شراء", "المنتج", "رقم", "للسلة", "في", "السلة"], key=len, reverse=True)
+    for kw in clean_words:
         clean = clean.replace(kw, "")
     clean = re.sub(r'\d+', '', clean).strip()
 

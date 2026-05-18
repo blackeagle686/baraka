@@ -29,6 +29,7 @@ class Order(models.Model):
     status = models.CharField(max_length=20, choices=OrderStatus.choices, default=OrderStatus.PENDING)
     address = models.TextField()
     is_paid_to_shop = models.BooleanField(default=False)
+    paid_shops = models.TextField(blank=True, default='')
     picked_up_at = models.DateTimeField(null=True, blank=True)
     
     # Mutual Trust Zero-Knowledge OTP Keys

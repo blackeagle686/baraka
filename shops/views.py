@@ -3,7 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
 from .models import Shop, Category, Product, Notification
-from .serializers import ShopSerializer, CategorySerializer, ProductSerializer, NotificationSerializer
+from .serializers import ShopSerializer, ShopCreateSerializer, CategorySerializer, ProductSerializer, NotificationSerializer
 from .permissions import IsOwnerOrReadOnly
 from users.permissions import IsApprovedOrReadOnly
 
@@ -20,10 +20,33 @@ class ShopViewSet(viewsets.ModelViewSet):
     filter_backends = [filters.SearchFilter]
     search_fields = ['name', 'description', 'address']
 
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return ShopCreateSerializer
+        return ShopSerializer
+
     def create(self, request, *args, **kwargs):
         if request.user.role != 'SHOP_OWNER' and not request.user.is_staff:
             return Response({"detail": "Only users with the SHOP_OWNER role can create a shop."}, status=status.HTTP_403_FORBIDDEN)
-        return super().create(request, *args, **kwargs)
+
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+
+        Notification.objects.create(
+            user=serializer.instance.owner,
+            shop=serializer.instance,
+            title='تم إنشاء متجرك بنجاح',
+            message=(
+                f"تم إنشاء متجر '{serializer.instance.name}' بنجاح. "
+                f"يمكنك الآن إضافة منتجات وإدارة الطلبات من لوحة التحكم."
+            ),
+            notification_type='shop_created'
+        )
+
+        full_serializer = ShopSerializer(serializer.instance, context=self.get_serializer_context())
+        return Response(full_serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
@@ -68,6 +91,17 @@ class ShopViewSet(viewsets.ModelViewSet):
             shop=shop,
             customer=user,
             defaults={'rating': rating_val, 'review': review_val}
+        )
+
+        Notification.objects.create(
+            user=shop.owner,
+            shop=shop,
+            title='تم تقييم متجرك',
+            message=(
+                f"حصل متجرك '{shop.name}' على تقييم جديد من عميل. "
+                f"التقييم: {rating_val} نجوم."
+            ),
+            notification_type='shop_rated'
         )
         
         serializer = ShopRatingSerializer(rating_obj)

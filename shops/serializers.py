@@ -23,6 +23,15 @@ class ShopRatingSerializer(serializers.ModelSerializer):
         fields = ['id', 'shop', 'customer_name', 'customer_phone', 'rating', 'review', 'created_at']
         read_only_fields = ['customer']
 
+class ShopCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Shop
+        fields = [
+            'name', 'description', 'image', 'address',
+            'latitude', 'longitude', 'is_open',
+            'opening_time', 'closing_time'
+        ]
+
 class ShopSerializer(serializers.ModelSerializer):
     products = ProductSerializer(many=True, read_only=True)
     owner_phone = serializers.ReadOnlyField(source='owner.phone')

@@ -681,7 +681,8 @@ async function loadUserNotifications() {
     if (!container) return;
 
     try {
-        const notifs = await api.notifications.getAll(token);
+        const role = localStorage.getItem('user_role');
+        const notifs = await api.notifications.getByRole(token, role);
         const unreadCount = notifs.filter(n => !n.is_read).length;
 
         // 1. Update Badge Count

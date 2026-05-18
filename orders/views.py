@@ -262,8 +262,13 @@ class OrderViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
     def confirm_payment_received(self, request, pk=None):
         order = self.get_object()
-        is_shop_owner = order.items.filter(product__shop__owner=request.user).exists()
-        if not is_shop_owner and not request.user.is_staff:
+        
+        # Identify the shops owned by this user that are involved in this order
+        from shops.models import Shop
+        shops_owned_by_user = Shop.objects.filter(owner=request.user)
+        order_items_belonging_to_user_shops = order.items.filter(product__shop__in=shops_owned_by_user)
+        
+        if not order_items_belonging_to_user_shops.exists() and not request.user.is_staff:
             return Response({"detail": "Not authorized to settle this order's cash."}, status=status.HTTP_403_FORBIDDEN)
             
         # Enforce Driver OTP code verification for shop owners confirming receipt of money
@@ -271,7 +276,24 @@ class OrderViewSet(viewsets.ModelViewSet):
         if not driver_otp or driver_otp != order.driver_otp:
             return Response({"detail": "رمز تصفية الحساب غير صحيح! يرجى إدخال الرمز المكون من 4 أرقام الموضح على شاشة الطيار لتأكيد التصفية."}, status=status.HTTP_400_BAD_REQUEST)
 
-        order.is_paid_to_shop = True
+        # Parse current paid shops list
+        paid_shops_list = [id_str for id_str in order.paid_shops.split(',') if id_str]
+        
+        # Add the shops belonging to the current user to the paid shops list
+        for item in order_items_belonging_to_user_shops:
+            if item.product and item.product.shop:
+                shop_id_str = str(item.product.shop.id)
+                if shop_id_str not in paid_shops_list:
+                    paid_shops_list.append(shop_id_str)
+                    
+        order.paid_shops = ','.join(paid_shops_list)
+        
+        # Check if all shops involved in this order have been paid
+        all_involved_shop_ids = set(str(item.product.shop.id) for item in order.items.all() if item.product and item.product.shop)
+        
+        if all_involved_shop_ids.issubset(set(paid_shops_list)):
+            order.is_paid_to_shop = True
+            
         order.save()
         return Response(self.get_serializer(order).data)
 

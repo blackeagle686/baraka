@@ -28,29 +28,31 @@ function injectChatbotHTML() {
         
         <!-- Chat Window -->
         <div class="ai-chat-window glass-panel" id="barakaAIChatWindow">
-            <div class="ai-chat-header d-flex justify-content-between align-items-center">
-                <div class="d-flex align-items-center gap-2">
-                    <div class="ai-avatar-circle">
-                        <i class="bi bi-robot fs-5 text-white"></i>
+            <div class="ai-chat-inner">
+                <div class="ai-chat-header d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="ai-avatar-circle">
+                            <i class="bi bi-robot fs-4 text-white"></i>
+                        </div>
+                        <div>
+                            <span class="d-block fw-bold text-espresso fs-5">مساعد بركة الذكي 🤖</span>
+                            <span class="d-block micro text-success fw-bold mt-1"><span class="pulse-dot"></span>متصل الآن - جاهز للتسوق</span>
+                        </div>
                     </div>
-                    <div>
-                        <span class="d-block fw-bold text-white fs-6">مساعد بركة الذكي 🤖</span>
-                        <span class="d-block micro text-success fw-bold"><span class="pulse-dot"></span>متصل الآن - جاهز للتسوق</span>
+                    <button class="btn btn-close-chat" onclick="toggleBarakaAIChat()"><i class="bi bi-x-lg text-espresso fs-4"></i></button>
+                </div>
+                <div class="ai-chat-messages" id="aiChatMessages">
+                    <div class="chat-message bot-message animate-up">
+                        <p class="mb-0">أهلاً بك يا غالي! 🌾 أنا مساعد بركة الذكي لمساعدتك في تسوق كل ما تحتاجه من محلات قريتك.</p>
+                        <p class="mb-0 mt-2">اكتب لي مثلاً: <strong>"عايز أشتري طماطم تفاح"</strong> أو <strong>"أشرح لي فوائد العسل"</strong>، وأنا هدورلك على أفضل الأسعار والمحلات المتوفرة!</p>
                     </div>
                 </div>
-                <button class="btn btn-close-chat" onclick="toggleBarakaAIChat()"><i class="bi bi-x-lg text-white"></i></button>
-            </div>
-            <div class="ai-chat-messages" id="aiChatMessages">
-                <div class="chat-message bot-message animate-up">
-                    <p class="mb-0">أهلاً بك يا غالي! 🌾 أنا مساعد بركة الذكي لمساعدتك في تسوق كل ما تحتاجه من محلات قريتك.</p>
-                    <p class="mb-0 mt-2">اكتب لي مثلاً: <strong>"عايز أشتري طماطم تفاح"</strong> أو <strong>"أشرح لي فوائد العسل"</strong>، وأنا هدورلك على أفضل الأسعار والمحلات المتوفرة!</p>
+                <div class="ai-chat-input-wrapper">
+                    <form id="aiChatForm" class="d-flex gap-3 align-items-center" onsubmit="sendBarakaChatMessage(event)">
+                        <input type="text" id="aiChatInput" class="form-control ai-chat-input" placeholder="اكتب رسالتك هنا..." required autocomplete="off">
+                        <button type="submit" class="btn btn-send-chat" id="aiChatSendBtn"><i class="bi bi-send-fill text-white fs-5"></i></button>
+                    </form>
                 </div>
-            </div>
-            <div class="ai-chat-input-wrapper">
-                <form id="aiChatForm" class="d-flex gap-2 align-items-center" onsubmit="sendBarakaChatMessage(event)">
-                    <input type="text" id="aiChatInput" class="form-control ai-chat-input" placeholder="اكتب رسالتك هنا..." required autocomplete="off">
-                    <button type="submit" class="btn btn-send-chat" id="aiChatSendBtn"><i class="bi bi-send-fill text-white"></i></button>
-                </form>
             </div>
         </div>
     `;

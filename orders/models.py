@@ -30,6 +30,7 @@ class Order(models.Model):
     address = models.TextField()
     is_paid_to_shop = models.BooleanField(default=False)
     paid_shops = models.TextField(blank=True, default='')
+    shop_otps = models.TextField(blank=True, default='')
     picked_up_at = models.DateTimeField(null=True, blank=True)
     
     # Mutual Trust Zero-Knowledge OTP Keys
@@ -43,6 +44,25 @@ class Order(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    def get_or_create_shop_otp(self, shop_id):
+        import random
+        shop_id_str = str(shop_id)
+        pairs = {}
+        if self.shop_otps:
+            for pair in self.shop_otps.split(','):
+                if ':' in pair:
+                    k, v = pair.split(':', 1)
+                    pairs[k] = v
+                    
+        if shop_id_str in pairs:
+            return pairs[shop_id_str]
+            
+        new_otp = f"{random.randint(1000, 9999)}"
+        pairs[shop_id_str] = new_otp
+        self.shop_otps = ','.join(f"{k}:{v}" for k, v in pairs.items())
+        self.save(update_fields=['shop_otps'])
+        return new_otp
 
     def save(self, *args, **kwargs):
         import random

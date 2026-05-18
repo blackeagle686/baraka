@@ -29,7 +29,7 @@ class ShopLiteSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Shop
-        fields = ['id', 'name', 'owner', 'owner_phone', 'location', 'image', 'is_approved']
+        fields = ['id', 'name', 'owner', 'owner_phone', 'address', 'image']
 
 
 class OrderItemSerializer(serializers.ModelSerializer):

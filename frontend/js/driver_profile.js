@@ -701,9 +701,14 @@ function renderActiveTrips(trips) {
             `;
         } else if (undeliveredOrders.length) {
             actionHtmlBlock = `
-                <button class="btn btn-success flex-grow-1 rounded-pill py-2 fw-bold" onclick="completeCombinedDeliveryTrip('${orderIds}')">
-                    <i class="bi bi-check2-all me-1"></i>${isCombined ? 'تسليم كل طلبات العميل' : 'تم التوصيل بنجاح للعميل'}
-                </button>
+                <div class="d-flex flex-column w-100 gap-2">
+                    <button class="btn btn-success rounded-pill py-2.5 fw-bold w-100" onclick="completeCombinedDeliveryTrip('${orderIds}')">
+                        <i class="bi bi-check2-all me-1"></i>${isCombined ? 'تسليم كل طلبات العميل' : 'تم التوصيل بنجاح للعميل'}
+                    </button>
+                    <button class="btn btn-outline-danger rounded-pill py-2 fw-bold w-100" onclick="reportTripEmergency('${orderIds}')">
+                        <i class="bi bi-exclamation-triangle-fill me-1"></i>أواجه حالة طارئة / إلغاء الرحلة 🚨
+                    </button>
+                </div>
             `;
         } else if (deliveredUnpaidOrders.length) {
             actionHtmlBlock = `
@@ -888,5 +893,28 @@ window.raiseDriverDispute = async function(orderId) {
         loadDriverOrders();
     } catch (error) {
         await showBarakaAlert('فشل تقديم الشكوى: ' + JSON.stringify(error), 'warning', 'خطأ ⚠️');
+    }
+}
+
+window.reportTripEmergency = async function(orderIdsText) {
+    const token = localStorage.getItem('access_token');
+    const orderIds = String(orderIdsText).split(',').map(id => parseInt(id, 10)).filter(Boolean);
+    if (!orderIds.length) return;
+
+    const reason = await showBarakaPrompt(
+        '⚠️ برجاء كتابة سبب إلغاء الرحلة (لتنبيه أصحاب المحلات والعميل وتفادي أي عقوبات):',
+        'مثال: عطل مفاجئ في الدراجة النارية / عطل بالسيارة',
+        'إبلاغ عن حالة طارئة وإلغاء الرحلة 🚨'
+    );
+    if (!reason) return;
+
+    try {
+        for (const orderId of orderIds) {
+            await api.orders.reportEmergency(token, orderId, reason);
+        }
+        await showBarakaAlert('تم إبلاغ النظام بنجاح وإعادة جميع الطلبات للوحة المتاحة لطيار آخر! سلامتك أولاً. ❤️', 'info', 'تم الإبلاغ 🚨');
+        loadDriverOrders();
+    } catch (error) {
+        await showBarakaAlert('حدث خطأ أثناء الإبلاغ: ' + (error.detail || JSON.stringify(error)), 'warning', 'خطأ ⚠️');
     }
 }

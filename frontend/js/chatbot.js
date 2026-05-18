@@ -141,6 +141,27 @@ window.sendBarakaChatMessage = async function(event) {
         if (typingMsg) typingMsg.remove();
         
         if (!response.ok) {
+            if (response.status === 401) {
+                // Handle unauthenticated user
+                const loginMsgDiv = document.createElement('div');
+                loginMsgDiv.className = 'chat-message bot-message align-self-flex-start animate-up';
+                loginMsgDiv.innerHTML = `
+                    <div class="bot-text-wrapper text-danger">
+                        <p class="mb-2 fw-bold"><i class="bi bi-lock-fill me-1"></i>عذراً يا فندم، لازم تسجل دخول الأول عشان أقدر أساعدك وأشوف طلباتك! 😊</p>
+                        <p class="small mb-0">جاري تحويلك لصفحة تسجيل الدخول...</p>
+                    </div>
+                `;
+                messagesContainer.appendChild(loginMsgDiv);
+                scrollToBottom();
+                
+                setTimeout(() => {
+                    window.location.href = '/html/auth/login.html';
+                }, 2500);
+                
+                input.disabled = false;
+                if (sendBtn) sendBtn.disabled = false;
+                return; // Stop execution
+            }
             throw new Error('API Error');
         }
         

@@ -390,15 +390,57 @@ function escapeHtml(text) {
 
 function formatMarkdown(text) {
     if (!text) return '';
+    
     // Bold text (**text**)
     text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    
     // Code blocks/inline code (`code`)
-    text = text.replace(/`(.*?)`/g, '<code>$1</code>');
-    // Bullet points (* point)
-    text = text.replace(/^\s*\*\s+(.*?)$/gm, '<li>$1</li>');
+    text = text.replace(/`(.*?)`/g, '<code class="text-marigold bg-light px-1 rounded">$1</code>');
+    
+    // Handle Markdown Tables
+    text = text.replace(/(?:^|\n)((?:\|.*\|\n?)+)/g, function(match, p1) {
+        const lines = p1.trim().split('\n');
+        // A valid markdown table must have at least 2 lines and the second line must contain |---
+        if (lines.length < 2 || !lines[1].includes('|---')) return match;
+        
+        let html = '<div class="table-responsive mt-2 mb-3 shadow-sm rounded-3 border"><table class="table table-hover table-sm align-middle mb-0" style="font-size: 0.85rem; background: white;"><thead><tr>';
+        
+        const headers = lines[0].split('|').slice(1, -1).map(s => s.trim());
+        headers.forEach(h => html += `<th class="bg-light text-espresso fw-bold py-2 px-3 border-bottom">${h}</th>`);
+        html += '</tr></thead><tbody>';
+        
+        for (let i = 2; i < lines.length; i++) {
+            html += '<tr>';
+            const cells = lines[i].split('|').slice(1, -1).map(s => s.trim());
+            cells.forEach(c => html += `<td class="px-3 py-2 border-bottom-0">${c}</td>`);
+            html += '</tr>';
+        }
+        html += '</tbody></table></div>';
+        return `\n${html}\n`;
+    });
+
+    // Bullet points (* point or - point)
+    text = text.replace(/^\s*[\*\-]\s+(.*?)$/gm, '<li class="mb-1">$1</li>');
+    
     // Wrap groups of <li> inside <ul>
-    text = text.replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>');
-    // Convert newlines to <br>
-    text = text.replace(/\n/g, '<br>');
+    text = text.replace(/(<li class="mb-1">.*?<\/li>(\s*<li class="mb-1">.*?<\/li>)*)/gs, '<ul class="mb-2 ps-4 text-mesa">$1</ul>');
+    
+    // Convert newlines to <br> but protect block elements
+    text = text.split('\n').map(line => {
+        // If line is already an HTML block element we just added, don't add <br>
+        if (line.trim().startsWith('<div') || line.trim().startsWith('</div') || 
+            line.trim().startsWith('<ul') || line.trim().startsWith('</ul') ||
+            line.trim().startsWith('<li') || line.trim().startsWith('</li') ||
+            line.trim().startsWith('<table') || line.trim().startsWith('</table')) {
+            return line;
+        }
+        return line + '<br>';
+    }).join('\n');
+    
+    // Clean up excessive <br>s
+    text = text.replace(/(<br>\s*)+$/g, ''); // Trim trailing
+    text = text.replace(/<br>\s*<br>/g, '<br>'); // Prevent double spacing
+    text = text.replace(/<div class="table-responsive/g, '<br><div class="table-responsive'); // Add space before table
+    
     return text;
 }

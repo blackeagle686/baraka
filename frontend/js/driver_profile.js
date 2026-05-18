@@ -281,82 +281,60 @@ function sumOrderTotals(orders, field) {
 }
 
 function groupOrdersByCustomer(orders) {
-    const groupsMap = new Map();
-
-    orders.forEach((order) => {
-        const key = getCustomerGroupKey(order);
-        if (!groupsMap.has(key)) {
-            groupsMap.set(key, {
-                key,
-                customerName: getCustomerName(order),
-                customerPhone: getCustomerPhone(order),
-                address: order.address || 'العنوان الافتراضي',
-                orders: []
-            });
-        }
-        groupsMap.get(key).orders.push(order);
-    });
-
-    return Array.from(groupsMap.values()).map((group) => {
+    // Instead of grouping separate checkout orders, each order is its own independent trip!
+    // Since the user already combined products from different shops into a single order at checkout,
+    // this avoids any "double combining" and perfectly aligns each order record as one delivery.
+    return orders.map((order) => {
         const shopsMap = new Map();
-        group.orders.forEach((order) => {
-            if (order.shops_details && order.shops_details.length > 0) {
-                order.shops_details.forEach(s => {
-                    const shopKey = s.id;
-                    if (!shopsMap.has(shopKey)) {
-                        shopsMap.set(shopKey, {
-                            name: s.name,
-                            address: s.address || '',
-                            total: 0,
-                            orders: [],
-                            allItemsReady: true
-                        });
-                    }
-                    const shop = shopsMap.get(shopKey);
-                    const shopItems = order.items.filter(it => it.product_details && it.product_details.shop_id === s.id);
-                    const shopTotal = shopItems.reduce((sum, it) => sum + (parseFloat(it.price) * it.quantity), 0);
-                    shop.total += shopTotal;
-                    
-                    const hasUnready = shopItems.some(it => !it.is_ready);
-                    if (hasUnready) {
-                        shop.allItemsReady = false;
-                    }
-                    
-                    if (!shop.orders.includes(order)) {
-                        shop.orders.push(order);
-                    }
-                });
-            } else {
-                const shopKey = order.shop || order.shop_details?.id || `shop-${order.id}`;
+        
+        if (order.shops_details && order.shops_details.length > 0) {
+            order.shops_details.forEach(s => {
+                const shopKey = s.id;
                 if (!shopsMap.has(shopKey)) {
                     shopsMap.set(shopKey, {
-                        name: order.shop_details?.name || 'محل بركة',
-                        address: order.shop_details?.address || '',
+                        name: s.name,
+                        address: s.address || '',
                         total: 0,
-                        orders: [],
+                        orders: [order],
                         allItemsReady: true
                     });
                 }
                 const shop = shopsMap.get(shopKey);
-                shop.total += parseFloat(order.total_price) || 0;
+                const shopItems = order.items.filter(it => it.product_details && it.product_details.shop_id === s.id);
+                const shopTotal = shopItems.reduce((sum, it) => sum + (parseFloat(it.price) * it.quantity), 0);
+                shop.total += shopTotal;
                 
-                const hasUnready = order.items ? order.items.some(it => !it.is_ready) : false;
+                const hasUnready = shopItems.some(it => !it.is_ready);
                 if (hasUnready) {
                     shop.allItemsReady = false;
                 }
-                
-                shop.orders.push(order);
+            });
+        } else {
+            const shopKey = order.shop || order.shop_details?.id || `shop-${order.id}`;
+            if (!shopsMap.has(shopKey)) {
+                shopsMap.set(shopKey, {
+                    name: order.shop_details?.name || 'محل بركة',
+                    address: order.shop_details?.address || '',
+                    total: parseFloat(order.total_price) || 0,
+                    orders: [order],
+                    allItemsReady: !order.items ? true : !order.items.some(it => !it.is_ready)
+                });
             }
-        });
+        }
 
-        group.shops = Array.from(shopsMap.values());
-        group.totalProducts = sumOrderTotals(group.orders, 'total_price');
-        group.totalDelivery = sumOrderTotals(group.orders, 'delivery_price');
-        group.latestCreatedAt = group.orders
-            .map(order => new Date(order.created_at).getTime())
-            .filter(Boolean)
-            .sort((a, b) => b - a)[0] || Date.now();
-        return group;
+        const shopsList = Array.from(shopsMap.values());
+        
+        return {
+            key: `${order.id}`,
+            customerName: getCustomerName(order),
+            customerPhone: getCustomerPhone(order),
+            address: order.address || 'العنوان الافتراضي',
+            orders: [order],
+            shops: shopsList,
+            totalProducts: parseFloat(order.total_price) || 0,
+            totalDelivery: parseFloat(order.delivery_price) || 0,
+            latestCreatedAt: new Date(order.created_at).getTime() || Date.now()
+        };
     }).sort((a, b) => b.latestCreatedAt - a.latestCreatedAt);
 }
 

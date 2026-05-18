@@ -74,6 +74,12 @@ class OrderViewSet(viewsets.ModelViewSet):
                         {"detail": f"المنتج {it['product']} غير موجود."},
                         status=status.HTTP_400_BAD_REQUEST,
                     )
+                
+                if prod.shop and not prod.shop.is_open:
+                    return Response(
+                        {"detail": f"عذراً، المحل '{prod.shop.name}' مغلق حالياً. لا يمكنك الطلب منه."},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
 
                 qty = int(it.get('quantity', 1))
                 if qty > prod.quantity:

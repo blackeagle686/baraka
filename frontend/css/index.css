@@ -544,42 +544,66 @@
     border-radius: 2px;
 }
 
-/* Shop Cards on Homepage */
-.shop-card-home {
-    background: rgba(255, 255, 255, 0.7);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.6);
-    border-radius: var(--radius-lg);
+/* Premium Circular Shop Previews on Homepage */
+.shop-circle-link {
+    transition: transform 0.4s var(--ease-out-expo);
+    max-width: 160px;
+    width: 100%;
+}
+
+.shop-circle-link:hover {
+    transform: translateY(-8px);
+}
+
+.shop-circle-link:hover .shop-circle-item {
+    box-shadow: 0 15px 35px rgba(194, 146, 64, 0.35);
+    border-color: var(--color-marigold);
+}
+
+.shop-circle-link:hover .shop-circle-overlay {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.shop-circle-link:hover .shop-circle-name {
+    color: var(--color-marigold) !important;
+}
+
+.shop-circle-item {
+    width: 130px;
+    height: 130px;
+    border-radius: 50%;
+    border: 3.5px solid rgba(255, 255, 255, 0.9);
+    position: relative;
     overflow: hidden;
+    box-shadow: var(--shadow-md);
     transition: var(--transition-base);
-    box-shadow: var(--shadow-sm);
-    cursor: pointer;
 }
 
-.shop-card-home:hover {
-    transform: translateY(-8px) scale(1.01);
-    box-shadow: var(--shadow-lg);
-    border-color: rgba(194, 146, 64, 0.25);
+.shop-circle-placeholder {
+    width: 100%;
+    height: 100%;
+    text-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
 }
 
-.shop-card-home .card-img-top {
-    height: 180px;
-    object-fit: cover;
-}
-
-.shop-img-placeholder {
-    height: 180px;
-    background: linear-gradient(135deg, var(--color-terracotta), var(--color-mesa));
+.shop-circle-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(50, 4, 4, 0.65);
     display: flex;
     align-items: center;
     justify-content: center;
+    opacity: 0;
+    transform: scale(0.85);
+    transition: var(--transition-base);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
 }
 
-.shop-img-placeholder span {
-    font-size: 2.5rem;
-    font-weight: 800;
-    color: rgba(255, 255, 255, 0.9);
-    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+.shop-circle-name {
+    font-size: 1.1rem;
+    font-weight: 700;
+    transition: color 0.3s;
 }
 
 /* How it Works Section */

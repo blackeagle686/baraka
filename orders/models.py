@@ -31,6 +31,7 @@ class Order(models.Model):
     is_paid_to_shop = models.BooleanField(default=False)
     paid_shops = models.TextField(blank=True, default='')
     shop_otps = models.TextField(blank=True, default='')
+    postponed_shops = models.TextField(blank=True, default='')
     picked_up_at = models.DateTimeField(null=True, blank=True)
     
     # Mutual Trust Zero-Knowledge OTP Keys
@@ -44,6 +45,15 @@ class Order(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    def has_unpaid_non_postponed_shops(self):
+        if self.is_paid_to_shop:
+            return False
+        involved_shop_ids = set(str(item.product.shop.id) for item in self.items.all() if item.product and item.product.shop)
+        paid_shop_ids = set(sid for sid in self.paid_shops.split(',') if sid)
+        postponed_shop_ids = set(sid for sid in self.postponed_shops.split(',') if sid)
+        unpaid_non_postponed = involved_shop_ids - paid_shop_ids - postponed_shop_ids
+        return len(unpaid_non_postponed) > 0
 
     def get_or_create_shop_otp(self, shop_id):
         import random

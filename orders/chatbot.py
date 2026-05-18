@@ -4,10 +4,25 @@ from rest_framework.response import Response
 from rest_framework import permissions, status
 from django.db.models import Q
 from shops.models import Product, Shop
-from phoenix.framework.chatbot.core import ChatBot
+from phoenix.services.llm.openai import OpenAILLM
 from phoenix.services.observability.logger import get_logger
 
 logger = get_logger("Baraka.Chatbot")
+
+# ── Singleton LLM instance (initialized once, reused across requests) ──
+_llm_instance = None
+
+def _get_llm():
+    """Return a cached OpenAILLM instance pointing at LongCat."""
+    global _llm_instance
+    if _llm_instance is None:
+        _llm_instance = OpenAILLM(
+            api_key="ak_2yp3Xw1Ny7ky2pF7er9x93ZO9jj6G",
+            base_url="https://api.longcat.chat/openai",
+            model="LongCat-Flash-Lite",
+        )
+    return _llm_instance
+
 
 class ChatbotView(APIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -19,34 +34,26 @@ class ChatbotView(APIView):
         if not message:
             return Response({"detail": "المسج مطلوب"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # 1. Initialize Phoenix Chatbot core builder to demonstrate framework usage
+        # 1. Call LongCat LLM directly via Phoenix OpenAILLM service (lightweight, no heavy SDK init)
         openai_response = None
         try:
-            import os
             from asgiref.sync import async_to_sync
-            
-            # Switch to remote OpenAI mode using LongCat LLM configuration
-            openai_key = "ak_2yp3Xw1Ny7ky2pF7er9x93ZO9jj6G"
-            openai_url = "https://api.longcat.chat/openai"
-            openai_model = "LongCat-Flash-Lite"
-                
-            bot = ChatBot(local=False).with_openai(
-                api_key=openai_key,
-                base_url=openai_url
-            ).with_model(
-                llm=openai_model
-            ).with_system_prompt(
-                "أنت مساعد بركة الذكي لمساعدة المستخدمين في شراء الخضروات والمنتجات وتأكيد الطلبات."
+
+            llm = _get_llm()
+            # Ensure the async client is initialized
+            if llm.client is None:
+                async_to_sync(llm.init)()
+
+            system_prompt = (
+                "أنت مساعد بركة الذكي لمساعدة المستخدمين في شراء الخضروات والمنتجات وتأكيد الطلبات. "
+                "أجب بالعربية بشكل ودود ومختصر. لا تستخدم أكثر من 3 أسطر في الرد."
             )
-            # Build chatbot instance
-            instance = bot.build()
-            instance.set_session(session_id)
-            
-            # Execute async chat method in sync context using LongCat
-            openai_response = async_to_sync(instance.chat)(text=message)
-            logger.info(f"Phoenix ChatBot OpenAI success response: {openai_response}")
+            full_prompt = f"{system_prompt}\n\nالمستخدم: {message}"
+
+            openai_response = async_to_sync(llm.generate)(prompt=full_prompt)
+            logger.info(f"LongCat LLM response received successfully.")
         except Exception as e:
-            logger.warning(f"Phoenix ChatBot instantiation/execution fallback: {e}")
+            logger.warning(f"LongCat LLM call failed, falling back to local engine: {e}")
 
         # 2. Advanced Intent Parsing Engine (Arabic Natural Language & eCommerce Logic)
         message_lower = message.lower()

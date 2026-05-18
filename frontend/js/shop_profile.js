@@ -112,6 +112,12 @@ async function initShopProfile() {
             const noShopState = document.getElementById('noShopProductsState');
             if (noShopState) noShopState.style.display = 'none';
             
+            // Revenue section show/hide
+            const revSection = document.getElementById('shopRevenueSection');
+            if (revSection) revSection.style.display = 'block';
+            const noRevState = document.getElementById('noShopRevenueState');
+            if (noRevState) noRevState.style.display = 'none';
+            
             loadShopProducts(shop.id);
             loadShopOrders();
         } else {
@@ -121,6 +127,12 @@ async function initShopProfile() {
             if (prodSection) prodSection.style.display = 'none';
             const noShopState = document.getElementById('noShopProductsState');
             if (noShopState) noShopState.style.display = 'block';
+            
+            // Revenue section show/hide
+            const revSection = document.getElementById('shopRevenueSection');
+            if (revSection) revSection.style.display = 'none';
+            const noRevState = document.getElementById('noShopRevenueState');
+            if (noRevState) noRevState.style.display = 'block';
             
             // BUG FIX: Initialize default map for new shop creator!
             initShopMap(null, null);

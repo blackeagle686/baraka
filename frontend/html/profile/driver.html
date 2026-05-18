@@ -135,6 +135,12 @@
                     </button>
                 </li>
                 <li class="dash-nav-item">
+                    <button class="dash-nav-link" onclick="switchTab('revenue')">
+                        <i class="bi bi-wallet2 text-success"></i>
+                        <span>أرباحي وإحصائياتي 💰</span>
+                    </button>
+                </li>
+                <li class="dash-nav-item">
                     <button class="dash-nav-link" onclick="switchTab('settings')">
                         <i class="bi bi-gear-fill"></i>
                         <span>إعدادات الحساب</span>
@@ -209,6 +215,20 @@
                     </div>
                 </div>
                 <div id="driverTripsPagination" class="d-flex justify-content-center mt-4"></div>
+            </div>
+
+            <!-- Revenue & Earnings Panel -->
+            <div class="dash-panel" id="revenuePanel">
+                <div class="dash-page-title">💰 سجل أرباحي وإحصائيات التوصيل</div>
+                <div class="dash-page-subtitle">تابع أرباحك الصافية وعمولات التوصيل التي حققتها عبر المنصة</div>
+
+                <!-- Revenue Dashboard Dashboard -->
+                <div id="revenueDashboardContainer">
+                    <div class="text-center text-mesa py-5">
+                        <div class="spinner-border text-marigold mb-3" role="status"></div>
+                        <p>جاري تحميل سجل الأرباح...</p>
+                    </div>
+                </div>
             </div>
 
             <!-- Settings Panel -->
@@ -300,6 +320,7 @@
     <script src="/js/api.js"></script>
     <script src="/js/main.js"></script>
     <script src="/js/driver_profile.js"></script>
+    <script src="/js/delivery_revenue.js"></script>
 
     <!-- Inline Tab Switching Script -->
     <script>
@@ -318,6 +339,18 @@
             const clickedLink = document.querySelector(`[onclick="switchTab('${tabId}')"]`);
             if (clickedLink) {
                 clickedLink.classList.add('active');
+            }
+            
+            // Invalidate Leaflet map size if switching to settings
+            if (tabId === 'settings' && typeof driverMapInstance !== 'undefined' && driverMapInstance) {
+                setTimeout(() => {
+                    driverMapInstance.invalidateSize();
+                }, 250);
+            }
+            
+            // Load delivery revenue when switching to the revenue tab
+            if (tabId === 'revenue' && window.loadDeliveryRevenue) {
+                window.loadDeliveryRevenue();
             }
         }
     </script>

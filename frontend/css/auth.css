@@ -131,19 +131,19 @@
 }
 
 /* Slider dynamic positions for RTL / LTR */
-body[dir="rtl"] .switcher-slider {
+html[dir="rtl"] .switcher-slider {
     right: 5px;
 }
 
-body[dir="rtl"] .auth-card.mode-register .switcher-slider {
+html[dir="rtl"] .auth-card.mode-register .switcher-slider {
     transform: translateX(-100%);
 }
 
-body[dir="ltr"] .switcher-slider {
+html[dir="ltr"] .switcher-slider {
     left: 5px;
 }
 
-body[dir="ltr"] .auth-card.mode-register .switcher-slider {
+html[dir="ltr"] .auth-card.mode-register .switcher-slider {
     transform: translateX(100%);
 }
 

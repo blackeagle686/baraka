@@ -147,8 +147,14 @@ function renderAllShops(shops) {
         return;
     }
 
-    // Section label
-    container.innerHTML = `<div class="list-section-label"><i class="bi bi-grid-3x3-gap me-1"></i>${shops.length} محل متاح</div>`;
+    // Section label and grid row container
+    container.innerHTML = `
+        <div class="list-section-label"><i class="bi bi-grid-3x3-gap me-1"></i>${shops.length} محل متاح</div>
+        <div class="row g-3" id="shopsGridRow"></div>
+    `;
+
+    const gridRow = document.getElementById('shopsGridRow');
+    if (!gridRow) return;
 
     shops.forEach((shop, i) => {
         // Use real rating from backend database
@@ -172,8 +178,8 @@ function renderAllShops(shops) {
         }
 
         const shopHtml = `
-            <div class="animate-up" style="animation-delay: ${i * 0.08}s;">
-                <a href="/html/shops/details.html?id=${shop.id}" class="shop-card-split">
+            <div class="col-12 col-sm-6 col-xxl-4 animate-up" style="animation-delay: ${i * 0.08}s;">
+                <a href="/html/shops/details.html?id=${shop.id}" class="shop-card-split h-100 d-flex flex-column mb-0">
                     <div class="shop-card-split-img">
                         <span class="shop-rating-badge">
                             <i class="bi bi-star-fill text-warning"></i>
@@ -184,17 +190,17 @@ function renderAllShops(shops) {
                             : `<div class="d-flex h-100 align-items-center justify-content-center text-white fw-bold fs-2" style="background: linear-gradient(135deg, var(--color-terracotta), var(--color-mesa));">${shop.name.charAt(0)}</div>`
                         }
                     </div>
-                    <div class="shop-card-split-body">
+                    <div class="shop-card-split-body d-flex flex-column flex-grow-1">
                         <div class="shop-card-split-category">${category}</div>
-                        <h5 class="shop-card-split-name">${shop.name}</h5>
-                        <button class="shop-card-split-btn">
+                        <h5 class="shop-card-split-name mb-3">${shop.name}</h5>
+                        <button class="shop-card-split-btn mt-auto">
                              خش المحل <i class="bi bi-arrow-left-short fs-5"></i>
                         </button>
                     </div>
                 </a>
             </div>
         `;
-        container.innerHTML += shopHtml;
+        gridRow.innerHTML += shopHtml;
     });
 }
 

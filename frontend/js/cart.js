@@ -296,6 +296,8 @@ async function autofillAddress() {
 // submitCartCheckout (Place order)
 // ==========================================
 window.submitCartCheckout = async function() {
+    if (window.isSubmittingCartCheckout) return; // Prevent double submissions!
+
     const token = localStorage.getItem('access_token');
     if (!token) {
         if(window.showBarakaToast) {
@@ -321,6 +323,8 @@ window.submitCartCheckout = async function() {
         if(addressInput) addressInput.focus();
         return;
     }
+
+    window.isSubmittingCartCheckout = true; // Set block flag
 
     const checkoutBtn = document.getElementById('cartCheckoutBtn');
     if (checkoutBtn) {
@@ -365,16 +369,21 @@ window.submitCartCheckout = async function() {
         localStorage.setItem('baraka_cart', JSON.stringify(cart));
         loadLocalCart();
         
+        window.isSubmittingCartCheckout = false; // Reset lock on success
+        
         // Switch automatically to tracking tab to watch progress live!
         switchCartTab('order-tracking');
     } catch (error) {
+        window.isSubmittingCartCheckout = false; // Reset lock on error
         alert('حدث خطأ أثناء إرسال بعض الطلبات: ' + JSON.stringify(error));
         // Reload cart to reflect remaining items
         loadLocalCart();
     } finally {
-        if (checkoutBtn) {
-            checkoutBtn.disabled = false;
-            checkoutBtn.innerHTML = `<i class="bi bi-check-all me-1"></i>تأكيد الطلبات ودليفري فوري!`;
+        if (!window.isSubmittingCartCheckout) { // Only re-enable if block is released (i.e. error occurred)
+            if (checkoutBtn) {
+                checkoutBtn.disabled = false;
+                checkoutBtn.innerHTML = `<i class="bi bi-check-all me-1"></i>تأكيد الطلبات ودليفري فوري!`;
+            }
         }
     }
 }

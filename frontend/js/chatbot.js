@@ -152,45 +152,97 @@ window.sendBarakaChatMessage = async function(event) {
         
         botMsgDiv.innerHTML = `<div class="bot-text-wrapper">${textContent}</div>`;
         
-        // If there are product recommendations, render them beautifully
+        // If there are product recommendations, render them beautifully in a table
         if (data.products && data.products.length > 0) {
             const productTitle = document.createElement('div');
-            productTitle.className = 'fw-bold text-espresso small mt-3 border-top pt-2';
+            productTitle.className = 'fw-bold text-espresso small mt-3 border-top pt-3 mb-2';
             productTitle.innerHTML = `<i class="bi bi-star-fill text-warning me-1"></i>المنتجات المرشحة لك:`;
             botMsgDiv.appendChild(productTitle);
             
             const mediaBase = (window.location.port === '8080') ? 'http://127.0.0.1:8000' : '';
+            
+            let tableHTML = `
+                <div class="chat-products-container mt-2">
+                    <div class="table-responsive">
+                        <table class="table table-borderless align-middle table-sm chat-products-table mb-0">
+                            <thead>
+                                <tr>
+                                    <th>المنتج</th>
+                                    <th>المحل</th>
+                                    <th class="text-nowrap">السعر</th>
+                                    <th class="text-center">إجراء</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+            `;
+            
             data.products.forEach(prod => {
-                const prodCard = document.createElement('div');
-                prodCard.className = 'chat-product-card d-flex flex-column animate-up mt-2';
+                const imgSrc = prod.image ? (prod.image.startsWith('http') ? prod.image : `${mediaBase}${prod.image}`) : '';
+                const imgTag = imgSrc 
+                    ? `<img src="${imgSrc}" class="rounded" style="width: 35px; height: 35px; object-fit: cover;">`
+                    : `<div class="rounded d-flex align-items-center justify-content-center text-marigold" style="width: 35px; height: 35px; background-color: rgba(194, 146, 64, 0.1);"><i class="bi bi-box-seam"></i></div>`;
                 
-                let imgHtml = '';
-                if (prod.image) {
-                    const imgSrc = prod.image.startsWith('http') ? prod.image : `${mediaBase}${prod.image}`;
-                    imgHtml = `<img src="${imgSrc}" class="chat-product-img">`;
-                } else {
-                    imgHtml = `<div class="chat-product-img d-flex align-items-center justify-content-center text-marigold fw-bold fs-4" style="height: 80px; background-color: rgba(194, 146, 64, 0.05);"><i class="bi bi-box-seam"></i></div>`;
-                }
-                
-                const maxQty = prod.quantity || 999;
                 const shopId = prod.shop_id || 1;
                 const shopName = prod.shop_name || 'محل بركة';
+                const maxQty = prod.quantity || 999;
                 
-                prodCard.innerHTML = `
-                    ${imgHtml}
-                    <div class="p-2 text-start">
-                        <span class="badge bg-mesa-soft text-mesa rounded-pill mb-1 micro">${escapeHtml(shopName)}</span>
-                        <h6 class="fw-bold text-espresso small mb-1" style="font-size: 0.85rem;">${escapeHtml(prod.name)}</h6>
-                        <div class="d-flex justify-content-between align-items-center mt-2">
-                            <span class="text-marigold fw-bold small" style="font-size: 0.85rem;">${prod.price} ج.م</span>
-                            <button class="btn btn-marigold btn-sm chat-product-btn px-2.5 py-1 text-white fw-bold shadow-xs" onclick="window.addChatbotItemToCart(${prod.id}, '${escapeHtml(prod.name)}', ${prod.price}, '${prod.image || ''}', ${maxQty}, ${shopId}, '${escapeHtml(shopName)}')">
-                                <i class="bi bi-plus-lg me-1"></i>أضف للسلة
-                            </button>
-                        </div>
-                    </div>
+                tableHTML += `
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                ${imgTag}
+                                <span class="fw-bold small text-espresso">${escapeHtml(prod.name)}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge bg-mesa-soft text-mesa micro">${escapeHtml(shopName)}</span>
+                        </td>
+                        <td class="text-nowrap">
+                            <span class="text-marigold fw-bold small">${prod.price} ج</span>
+                        </td>
+                        <td>
+                            <div class="d-flex justify-content-center gap-1">
+                                <button class="btn btn-marigold btn-sm text-white px-2 py-1 shadow-xs" onclick="window.addChatbotItemToCart(${prod.id}, '${escapeHtml(prod.name)}', ${prod.price}, '${prod.image || ''}', ${maxQty}, ${shopId}, '${escapeHtml(shopName)}')" title="أضف للسلة">
+                                    <i class="bi bi-cart-plus"></i>
+                                </button>
+                                <a href="/html/shops/details.html?id=${shopId}" class="btn btn-outline-mesa btn-sm px-2 py-1" title="زيارة المحل">
+                                    <i class="bi bi-shop"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
                 `;
-                botMsgDiv.appendChild(prodCard);
             });
+            
+            tableHTML += `
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+            
+            const tableDiv = document.createElement('div');
+            tableDiv.innerHTML = tableHTML;
+            botMsgDiv.appendChild(tableDiv);
+            
+            // Add quick reply buttons for products
+            const quickReplies = document.createElement('div');
+            quickReplies.className = 'chat-quick-replies';
+            quickReplies.innerHTML = `
+                <button class="chat-quick-reply-btn" onclick="sendQuickReply('إتمام الطلب')">🛒 إتمام الطلب</button>
+                <button class="chat-quick-reply-btn" onclick="sendQuickReply('عرض سلة المشتريات')">🛍️ سلة المشتريات</button>
+                <button class="chat-quick-reply-btn" onclick="sendQuickReply('ايه أرخص حاجة؟')">💰 أرخص العروض</button>
+            `;
+            botMsgDiv.appendChild(quickReplies);
+        } else {
+            // Add general quick reply buttons if no products were recommended
+            const quickReplies = document.createElement('div');
+            quickReplies.className = 'chat-quick-replies mt-2';
+            quickReplies.innerHTML = `
+                <button class="chat-quick-reply-btn" onclick="sendQuickReply('ايه المنتجات الجديدة؟')">✨ المنتجات الجديدة</button>
+                <button class="chat-quick-reply-btn" onclick="sendQuickReply('سلة المشتريات')">🛒 سلة المشتريات</button>
+            `;
+            botMsgDiv.appendChild(quickReplies);
         }
         
         messagesContainer.appendChild(botMsgDiv);

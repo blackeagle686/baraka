@@ -64,6 +64,12 @@
                         <span class="nav-badge" id="sidebarProductBadge">0</span>
                     </button>
                 </li>
+                <li class="dash-nav-item">
+                    <button class="dash-nav-link" onclick="switchTab('revenue')">
+                        <i class="bi bi-wallet2 text-success"></i>
+                        <span>أرباحي وحسابات المحل 💰</span>
+                    </button>
+                </li>
             </ul>
         </aside>
 
@@ -126,6 +132,31 @@
                         <a href="/html/shops/list.html" class="btn btn-outline-secondary rounded-pill px-4 py-2 fw-bold">
                             <i class="bi bi-eye me-2"></i>عرض المنصة العام
                         </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Revenue & Earnings Panel -->
+            <div class="dash-panel" id="revenuePanel">
+                <div class="dash-page-title">💰 سجل أرباح المحل والتدفقات النقدية</div>
+                <div class="dash-page-subtitle">تابع مبيعاتك الإجمالية، المبالغ المحصلة، والتحويلات المالية المكتملة عبر التطبيق</div>
+
+                <!-- Empty state when shop is not created yet -->
+                <div id="noShopRevenueState" class="empty-state animate-up" style="display: block;">
+                    <div class="empty-state-icon"><i class="bi bi-shop-window text-marigold"></i></div>
+                    <p class="fw-bold fs-5 text-espresso">يا غالي، لازم تعمل المحل بتاعك الأول!</p>
+                    <p class="small text-mesa mb-4" style="max-width: 400px; margin: 0 auto;">قم بتحديد موقع المحل، اسمه، وتفاصيله من صفحة **"إعدادات المحل"** ليظهر للناس وتتمكن من تتبع مبيعاتك وأرباحك بسهولة.</p>
+                    <button class="btn btn-primary rounded-pill px-4 fw-bold" onclick="switchTab('settings')">
+                        <i class="bi bi-gear-fill me-2"></i>الذهاب لإعدادات المحل الآن
+                    </button>
+                </div>
+
+                <div id="shopRevenueSection" style="display: none;">
+                    <div id="shopRevenueDashboardContainer">
+                        <div class="text-center text-mesa py-5">
+                            <div class="spinner-border text-marigold mb-3" role="status"></div>
+                            <p>جاري تحميل سجل الأرباح والتدفقات النقدية...</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -388,6 +419,7 @@
     <script src="/js/api.js"></script>
     <script src="/js/main.js"></script>
     <script src="/js/shop_profile.js"></script>
+    <script src="/js/shop_revenue.js"></script>
 
     <!-- Tabs Switching Inline Script to ensure absolute separation & zero backend dependencies -->
     <script>
@@ -409,6 +441,27 @@
             const clickedLink = document.querySelector(`[onclick="switchTab('${tabId}')"]`);
             if (clickedLink) {
                 clickedLink.classList.add('active');
+            }
+            
+            // Handle Leaflet map container invalidation when switching to settings
+            if (tabId === 'settings' && typeof shopMapInstance !== 'undefined' && shopMapInstance) {
+                setTimeout(() => {
+                    shopMapInstance.invalidateSize();
+                }, 250);
+            }
+            
+            // Load shop revenue when switching to the revenue tab
+            if (tabId === 'revenue') {
+                if (typeof currentShopId === 'undefined' || !currentShopId) {
+                    document.getElementById('noShopRevenueState').style.display = 'block';
+                    document.getElementById('shopRevenueSection').style.display = 'none';
+                } else {
+                    document.getElementById('noShopRevenueState').style.display = 'none';
+                    document.getElementById('shopRevenueSection').style.display = 'block';
+                    if (window.loadShopRevenue) {
+                        window.loadShopRevenue();
+                    }
+                }
             }
         }
     </script>

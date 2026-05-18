@@ -76,8 +76,19 @@ class OrderSerializer(serializers.ModelSerializer):
             if instance.customer == request.user or request.user.is_staff:
                 ret['customer_otp'] = instance.customer_otp
                 
-            # Only the actual driver of this order can see the settlement verification OTP
+            # Driver or staff see all shop-specific settlement OTPs
             if instance.driver == request.user or request.user.is_staff:
                 ret['driver_otp'] = instance.driver_otp
+                ret['shop_otps_map'] = {
+                    str(shop.id): instance.get_or_create_shop_otp(shop.id)
+                    for shop in set(item.product.shop for item in instance.items.all() if item.product and item.product.shop)
+                }
+                
+            # Each shop owner sees ONLY their own shop's settlement OTP
+            from shops.models import Shop
+            shops_owned_by_user = Shop.objects.filter(owner=request.user)
+            order_items_belonging_to_user_shops = instance.items.filter(product__shop__in=shops_owned_by_user)
+            if order_items_belonging_to_user_shops.exists():
+                ret['my_shop_otp'] = instance.get_or_create_shop_otp(order_items_belonging_to_user_shops.first().product.shop.id)
                 
         return ret

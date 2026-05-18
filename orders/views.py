@@ -273,8 +273,13 @@ class OrderViewSet(viewsets.ModelViewSet):
             
         # Enforce Driver OTP code verification for shop owners confirming receipt of money
         driver_otp = request.data.get('driver_otp')
-        if not driver_otp or driver_otp != order.driver_otp:
-            return Response({"detail": "رمز تصفية الحساب غير صحيح! يرجى إدخال الرمز المكون من 4 أرقام الموضح على شاشة الطيار لتأكيد التصفية."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Verify the shop-specific OTP for each shop owned by this user
+        for item in order_items_belonging_to_user_shops:
+            if item.product and item.product.shop:
+                shop_otp = order.get_or_create_shop_otp(item.product.shop.id)
+                if not driver_otp or driver_otp != shop_otp:
+                    return Response({"detail": "رمز تصفية الحساب غير صحيح! يرجى إدخال الرمز المكون من 4 أرقام الموضح على شاشة الطيار لتأكيد التصفية."}, status=status.HTTP_400_BAD_REQUEST)
 
         # Parse current paid shops list
         paid_shops_list = [id_str for id_str in order.paid_shops.split(',') if id_str]

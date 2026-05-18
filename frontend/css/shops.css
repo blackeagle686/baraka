@@ -581,6 +581,33 @@
     box-shadow: 0 4px 12px rgba(194, 146, 64, 0.2);
 }
 
+/* Mobile-specific adjustments for 2-column cards */
+@media (max-width: 576px) {
+    .shop-card-split-img {
+        height: 100px;
+    }
+    .shop-card-split-body {
+        padding: 0.7rem;
+    }
+    .shop-card-split-name {
+        font-size: 0.88rem;
+        margin-bottom: 0.5rem;
+    }
+    .shop-card-split-category {
+        font-size: 0.72rem;
+    }
+    .shop-card-split-btn {
+        padding: 0.35rem 0.6rem;
+        font-size: 0.75rem;
+    }
+    .shop-rating-badge {
+        top: 6px;
+        right: 6px;
+        padding: 0.1rem 0.4rem;
+        font-size: 0.68rem;
+    }
+}
+
 /* Adjust layout on smaller screens to be stackable */
 @media (max-width: 768px) {
     body.overflow-hidden {

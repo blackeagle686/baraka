@@ -3,7 +3,7 @@
    ========================================================================== */
 
 .shops-sidebar {
-    width: 420px;
+    width: 58%;
     display: flex;
     flex-direction: column;
     background: var(--color-dune-light, #fdf5f1);

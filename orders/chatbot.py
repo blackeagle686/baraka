@@ -93,7 +93,8 @@ def _handle_add_to_cart(message):
         actual_qty = min(qty, best.quantity)
         text = (
             f"تمت إضافة **{actual_qty}** من **{best.name}** "
-            f"بسعر **{best.price} ج.م** من (**{shop_name}**) للسلة! 🍎🛒"
+            f"بسعر **{best.price} ج.م** من (**{shop_name}**) للسلة! 🍎🛒\n\n"
+            f"يرجى مراجعة سلتك وتأكيد طلبك في أي وقت 😊"
         )
         action = {"type": "ADD_TO_CART", "product_id": best.id, "quantity": actual_qty}
         prod_data = [{

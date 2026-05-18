@@ -214,3 +214,11 @@ SIMPLE_JWT = {
     'BLACKLIST_AFTER_ROTATION': False,
     'UPDATE_LAST_LOGIN': True,
 }
+
+# Celery Beat Periodic Tasks Schedule
+CELERY_BEAT_SCHEDULE = {
+    'check-shop-hours-every-minute': {
+        'task': 'shops.tasks.check_shop_working_hours',
+        'schedule': 60.0,  # Check every 60 seconds (1 minute)
+    },
+}

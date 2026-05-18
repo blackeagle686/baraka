@@ -802,6 +802,8 @@ window.removeFromCart = function(productId) {
 }
 
 window.submitOrder = async function() {
+    if (window.isSubmittingOrder) return; // Prevent double submissions!
+
     const token = localStorage.getItem('access_token');
     if (!token) return;
     
@@ -825,6 +827,8 @@ window.submitOrder = async function() {
         return;
     }
     
+    window.isSubmittingOrder = true; // Set block flag
+
     const submitBtn = document.getElementById('submitOrderBtn');
     if (submitBtn) {
         submitBtn.disabled = true;
@@ -857,18 +861,22 @@ window.submitOrder = async function() {
         
         // Redirect to new Consolidated Cart & Tracking Dashboard
         setTimeout(() => {
+            window.isSubmittingOrder = false; // Reset lock
             window.location.href = '/html/cart.html';
         }, 1200);
     } catch (error) {
+        window.isSubmittingOrder = false; // Reset lock on error
         if (window.showBarakaToast) {
             window.showBarakaToast('حدث خطأ أثناء إرسال الطلب.', 'error', 'bi-exclamation-triangle');
         } else {
             alert('حدث خطأ أثناء إرسال الطلب: ' + JSON.stringify(error));
         }
     } finally {
-        if (submitBtn) {
-            submitBtn.disabled = false;
-            submitBtn.innerText = 'تأكيد الطلب ودليفري!';
+        if (!window.isSubmittingOrder) { // Only re-enable if lock is released (i.e. error occurred)
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerText = 'تأكيد الطلب ودليفري!';
+            }
         }
     }
 }

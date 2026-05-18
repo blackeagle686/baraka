@@ -219,6 +219,18 @@ const api = {
             if (!res.ok) throw await res.json();
             return await res.json();
         },
+        reportEmergency: async (token, orderId, reason) => {
+            const res = await fetch(`${API_BASE}/orders/${orderId}/report_emergency/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ reason })
+            });
+            if (!res.ok) throw await res.json();
+            return await res.json();
+        },
         toggleItemReady: async (token, orderId, itemId) => {
             const res = await fetch(`${API_BASE}/orders/${orderId}/toggle_item_ready/`, {
                 method: 'POST',

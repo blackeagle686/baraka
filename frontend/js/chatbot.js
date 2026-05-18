@@ -169,17 +169,6 @@ window.sendBarakaChatMessage = async function(event) {
         
         const data = await response.json();
         
-        // Auto-play TTS audio if returned
-        if (data.audio_url) {
-            if (window.currentChatbotAudio) {
-                window.currentChatbotAudio.pause();
-            }
-            window.currentChatbotAudio = new Audio(data.audio_url);
-            window.currentChatbotAudio.play().catch(e => {
-                console.log("Audio autoplay blocked by browser policy, user needs interaction:", e);
-            });
-        }
-
         // Render Bot Message
         const botMsgDiv = document.createElement('div');
         botMsgDiv.className = 'chat-message bot-message align-self-flex-start animate-up';
@@ -188,9 +177,10 @@ window.sendBarakaChatMessage = async function(event) {
         // Simple markdown formatter for newlines and bold texts
         textContent = formatMarkdown(textContent);
         
-        // Append a speaker button if audio_url is available
+        // Unique button ID to identify this specific message's audio control
+        const audioBtnId = `audio_btn_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
         const speakerHtml = data.audio_url 
-            ? `<button class="btn btn-sm btn-link p-0 text-marigold ms-2" onclick="replayChatbotAudio('${data.audio_url}')" title="إعادة تشغيل الصوت"><i class="bi bi-volume-up-fill fs-5"></i></button>`
+            ? `<button class="btn btn-sm btn-link p-0 text-marigold ms-2 chatbot-audio-btn" id="${audioBtnId}" onclick="toggleChatbotAudio('${data.audio_url}', this)" title="تشغيل/إيقاف الصوت"><i class="bi bi-volume-up-fill fs-5"></i></button>`
             : '';
 
         botMsgDiv.innerHTML = `
@@ -199,6 +189,19 @@ window.sendBarakaChatMessage = async function(event) {
                 ${speakerHtml}
             </div>
         `;
+        
+        messagesContainer.appendChild(botMsgDiv);
+        scrollToBottom();
+
+        // Auto-play TTS audio if returned and handle toggle UI
+        if (data.audio_url) {
+            setTimeout(() => {
+                const btn = document.getElementById(audioBtnId);
+                if (btn) {
+                    toggleChatbotAudio(data.audio_url, btn);
+                }
+            }, 100);
+        }
         
         // If there are product recommendations, render them beautifully in a table
         if (data.products && data.products.length > 0) {
@@ -471,12 +474,44 @@ function formatMarkdown(text) {
 let speechRecognitionInstance = null;
 let isSpeechRecording = false;
 
-window.replayChatbotAudio = function(url) {
+window.toggleChatbotAudio = function(url, btn) {
+    // Resolve absolute path to ensure correct comparisons
+    const absoluteUrl = new URL(url, window.location.origin).href;
+
+    if (window.currentChatbotAudio && window.currentChatbotAudio.src === absoluteUrl) {
+        if (!window.currentChatbotAudio.paused) {
+            // Stop/Pause current playing audio
+            window.currentChatbotAudio.pause();
+            window.currentChatbotAudio.currentTime = 0;
+            btn.innerHTML = '<i class="bi bi-volume-up-fill fs-5"></i>';
+            btn.title = "تشغيل الصوت";
+            return;
+        }
+    }
+
+    // Stop any currently playing audio and reset their buttons to "play" state
     if (window.currentChatbotAudio) {
         window.currentChatbotAudio.pause();
     }
+    document.querySelectorAll('.chatbot-audio-btn').forEach(b => {
+        b.innerHTML = '<i class="bi bi-volume-up-fill fs-5"></i>';
+        b.title = "تشغيل الصوت";
+    });
+
+    // Create and play new audio
     window.currentChatbotAudio = new Audio(url);
-    window.currentChatbotAudio.play().catch(e => console.error("Failed to play audio:", e));
+    btn.innerHTML = '<i class="bi bi-stop-fill fs-5 text-danger"></i>';
+    btn.title = "إيقاف الصوت";
+
+    window.currentChatbotAudio.play().catch(e => {
+        console.error("Audio playback failed:", e);
+        btn.innerHTML = '<i class="bi bi-volume-up-fill fs-5"></i>';
+    });
+
+    window.currentChatbotAudio.onended = function() {
+        btn.innerHTML = '<i class="bi bi-volume-up-fill fs-5"></i>';
+        btn.title = "تشغيل الصوت";
+    };
 };
 
 window.toggleChatbotMic = function() {

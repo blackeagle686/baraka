@@ -198,15 +198,23 @@ class OrderViewSet(viewsets.ModelViewSet):
         from django.utils import timezone
         from datetime import timedelta
         limit_time = timezone.now() - timedelta(hours=5)
-        overdue_orders = Order.objects.filter(
+        
+        delivered_unpaid = Order.objects.filter(
             driver=request.user,
             status='DELIVERED',
             is_paid_to_shop=False,
             picked_up_at__lt=limit_time
         )
-        if overdue_orders.exists():
+        
+        has_overdue_unpaid = False
+        for overdue_order in delivered_unpaid:
+            if overdue_order.has_unpaid_non_postponed_shops():
+                has_overdue_unpaid = True
+                break
+                
+        if has_overdue_unpaid:
             return Response({
-                "detail": "عذراً، تم تعليق حسابك مؤقتاً لوجود مستحقات مالية متأخرة للمحلات لأكثر من 5 ساعات! يرجى تصفية الحساب مع المحل أولاً لتتمكن من استقبال طلبات جديدة."
+                "detail": "عذراً، تم تعليق حسابك مؤقتاً لوجود مستحقات مالية معلقة للمحلات لأكثر من 5 ساعات! يرجى تسوية الحساب أو تأجيل السداد بسبب إغلاق المحلات لتتمكن من استقبال طلبات جديدة."
             }, status=status.HTTP_400_BAD_REQUEST)
 
         # Check for outstanding emergency custody returns
@@ -300,6 +308,44 @@ class OrderViewSet(viewsets.ModelViewSet):
             order.is_paid_to_shop = True
             
         order.save()
+        return Response(self.get_serializer(order).data)
+
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
+    def postpone_shop_settlement(self, request, pk=None):
+        order = self.get_object()
+        if order.driver != request.user:
+            return Response({"detail": "Not authorized to postpone this order's settlement."}, status=status.HTTP_403_FORBIDDEN)
+            
+        shop_id = request.data.get('shop_id')
+        if not shop_id:
+            return Response({"detail": "shop_id is required."}, status=status.HTTP_400_BAD_REQUEST)
+            
+        from shops.models import Shop
+        try:
+            shop = Shop.objects.get(id=shop_id)
+        except Shop.DoesNotExist:
+            return Response({"detail": "Shop not found."}, status=status.HTTP_404_NOT_FOUND)
+            
+        postponed_list = [sid for sid in order.postponed_shops.split(',') if sid]
+        shop_id_str = str(shop_id)
+        
+        if shop_id_str not in postponed_list:
+            postponed_list.append(shop_id_str)
+            order.postponed_shops = ','.join(postponed_list)
+            order.save()
+            
+            # Send notification to the shop owner about the postponement
+            Notification.objects.create(
+                user=shop.owner,
+                shop=shop,
+                title="🚪 تأجيل تصفية الحساب لإغلاق المحل",
+                message=(
+                    f"أبلغ الطيار {request.user.phone} عن إغلاق المحل أو عدم توفر المالك للطلب #{order.id}. "
+                    f"تم تأجيل تصفية حسابه مؤقتاً حتى تقوم بالفتح وإعادة التسوية."
+                ),
+                notification_type='shop_settlement_postponed'
+            )
+            
         return Response(self.get_serializer(order).data)
 
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])

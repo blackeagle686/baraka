@@ -31,20 +31,18 @@ function renderShops(shops) {
     // Show up to 4 shops on landing page
     shops.slice(0, 4).forEach((shop, i) => {
         const shopHtml = `
-            <div class="col-md-3 col-sm-6 animate-up delay-${i + 1}">
-                <a href="/html/shops/details.html?id=${shop.id}" class="text-decoration-none">
-                    <div class="shop-card-home h-100">
-                        <div class="shop-img-placeholder">
-                            ${shop.image ? `<img src="${shop.image}" class="w-100 h-100 object-fit-cover">` : `<span>${shop.name.charAt(0)}</span>`}
-                        </div>
-                        <div class="card-body text-center p-3">
-                            <h6 class="fw-bold text-espresso mb-1">${shop.name}</h6>
-                            <p class="text-mesa small mb-2">${shop.description ? shop.description.substring(0, 50) : 'أفضل المنتجات وأسرع توصيل'}</p>
-                            <span class="btn btn-outline-primary btn-sm rounded-pill w-100">
-                                <i class="bi bi-arrow-left me-1"></i>تسوق الآن
-                            </span>
+            <div class="col-md-3 col-sm-6 text-center animate-up delay-${i + 1}">
+                <a href="/html/shops/details.html?id=${shop.id}" class="shop-circle-link text-decoration-none d-inline-block">
+                    <div class="shop-circle-item mb-3 mx-auto">
+                        ${shop.image 
+                            ? `<img src="${shop.image}" class="w-100 h-100 object-fit-cover rounded-circle">` 
+                            : `<div class="shop-circle-placeholder rounded-circle d-flex align-items-center justify-content-center text-white fw-bold fs-2" style="background: linear-gradient(135deg, var(--color-terracotta), var(--color-mesa));">${shop.name.charAt(0)}</div>`
+                        }
+                        <div class="shop-circle-overlay rounded-circle">
+                            <i class="bi bi-arrow-left-short fs-2 text-white"></i>
                         </div>
                     </div>
+                    <h6 class="fw-bold text-espresso shop-circle-name mb-0">${shop.name}</h6>
                 </a>
             </div>
         `;

@@ -183,6 +183,32 @@ class OrderViewSet(viewsets.ModelViewSet):
     def accept_delivery(self, request, pk=None):
         if request.user.role != 'DRIVER':
             return Response({"detail": "Only drivers can accept delivery assignment."}, status=status.HTTP_403_FORBIDDEN)
+        
+        # Check active orders limit: at most 5 active orders in progress
+        active_count = Order.objects.filter(
+            driver=request.user,
+            status__in=['ACCEPTED', 'PREPARING', 'ON_DELIVERY']
+        ).count()
+        if active_count >= 5:
+            return Response({
+                "detail": "عذراً، لقد وصلت للحد الأقصى للطلبات النشطة (5 طلبات) في رحلتك الحالية. يرجى توصيل الطلبات الحالية وتصفيتها أولاً."
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # Check for overdue payments (> 5 hours since picked_up_at)
+        from django.utils import timezone
+        from datetime import timedelta
+        limit_time = timezone.now() - timedelta(hours=5)
+        overdue_orders = Order.objects.filter(
+            driver=request.user,
+            status='DELIVERED',
+            is_paid_to_shop=False,
+            picked_up_at__lt=limit_time
+        )
+        if overdue_orders.exists():
+            return Response({
+                "detail": "عذراً، تم تعليق حسابك مؤقتاً لوجود مستحقات مالية متأخرة للمحلات لأكثر من 5 ساعات! يرجى تصفية الحساب مع المحل أولاً لتتمكن من استقبال طلبات جديدة."
+            }, status=status.HTTP_400_BAD_REQUEST)
+
         order = self.get_object()
         if order.driver:
             return Response({"detail": "Order already has an assigned driver."}, status=status.HTTP_400_BAD_REQUEST)

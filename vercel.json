@@ -15,6 +15,10 @@
     {
       "source": "/api/:path*",
       "destination": "https://baraka-backend-api-production.com/api/:path*"
+    },
+    {
+      "source": "/(css|js|images|html)/:path*",
+      "destination": "/frontend/$1/:path*"
     }
   ]
 }

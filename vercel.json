@@ -5,24 +5,16 @@
     {
       "src": "frontend/**/*",
       "use": "@vercel/static"
+    },
+    {
+      "src": "index.html",
+      "use": "@vercel/static"
     }
   ],
   "rewrites": [
     {
       "source": "/api/:path*",
       "destination": "https://baraka-backend-api-production.com/api/:path*"
-    },
-    {
-      "source": "/(css|js|images|html)/:path*",
-      "destination": "/frontend/$1/:path*"
-    },
-    {
-      "source": "/index.html",
-      "destination": "/frontend/index.html"
-    },
-    {
-      "source": "/",
-      "destination": "/frontend/index.html"
     }
   ]
 }

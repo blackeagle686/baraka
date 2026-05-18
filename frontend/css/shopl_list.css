@@ -1,0 +1,300 @@
+/* ==========================================================================
+   Shops Directory List Styles (shopl_list.css)
+   ========================================================================== */
+
+.shops-sidebar {
+    width: 420px;
+    display: flex;
+    flex-direction: column;
+    background: var(--color-dune-light, #fdf5f1);
+    border-left: 1px solid rgba(201, 153, 151, 0.13);
+    box-shadow: -2px 0 20px rgba(50, 4, 4, 0.04);
+}
+
+/* --- Sidebar Top Panel --- */
+.sidebar-top-panel {
+    padding: 1.5rem 1.5rem 0;
+    background: linear-gradient(160deg, rgba(255, 255, 255, 0.95) 0%, rgba(253, 245, 241, 0.9) 100%);
+    border-bottom: 1px solid rgba(201, 153, 151, 0.1);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+
+.sidebar-brand-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.1rem;
+}
+
+.sidebar-brand-title {
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: var(--color-espresso, #320404);
+    letter-spacing: -0.3px;
+    line-height: 1.2;
+}
+
+.sidebar-brand-subtitle {
+    font-size: 0.78rem;
+    color: var(--color-mesa, #c99997);
+    font-weight: 600;
+    margin-top: 2px;
+}
+
+.shops-count-pill {
+    background: linear-gradient(135deg, var(--color-marigold, #c29240), #e0b060);
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 800;
+    padding: 0.3rem 0.75rem;
+    border-radius: 100px;
+    white-space: nowrap;
+    box-shadow: 0 3px 10px rgba(194, 146, 64, 0.3);
+}
+
+/* --- Search Input --- */
+.shops-search-wrap {
+    position: relative;
+    margin-bottom: 0.9rem;
+}
+
+.shops-search-wrap .search-icon {
+    position: absolute;
+    top: 50%;
+    right: 1rem;
+    transform: translateY(-50%);
+    color: var(--color-mesa, #c99997);
+    font-size: 1rem;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.shops-search-input {
+    width: 100%;
+    border: 1.5px solid rgba(201, 153, 151, 0.2);
+    border-radius: 14px;
+    padding: 0.7rem 2.8rem 0.7rem 3rem;
+    font-family: 'Cairo', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--color-espresso, #320404);
+    background: white;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+}
+
+.shops-search-input::placeholder {
+    color: rgba(201, 153, 151, 0.7);
+    font-weight: 500;
+}
+
+.shops-search-input:focus {
+    border-color: rgba(194, 146, 64, 0.5);
+    box-shadow: 0 0 0 3px rgba(194, 146, 64, 0.1);
+}
+
+.shops-search-clear {
+    position: absolute;
+    top: 50%;
+    left: 0.75rem;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--color-mesa);
+    cursor: pointer;
+    font-size: 0.85rem;
+    display: none;
+    padding: 0;
+    line-height: 1;
+}
+
+/* --- Open Now Toggle Row --- */
+.open-now-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: white;
+    border: 1.5px solid rgba(201, 153, 151, 0.15);
+    border-radius: 12px;
+    padding: 0.55rem 1rem;
+    margin-bottom: 1rem;
+}
+
+.open-now-label {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--color-espresso);
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.open-now-label .pulse-dot {
+    width: 8px;
+    height: 8px;
+    background: #22c55e;
+    border-radius: 50%;
+    display: inline-block;
+    animation: pulse-green 1.5s infinite;
+}
+
+@keyframes pulse-green {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
+    50% { box-shadow: 0 0 0 5px rgba(34, 197, 94, 0); }
+}
+
+/* --- Category Filter Pills --- */
+.category-pills {
+    display: flex;
+    gap: 0.5rem;
+    padding-bottom: 1.1rem;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+.category-pills::-webkit-scrollbar { display: none; }
+
+.cat-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.35rem 0.85rem;
+    border-radius: 100px;
+    border: 1.5px solid rgba(201, 153, 151, 0.2);
+    background: white;
+    color: var(--color-espresso);
+    font-size: 0.8rem;
+    font-weight: 700;
+    font-family: 'Cairo', sans-serif;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.cat-pill:hover {
+    border-color: rgba(194, 146, 64, 0.4);
+    background: rgba(194, 146, 64, 0.05);
+    color: var(--color-marigold);
+}
+
+.cat-pill.active {
+    background: linear-gradient(135deg, var(--color-marigold), #e0b060);
+    border-color: transparent;
+    color: white;
+    box-shadow: 0 3px 10px rgba(194, 146, 64, 0.25);
+}
+
+/* --- Shops List Scroll Area --- */
+.shops-list-scroll {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 1.25rem 1.25rem 2rem;
+    min-height: 0;
+}
+
+/* --- Section Label inside list --- */
+.list-section-label {
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--color-mesa);
+    margin-bottom: 0.85rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 1px dashed rgba(201, 153, 151, 0.2);
+}
+
+/* --- Pagination Area --- */
+.shops-pagination-bar {
+    padding: 0.75rem 1.25rem;
+    border-top: 1px solid rgba(201, 153, 151, 0.12);
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(8px);
+}
+
+/* --- Map Area Enhancements --- */
+.shops-map-wrapper {
+    flex-grow: 1;
+    position: relative;
+    height: 100%;
+}
+
+.map-top-bar {
+    position: absolute;
+    top: 16px;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    display: flex;
+    justify-content: center;
+    pointer-events: none;
+}
+
+.map-top-badge {
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(201, 153, 151, 0.2);
+    border-radius: 100px;
+    padding: 0.45rem 1.2rem;
+    font-size: 0.82rem;
+    font-weight: 800;
+    font-family: 'Cairo', sans-serif;
+    color: var(--color-espresso);
+    box-shadow: 0 6px 20px rgba(50, 4, 4, 0.1);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.map-top-badge .dot {
+    width: 7px;
+    height: 7px;
+    background: var(--color-marigold);
+    border-radius: 50%;
+    animation: pulse-gold 2s infinite;
+}
+
+@keyframes pulse-gold {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(194, 146, 64, 0.5); }
+    50% { box-shadow: 0 0 0 6px rgba(194, 146, 64, 0); }
+}
+
+/* --- Mobile view mode styles --- */
+#mobileViewToggle {
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    background: linear-gradient(135deg, var(--color-marigold, #c29240), #e0b060);
+    border: none;
+    box-shadow: 0 5px 20px rgba(194, 146, 64, 0.4) !important;
+}
+
+#mobileViewToggle.btn-dark {
+    background: linear-gradient(135deg, var(--color-espresso, #320404), #5a1212);
+    box-shadow: 0 5px 20px rgba(50, 4, 4, 0.4) !important;
+}
+
+/* --- Responsive Layout Override --- */
+@media (max-width: 768px) {
+    .shops-split-container {
+        flex-direction: column;
+        position: relative;
+    }
+    .shops-sidebar {
+        width: 100%;
+        height: 100% !important;
+        max-height: none;
+        display: flex;
+    }
+    .shops-map-wrapper {
+        width: 100%;
+        height: 100% !important;
+        min-height: none;
+        display: none; /* Hidden by default on mobile, toggled via JS */
+    }
+    /* Set Leaflet zoom control layout for mobile */
+    .leaflet-control-zoom {
+        margin-bottom: 90px !important;
+    }
+}

@@ -51,7 +51,7 @@ class OrderSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'customer', 'customer_details', 'shop', 'shop_details', 'shops_details',
             'driver', 'driver_details', 'total_price', 'delivery_price', 'status', 'address',
-            'is_paid_to_shop', 'picked_up_at', 'customer_otp', 'driver_otp', 'dispute_status', 
+            'is_paid_to_shop', 'paid_shops', 'picked_up_at', 'customer_otp', 'driver_otp', 'dispute_status', 
             'dispute_reason', 'disputed_by', 'items', 'created_at', 'updated_at'
         ]
         read_only_fields = ['customer', 'driver', 'total_price', 'status', 'customer_otp', 'driver_otp']

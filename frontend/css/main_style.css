@@ -652,27 +652,54 @@ h1, h2, h3, h4, h5, h6 {
     transform: scale(1.05);
 }
 
-/* Recommended Product Cards inside Chat */
-.chat-product-card {
+/* Recommended Product Table inside Chat */
+.chat-products-container {
     background: white;
-    border-radius: 12px;
-    border: 1px solid rgba(201, 153, 151, 0.12);
+    border-radius: 16px;
+    border: 1px solid rgba(0,0,0,0.05);
     overflow: hidden;
-    margin-top: 10px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.02);
 }
 
-.chat-product-img {
-    height: 80px;
-    width: 100%;
-    object-fit: cover;
-    background-color: rgba(194, 146, 64, 0.05);
+.chat-products-table th {
+    font-weight: 600;
+    color: var(--color-mesa);
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+    padding: 10px 15px;
 }
 
-.chat-product-btn {
-    border-radius: 50px;
-    font-size: 0.8rem;
-    font-weight: bold;
+.chat-products-table td {
+    padding: 12px 15px;
+    vertical-align: middle;
+    border-bottom: 1px solid rgba(0,0,0,0.03);
+}
+
+.chat-products-table tr:last-child td {
+    border-bottom: none;
+}
+
+.chat-quick-replies {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 15px;
+}
+
+.chat-quick-reply-btn {
+    background: rgba(194, 146, 64, 0.1);
+    color: var(--color-marigold);
+    border: 1px solid rgba(194, 146, 64, 0.2);
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.chat-quick-reply-btn:hover {
+    background: var(--color-marigold);
+    color: white;
 }
 
 .micro {

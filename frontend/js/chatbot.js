@@ -126,10 +126,14 @@ window.sendBarakaChatMessage = async function(event) {
         const chatApiBase = window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1')
             ? (window.location.port === '8080' ? 'http://127.0.0.1:8000/api' : '/api')
             : '/api';
+            
+        // Append local cart data
+        const currentCart = JSON.parse(localStorage.getItem('baraka_cart')) || [];
+        
         const response = await fetch(`${chatApiBase}/chatbot/chat/`, {
             method: 'POST',
             headers: headers,
-            body: JSON.stringify({ message: userText })
+            body: JSON.stringify({ message: userText, cart: currentCart })
         });
         
         // Remove typing indicator

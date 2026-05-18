@@ -28,6 +28,7 @@ class Order(models.Model):
     status = models.CharField(max_length=20, choices=OrderStatus.choices, default=OrderStatus.PENDING)
     address = models.TextField()
     is_paid_to_shop = models.BooleanField(default=False)
+    picked_up_at = models.DateTimeField(null=True, blank=True)
     
     # Mutual Trust Zero-Knowledge OTP Keys
     customer_otp = models.CharField(max_length=4, blank=True, null=True)
@@ -43,10 +44,13 @@ class Order(models.Model):
 
     def save(self, *args, **kwargs):
         import random
+        from django.utils import timezone
         if not self.customer_otp:
             self.customer_otp = f"{random.randint(1000, 9999)}"
         if not self.driver_otp:
             self.driver_otp = f"{random.randint(1000, 9999)}"
+        if self.status == 'ON_DELIVERY' and not self.picked_up_at:
+            self.picked_up_at = timezone.now()
         super().save(*args, **kwargs)
 
 class OrderItem(models.Model):

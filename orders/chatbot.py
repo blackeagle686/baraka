@@ -42,10 +42,9 @@ class ChatbotView(APIView):
             instance = bot.build()
             instance.set_session(session_id)
             
-            # Execute async chat method in sync context if key is active
             # Execute async chat method in sync context using LongCat
             openai_response = async_to_sync(instance.chat)(text=message)
-                logger.info(f"Phoenix ChatBot OpenAI success response: {openai_response}")
+            logger.info(f"Phoenix ChatBot OpenAI success response: {openai_response}")
         except Exception as e:
             logger.warning(f"Phoenix ChatBot instantiation/execution fallback: {e}")
 

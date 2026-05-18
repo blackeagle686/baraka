@@ -195,6 +195,18 @@ const api = {
             if (!res.ok) throw await res.json();
             return await res.json();
         },
+        postponeShopSettlement: async (token, orderId, shopId) => {
+            const res = await fetch(`${API_BASE}/orders/${orderId}/postpone_shop_settlement/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ shop_id: shopId })
+            });
+            if (!res.ok) throw await res.json();
+            return await res.json();
+        },
         confirmPaymentReceived: async (token, orderId, driverOtp) => {
             const res = await fetch(`${API_BASE}/orders/${orderId}/confirm_payment_received/`, {
                 method: 'POST',

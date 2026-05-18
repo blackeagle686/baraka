@@ -7,7 +7,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, rgba(50, 4, 4, 0.45) 0%, rgba(20, 2, 2, 0.45) 100%), url('../images/home2.jpg') no-repeat center center;
+    background: linear-gradient(135deg, rgba(50, 4, 4, 0.45) 0%, rgba(20, 2, 2, 0.45) 100%), url('../images/home2_low.jpg') no-repeat center center;
     background-size: cover;
     position: relative;
     overflow-y: auto;

@@ -20,7 +20,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(135deg, rgba(50, 4, 4, 0.494) 0%, rgba(20, 2, 2, 0.396) 100%), url('../images/village2.jpg');
+    background: linear-gradient(135deg, rgba(50, 4, 4, 0.494) 0%, rgba(20, 2, 2, 0.396) 100%), url('../images/village_low.jpg');
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;

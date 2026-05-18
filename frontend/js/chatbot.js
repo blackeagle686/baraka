@@ -51,7 +51,8 @@ function injectChatbotHTML() {
                 <div class="ai-chat-input-wrapper">
                     <form id="aiChatForm" class="d-flex gap-3 align-items-center" onsubmit="sendBarakaChatMessage(event)">
                         <input type="text" id="aiChatInput" class="form-control ai-chat-input" placeholder="اكتب رسالتك هنا..." required autocomplete="off">
-                        <button type="submit" class="btn btn-send-chat" id="aiChatSendBtn"><i class="bi bi-send-fill text-white fs-5"></i></button>
+                        <button type="button" class="btn btn-mic-chat" id="aiChatMicBtn" onclick="toggleChatbotMic()" title="تحدث بالصوت"><i class="bi bi-mic-fill fs-5"></i></button>
+                        <button type="submit" class="btn btn-send-chat" id="aiChatSendBtn" title="إرسال"><i class="bi bi-send-fill text-white fs-5"></i></button>
                     </form>
                 </div>
             </div>
@@ -168,6 +169,17 @@ window.sendBarakaChatMessage = async function(event) {
         
         const data = await response.json();
         
+        // Auto-play TTS audio if returned
+        if (data.audio_url) {
+            if (window.currentChatbotAudio) {
+                window.currentChatbotAudio.pause();
+            }
+            window.currentChatbotAudio = new Audio(data.audio_url);
+            window.currentChatbotAudio.play().catch(e => {
+                console.log("Audio autoplay blocked by browser policy, user needs interaction:", e);
+            });
+        }
+
         // Render Bot Message
         const botMsgDiv = document.createElement('div');
         botMsgDiv.className = 'chat-message bot-message align-self-flex-start animate-up';
@@ -176,7 +188,17 @@ window.sendBarakaChatMessage = async function(event) {
         // Simple markdown formatter for newlines and bold texts
         textContent = formatMarkdown(textContent);
         
-        botMsgDiv.innerHTML = `<div class="bot-text-wrapper">${textContent}</div>`;
+        // Append a speaker button if audio_url is available
+        const speakerHtml = data.audio_url 
+            ? `<button class="btn btn-sm btn-link p-0 text-marigold ms-2" onclick="replayChatbotAudio('${data.audio_url}')" title="إعادة تشغيل الصوت"><i class="bi bi-volume-up-fill fs-5"></i></button>`
+            : '';
+
+        botMsgDiv.innerHTML = `
+            <div class="bot-text-wrapper d-flex justify-content-between align-items-start gap-2">
+                <div class="flex-grow-1">${textContent}</div>
+                ${speakerHtml}
+            </div>
+        `;
         
         // If there are product recommendations, render them beautifully in a table
         if (data.products && data.products.length > 0) {
@@ -444,3 +466,87 @@ function formatMarkdown(text) {
     
     return text;
 }
+
+// ── Speech-to-Text & Text-to-Speech Voice Support ──
+let speechRecognitionInstance = null;
+let isSpeechRecording = false;
+
+window.replayChatbotAudio = function(url) {
+    if (window.currentChatbotAudio) {
+        window.currentChatbotAudio.pause();
+    }
+    window.currentChatbotAudio = new Audio(url);
+    window.currentChatbotAudio.play().catch(e => console.error("Failed to play audio:", e));
+};
+
+window.toggleChatbotMic = function() {
+    const micBtn = document.getElementById('aiChatMicBtn');
+    const input = document.getElementById('aiChatInput');
+    if (!micBtn || !input) return;
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+        if (window.showBarakaToast) {
+            window.showBarakaToast("عذراً، متصفحك الحالي لا يدعم خاصية التعرف على الصوت باللغة العربية.", "error", "bi-exclamation-triangle");
+        } else {
+            alert("عذراً، متصفحك الحالي لا يدعم خاصية التعرف على الصوت.");
+        }
+        return;
+    }
+
+    if (!speechRecognitionInstance) {
+        speechRecognitionInstance = new SpeechRecognition();
+        speechRecognitionInstance.lang = 'ar-EG'; // Egyptian Arabic
+        speechRecognitionInstance.continuous = true;
+        speechRecognitionInstance.interimResults = true;
+
+        speechRecognitionInstance.onstart = function() {
+            isSpeechRecording = true;
+            micBtn.classList.add('recording');
+            micBtn.innerHTML = '<i class="bi bi-mic-mute-fill fs-5"></i>';
+            input.placeholder = "تحدث الآن... أنا أستمع إليك 🎙️";
+        };
+
+        speechRecognitionInstance.onresult = function(event) {
+            let interimTranscript = '';
+            let finalTranscript = '';
+
+            for (let i = event.resultIndex; i < event.results.length; ++i) {
+                if (event.results[i].isFinal) {
+                    finalTranscript += event.results[i][0].transcript;
+                } else {
+                    interimTranscript += event.results[i][0].transcript;
+                }
+            }
+
+            // Real-time update in input box
+            input.value = finalTranscript || interimTranscript;
+        };
+
+        speechRecognitionInstance.onerror = function(event) {
+            console.error("Speech recognition error:", event.error);
+            stopSpeechRecording();
+        };
+
+        speechRecognitionInstance.onend = function() {
+            stopSpeechRecording();
+        };
+    }
+
+    if (isSpeechRecording) {
+        speechRecognitionInstance.stop();
+    } else {
+        speechRecognitionInstance.start();
+    }
+
+    function stopSpeechRecording() {
+        isSpeechRecording = false;
+        if (micBtn) {
+            micBtn.classList.remove('recording');
+            micBtn.innerHTML = '<i class="bi bi-mic-fill fs-5"></i>';
+        }
+        if (input) {
+            input.placeholder = "اكتب رسالتك هنا...";
+        }
+    }
+};

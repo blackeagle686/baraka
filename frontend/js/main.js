@@ -2,6 +2,8 @@ document.addEventListener('DOMContentLoaded', () => {
     renderHeader();
     renderFooter();
     checkAuth();
+    loadUserNotifications();
+    setInterval(loadUserNotifications, 30000); // Check notifications every 30 seconds
 });
 
 function renderHeader() {
@@ -46,9 +48,25 @@ function renderHeader() {
             profileLink = '/html/admin/dashboard.html';
         }
 
+        let notificationsBellHtml = '';
+        if (token) {
+            notificationsBellHtml = `
+                <div class="dropdown me-2 position-relative" id="notificationsDropdownWrapper" style="display: inline-block;">
+                    <button class="btn btn-link text-espresso p-1 text-decoration-none d-flex align-items-center justify-content-center position-relative dropdown-toggle no-caret" type="button" id="notifBellBtn" data-bs-toggle="dropdown" aria-expanded="false" style="cursor: pointer; border: none; background: none;">
+                        <i class="bi bi-bell fs-4 text-espresso"></i>
+                        <span class="badge bg-danger rounded-circle position-absolute top-0 start-100 translate-middle-y" id="notifCountBadge" style="font-size: 0.6rem; padding: 0.25em 0.5em; min-width: 1.5em; display: none;">0</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-4 p-2" aria-labelledby="notifBellBtn" id="notificationsListContainer" style="width: 320px; max-height: 400px; overflow-y: auto; background: var(--color-dune-light, #fbf7f0); direction: rtl; text-align: right; z-index: 1050; border: 1px solid rgba(201,153,151,0.15) !important;">
+                        <li class="p-2 text-center text-muted small">جاري تحميل الإشعارات...</li>
+                    </ul>
+                </div>
+            `;
+        }
+
         rightSideHtml += `
             <div class="d-flex align-items-center gap-2">
                 ${roleBadge}
+                ${notificationsBellHtml}
                 <div class="vr mx-2 text-muted opacity-25 d-none d-lg-block"></div>
                 <a href="${profileLink}" class="nav-link d-flex align-items-center gap-2 fw-bold text-espresso me-2" style="font-size: 0.95rem; color: var(--color-espresso) !important;">
                     <i class="bi bi-person fs-5 text-mesa"></i>
@@ -627,5 +645,114 @@ window.renderClientPagination = function(containerId, totalItems, currentPage, p
     `;
 
     container.innerHTML = html;
+};
+
+/* --- Notifications Engine --- */
+async function loadUserNotifications() {
+    const token = localStorage.getItem('access_token');
+    if (!token) return;
+
+    const notifCountBadge = document.getElementById('notifCountBadge');
+    const container = document.getElementById('notificationsListContainer');
+    if (!container) return;
+
+    try {
+        const notifs = await api.notifications.getAll(token);
+        const unreadCount = notifs.filter(n => !n.is_read).length;
+
+        // 1. Update Badge Count
+        if (unreadCount > 0) {
+            notifCountBadge.innerText = unreadCount;
+            notifCountBadge.style.display = 'inline-block';
+        } else {
+            notifCountBadge.style.display = 'none';
+        }
+
+        // 2. Render List items
+        if (notifs.length === 0) {
+            container.innerHTML = `<li class="p-3 text-center text-mesa small"><i class="bi bi-bell-slash d-block fs-3 mb-2 opacity-50"></i>مفيش إشعارات جديدة يا غالي</li>`;
+            return;
+        }
+
+        // Header with "Mark all as read"
+        let listHtml = `
+            <div class="d-flex justify-content-between align-items-center px-2 py-1 mb-2 border-bottom border-secondary border-opacity-10 pb-2">
+                <span class="fw-bold text-espresso small"><i class="bi bi-bell me-1 text-marigold"></i>الإشعارات</span>
+                ${unreadCount > 0 ? `<button class="btn btn-link btn-xs text-mesa p-0 text-decoration-none small fw-bold" onclick="markAllNotificationsRead()" style="font-size: 0.75rem;">قراءة الكل ✓</button>` : ''}
+            </div>
+        `;
+
+        notifs.forEach(notif => {
+            const timeStr = new Date(notif.created_at).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+            
+            let actionButton = '';
+            if (!notif.is_read) {
+                if (notif.notification_type === 'shop_open_alert') {
+                    actionButton = `<button class="btn btn-marigold btn-sm rounded-pill w-100 mt-2 fw-bold text-white shadow-sm" onclick="toggleShopStatusFromNotification(${notif.id}, ${notif.shop}, true)">افتح المحل دلوقتي 🏪</button>`;
+                } else if (notif.notification_type === 'shop_close_alert') {
+                    actionButton = `<button class="btn btn-dark btn-sm rounded-pill w-100 mt-2 fw-bold text-white shadow-sm" onclick="toggleShopStatusFromNotification(${notif.id}, ${notif.shop}, false)">اقفل المحل دلوقتي 🔒</button>`;
+                } else {
+                    actionButton = `<button class="btn btn-outline-mesa btn-sm rounded-pill w-100 mt-2 fw-bold" onclick="markNotificationRead(${notif.id})">تم القراءة ✓</button>`;
+                }
+            }
+
+            listHtml += `
+                <li class="p-2 mb-2 rounded-3 notification-item ${notif.is_read ? 'opacity-75' : 'bg-white shadow-xs border-start border-4 border-marigold'}" style="transition: all 0.2s; direction: rtl; text-align: right;">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <span class="fw-bold text-espresso" style="font-size: 0.85rem;">${notif.title}</span>
+                        <span class="text-muted" style="font-size: 0.65rem;">${timeStr}</span>
+                    </div>
+                    <p class="text-mesa m-0 mt-1 small" style="font-size: 0.8rem; line-height: 1.3;">${notif.message}</p>
+                    ${actionButton}
+                </li>
+            `;
+        });
+
+        container.innerHTML = listHtml;
+    } catch (error) {
+        console.error("Error loading user notifications:", error);
+    }
+}
+
+window.markNotificationRead = async function(notifId) {
+    const token = localStorage.getItem('access_token');
+    try {
+        await api.notifications.markRead(token, notifId);
+        loadUserNotifications();
+    } catch (error) {
+        console.error("Error marking notification read:", error);
+    }
+};
+
+window.markAllNotificationsRead = async function() {
+    const token = localStorage.getItem('access_token');
+    try {
+        await api.notifications.markAllRead(token);
+        loadUserNotifications();
+    } catch (error) {
+        console.error("Error marking all notifications read:", error);
+    }
+};
+
+window.toggleShopStatusFromNotification = async function(notifId, shopId, openStatus) {
+    const token = localStorage.getItem('access_token');
+    try {
+        const formData = new FormData();
+        formData.append('is_open', openStatus);
+        await api.shops.updateShop(token, shopId, formData);
+        
+        await api.notifications.markRead(token, notifId);
+        
+        showBarakaToast(openStatus ? 'تم فتح المحل بنجاح وتفعيل استقبال الطلبات! 🏪' : 'تم إغلاق المحل بنجاح! نتمنا لك وقتاً طيباً لترتاح. 🔒', 'success');
+        
+        loadUserNotifications();
+        
+        if (window.location.pathname.includes('/profile/shop.html') && typeof loadShopDetails === 'function') {
+            loadShopDetails();
+        }
+    } catch (error) {
+        console.error("Error toggling shop status from notification:", error);
+        showBarakaToast('عذراً، حدث خطأ أثناء تحديث حالة المحل.', 'danger');
+    }
 };
 

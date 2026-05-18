@@ -149,6 +149,8 @@ function populateShopForm(shop) {
     document.getElementById('shopLatitude').value = shop.latitude || '';
     document.getElementById('shopLongitude').value = shop.longitude || '';
     document.getElementById('shopDesc').value = shop.description || '';
+    document.getElementById('shopOpeningTime').value = shop.opening_time ? shop.opening_time.substring(0, 5) : '';
+    document.getElementById('shopClosingTime').value = shop.closing_time ? shop.closing_time.substring(0, 5) : '';
     document.getElementById('shopIsOpen').checked = shop.is_open;
     
     // Update sidebar brand text
@@ -198,6 +200,8 @@ async function handleShopSubmit() {
     if (lon) formData.append('longitude', lon);
 
     formData.append('description', document.getElementById('shopDesc').value);
+    formData.append('opening_time', document.getElementById('shopOpeningTime').value || '');
+    formData.append('closing_time', document.getElementById('shopClosingTime').value || '');
     formData.append('is_open', document.getElementById('shopIsOpen').checked);
     if (newShopImageFile) {
         formData.append('image', newShopImageFile);

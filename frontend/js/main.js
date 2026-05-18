@@ -40,7 +40,29 @@ function renderHeader() {
         let profileLink = '/html/profile/user.html';
 
         if (userRole === 'SHOP_OWNER') {
-            roleBadge = `<a href="/html/profile/shop.html" class="btn btn-marigold btn-sm rounded-pill fw-bold text-white px-3 py-1 me-2" style="font-size: 0.8rem;"><i class="bi bi-shop-window me-1"></i>إدارة محلي</a>`;
+            roleBadge = `
+                <div class="d-flex align-items-center gap-2 me-2">
+                    <a href="/html/profile/shop.html" class="btn btn-marigold btn-sm rounded-pill fw-bold text-white px-3 py-1.5 shadow-xs" style="font-size: 0.8rem;"><i class="bi bi-shop-window me-1"></i>إدارة محلي</a>
+                    
+                    <div class="d-flex align-items-center gap-1 bg-white p-1 rounded-pill border border-secondary border-opacity-10 shadow-xs" style="direction: rtl;">
+                        <style>
+                            .btn-check:checked + .header-toggle-btn.text-success {
+                                background-color: #d1e7dd !important;
+                                color: #0f5132 !important;
+                            }
+                            .btn-check:checked + .header-toggle-btn.text-danger {
+                                background-color: #f8d7da !important;
+                                color: #842029 !important;
+                            }
+                        </style>
+                        <input type="radio" class="btn-check" name="headerShopStatus" id="headerShopOpenRadio" autocomplete="off" onclick="toggleHeaderShopStatus(true)">
+                        <label class="btn btn-xs rounded-pill px-2.5 py-1 text-success border-0 header-toggle-btn" for="headerShopOpenRadio" style="font-size: 0.7rem; cursor: pointer; transition: all 0.2s;"><i class="bi bi-circle-fill text-success small me-1" style="font-size: 0.5rem;"></i>مفتوح</label>
+
+                        <input type="radio" class="btn-check" name="headerShopStatus" id="headerShopCloseRadio" autocomplete="off" onclick="toggleHeaderShopStatus(false)">
+                        <label class="btn btn-xs rounded-pill px-2.5 py-1 text-danger border-0 header-toggle-btn" for="headerShopCloseRadio" style="font-size: 0.7rem; cursor: pointer; transition: all 0.2s;"><i class="bi bi-circle-fill text-danger small me-1" style="font-size: 0.5rem;"></i>مغلق</label>
+                    </div>
+                </div>
+            `;
         } else if (userRole === 'DRIVER') {
             roleBadge = `<a href="/html/profile/driver.html" class="btn btn-success btn-sm rounded-pill fw-bold text-white px-3 py-1 me-2" style="font-size: 0.8rem;"><i class="bi bi-bicycle me-1"></i>لوحة الطيار</a>`;
         } else if (userRole === 'ADMIN') {
@@ -106,6 +128,10 @@ function renderHeader() {
         </div>
     </nav>
     `;
+
+    if (token && userRole === 'SHOP_OWNER') {
+        fetchMyShopHeaderStatus();
+    }
 }
 
 function renderFooter() {
@@ -753,6 +779,62 @@ window.toggleShopStatusFromNotification = async function(notifId, shopId, openSt
     } catch (error) {
         console.error("Error toggling shop status from notification:", error);
         showBarakaToast('عذراً، حدث خطأ أثناء تحديث حالة المحل.', 'danger');
+    }
+};
+
+/* --- Header Shop Status Engine --- */
+async function fetchMyShopHeaderStatus() {
+    const token = localStorage.getItem('access_token');
+    if (!token) return;
+
+    try {
+        const shop = await api.shops.getMyShop(token);
+        if (shop) {
+            window.myShopHeaderId = shop.id; // Save globally
+            const openRadio = document.getElementById('headerShopOpenRadio');
+            const closeRadio = document.getElementById('headerShopCloseRadio');
+            
+            if (openRadio && closeRadio) {
+                if (shop.is_open) {
+                    openRadio.checked = true;
+                } else {
+                    closeRadio.checked = true;
+                }
+            }
+        }
+    } catch (e) {
+        console.error("Error fetching shop status for header:", e);
+    }
+}
+
+window.toggleHeaderShopStatus = async function(openStatus) {
+    const token = localStorage.getItem('access_token');
+    const shopId = window.myShopHeaderId;
+    if (!token || !shopId) return;
+
+    try {
+        const formData = new FormData();
+        formData.append('is_open', openStatus);
+        await api.shops.updateShop(token, shopId, formData);
+        
+        showBarakaToast(openStatus ? 'تم فتح المحل بنجاح وتفعيل استقبال الطلبات! 🏪' : 'تم إغلاق المحل بنجاح! 🔒', 'success');
+        
+        // Sync setting switch if on shop profile page
+        const shopIsOpenSwitch = document.getElementById('shopIsOpen');
+        if (shopIsOpenSwitch) {
+            shopIsOpenSwitch.checked = openStatus;
+        }
+
+        // Update other views if on shop settings page
+        if (window.location.pathname.includes('/profile/shop.html') && typeof loadShopDetails === 'function') {
+            loadShopDetails();
+        }
+        
+        fetchMyShopHeaderStatus();
+    } catch (error) {
+        console.error("Error toggling shop status from header:", error);
+        showBarakaToast('عذراً، حدث خطأ أثناء تحديث حالة المحل.', 'danger');
+        fetchMyShopHeaderStatus(); // Revert check
     }
 };
 

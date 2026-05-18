@@ -131,6 +131,10 @@ function renderAllShops(shops) {
     const container = document.getElementById('allShopsList');
     if (!container) return;
 
+    // Update count pill in sidebar brand row
+    const countNum = document.getElementById('shopsCountNum');
+    if (countNum) countNum.innerText = shops.length;
+
     container.innerHTML = '';
     
     if (shops.length === 0) {
@@ -142,6 +146,9 @@ function renderAllShops(shops) {
             </div>`;
         return;
     }
+
+    // Section label
+    container.innerHTML = `<div class="list-section-label"><i class="bi bi-grid-3x3-gap me-1"></i>${shops.length} محل متاح</div>`;
 
     shops.forEach((shop, i) => {
         // Use real rating from backend database

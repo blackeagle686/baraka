@@ -315,7 +315,6 @@ class OrderViewSet(viewsets.ModelViewSet):
             'driver_phone': order.driver.phone if order.driver else None
         })
 
-
 # ==========================================
 # Admin Dashboard - All Orders View
 # ==========================================
@@ -323,7 +322,6 @@ from rest_framework import generics
 from rest_framework.pagination import PageNumberPagination
 from django.db.models import Q
 from users.permissions import IsAdminUserRole
-
 
 class AdminOrderPagination(PageNumberPagination):
     page_size = 15

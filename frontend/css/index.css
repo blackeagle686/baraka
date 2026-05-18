@@ -27,6 +27,7 @@
     z-index: 0;
     pointer-events: none;
     animation: background-brightness 5s infinite alternate ease-in-out;
+    animation: our-place 5s infinite alternate ease-in-out;
     will-change: filter;
 }
 

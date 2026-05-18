@@ -7,7 +7,6 @@ from .serializers import OrderSerializer
 from shops.models import Shop, Product
 from users.permissions import IsApprovedOrReadOnly
 
-
 class OrderViewSet(viewsets.ModelViewSet):
     serializer_class = OrderSerializer
     permission_classes = [permissions.IsAuthenticated, IsApprovedOrReadOnly]

@@ -209,6 +209,12 @@ class OrderViewSet(viewsets.ModelViewSet):
                 "detail": "عذراً، تم تعليق حسابك مؤقتاً لوجود مستحقات مالية متأخرة للمحلات لأكثر من 5 ساعات! يرجى تصفية الحساب مع المحل أولاً لتتمكن من استقبال طلبات جديدة."
             }, status=status.HTTP_400_BAD_REQUEST)
 
+        # Check for outstanding emergency custody returns
+        if Order.objects.filter(driver=request.user, status='PENDING_RETURN').exists():
+            return Response({
+                "detail": "عذراً، لا يمكنك قبول طلبات جديدة لوجود عهدة مرتجعة معلقة لم تقم بإرجاعها للمحلات بعد! يرجى إرجاع المنتجات للمحل وتأكيد الاستلام لتنشيط حسابك."
+            }, status=status.HTTP_400_BAD_REQUEST)
+
         order = self.get_object()
         if order.driver:
             return Response({"detail": "Order already has an assigned driver."}, status=status.HTTP_400_BAD_REQUEST)

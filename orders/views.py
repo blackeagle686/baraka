@@ -254,7 +254,7 @@ class OrderViewSet(viewsets.ModelViewSet):
         )
         
         serializer = DriverRatingSerializer(rating_obj)
-        return Response(serializer.data, status=status.HTTP_201_CREATED if created else status=status.HTTP_200_OK)
+        return Response(serializer.data, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
 
     @action(detail=True, methods=['get'], permission_classes=[permissions.IsAuthenticated])
     def driver_rating_status(self, request, pk=None):

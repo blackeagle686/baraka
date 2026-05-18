@@ -5,6 +5,8 @@ document.addEventListener('DOMContentLoaded', () => {
 let currentDriver = null;
 let driverMapInstance = null;
 let driverMarkerInstance = null;
+let currentRemainingCapacity = 5;
+let isAccountSuspended = false;
 
 async function initDriverDashboard() {
     const token = localStorage.getItem('access_token');
@@ -216,6 +218,21 @@ async function loadDriverOrders() {
 
         // 2. Active trips: assigned to this driver, not delivered/cancelled OR delivered but unpaid to shop
         const myActiveTrips = orders.filter(o => o.driver == currentDriver.id && (['ON_DELIVERY', 'ACCEPTED', 'PREPARING'].includes(o.status) || (o.status === 'DELIVERED' && !o.is_paid_to_shop)));
+        
+        // Calculate remaining capacity and suspension
+        const activeInTransitCount = myActiveTrips.filter(o => ['ON_DELIVERY', 'ACCEPTED', 'PREPARING'].includes(o.status)).length;
+        currentRemainingCapacity = Math.max(0, 5 - activeInTransitCount);
+        
+        const overdueDues = myActiveTrips.filter(o => {
+            if (o.status === 'DELIVERED' && !o.is_paid_to_shop) {
+                const pickedUpTime = o.picked_up_at ? new Date(o.picked_up_at).getTime() : new Date(o.created_at).getTime();
+                const elapsedHours = (Date.now() - pickedUpTime) / (1000 * 60 * 60);
+                return elapsedHours > 5;
+            }
+            return false;
+        });
+        isAccountSuspended = overdueDues.length > 0;
+        
         renderActiveTrips(myActiveTrips);
 
         // 3. Completed trips: assigned to this driver, status DELIVERED
@@ -519,9 +536,38 @@ function renderAvailableOrders(orders) {
                         </div>
                     </div>
 
-                    <button class="btn btn-primary rounded-pill w-100 py-3 fw-bold fs-5 shadow-sm mt-2" onclick="acceptCombinedDeliveryTrip('${orderIds}', '${priceInputId}')">
-                        <i class="bi bi-check2-circle me-1"></i>قبول وتأكيد الرحلة المجمعة
-                    </button>
+                    ${(() => {
+                        let capacityAlert = '';
+                        let isBtnDisabled = false;
+                        
+                        if (isAccountSuspended) {
+                            capacityAlert = `
+                                <div class="alert alert-danger py-2 rounded-4 text-center small mb-2 border-0 fw-bold animate-pulse">
+                                    🚫 حسابك معلق حالياً لوجود مستحقات مالية متأخرة لأكثر من 5 ساعات! يرجى سداد المحلات فوراً.
+                                </div>
+                            `;
+                            isBtnDisabled = true;
+                        } else if (group.orders.length > currentRemainingCapacity) {
+                            capacityAlert = `
+                                <div class="alert alert-warning py-2 rounded-4 text-center small mb-2 border-0 fw-bold">
+                                    ⚠️ عدد الطلبات (${group.orders.length}) يتجاوز سعتك المتبقية (${currentRemainingCapacity} طلبات). حد السعة: 5 طلبات نشطة.
+                                </div>
+                            `;
+                            isBtnDisabled = true;
+                        } else {
+                            capacityAlert = `
+                                <div class="alert alert-success py-2 rounded-4 text-center small mb-2 border-0 fw-bold" style="background-color: rgba(25, 135, 84, 0.08); color: #198754;">
+                                    🟢 متوافق مع سعتك المتبقية (متاح لك ${currentRemainingCapacity} طلبات).
+                                </div>
+                            `;
+                        }
+                        return `
+                            ${capacityAlert}
+                            <button class="btn btn-primary rounded-pill w-100 py-3 fw-bold fs-5 shadow-sm mt-2" onclick="acceptCombinedDeliveryTrip('${orderIds}', '${priceInputId}')" ${isBtnDisabled ? 'disabled' : ''}>
+                                <i class="bi bi-check2-circle me-1"></i>قبول وتأكيد الرحلة المجمعة
+                            </button>
+                        `;
+                    })()}
                 </div>
             </div>
         `;
@@ -618,16 +664,30 @@ function renderActiveTrips(trips) {
                         <span>خدمة التوصيل:</span>
                         <span>${moneyValue(trip.delivery_price)} ج.م</span>
                     </div>
-                    ${isDeliveredUnpaid ? `
-                        <div class="mt-2 p-2 bg-white rounded-3 border text-espresso text-center">
-                            <span class="small text-mesa d-block mb-1">رمز تصفية حساب هذا المحل:</span>
-                            <strong class="fs-5 text-success" style="font-family: monospace; letter-spacing: 4px;">${trip.driver_otp || '----'}</strong>
-                            <div id="qrcode-driver-${trip.id}" class="d-flex justify-content-center my-2"></div>
-                        </div>
-                        <button onclick="raiseDriverDispute(${trip.id})" class="btn btn-sm btn-outline-danger rounded-pill w-100 mt-1">
-                            <i class="bi bi-exclamation-octagon me-1"></i>نزاع مع هذا المحل
-                        </button>
-                    ` : ''}
+                    ${isDeliveredUnpaid ? (() => {
+                        const pickedUpTime = trip.picked_up_at ? new Date(trip.picked_up_at).getTime() : new Date(trip.created_at).getTime();
+                        const elapsedHours = (Date.now() - pickedUpTime) / (1000 * 60 * 60);
+                        const remainingHours = 5 - elapsedHours;
+                        let timerBadge = '';
+                        if (remainingHours <= 0) {
+                            timerBadge = `<div class="badge bg-danger text-white w-100 py-2 rounded-3 fw-bold mb-2 fs-7 animate-pulse"><i class="bi bi-exclamation-octagon-fill me-1"></i>متأخر لأكثر من 5 ساعات! حسابك معلق مؤقتاً ⚠️</div>`;
+                        } else {
+                            const remHrs = Math.floor(remainingHours);
+                            const remMins = Math.floor((remainingHours - remHrs) * 60);
+                            timerBadge = `<div class="badge bg-warning-subtle text-warning border border-warning-subtle w-100 py-2 rounded-3 fw-bold mb-2 fs-7"><i class="bi bi-clock-history me-1"></i>متبقي للتسوية: ${remHrs} ساعة و ${remMins} دقيقة ⏳</div>`;
+                        }
+                        return `
+                            <div class="mt-2 p-2 bg-white rounded-3 border text-espresso text-center">
+                                ${timerBadge}
+                                <span class="small text-mesa d-block mb-1">رمز تصفية حساب هذا المحل:</span>
+                                <strong class="fs-5 text-success" style="font-family: monospace; letter-spacing: 4px;">${trip.driver_otp || '----'}</strong>
+                                <div id="qrcode-driver-${trip.id}" class="d-flex justify-content-center my-2"></div>
+                            </div>
+                            <button onclick="raiseDriverDispute(${trip.id})" class="btn btn-sm btn-outline-danger rounded-pill w-100 mt-1">
+                                <i class="bi bi-exclamation-octagon me-1"></i>نزاع مع هذا المحل
+                            </button>
+                        `;
+                    })() : ''}
                 </div>
             `;
         }).join('');

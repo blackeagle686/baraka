@@ -42,7 +42,8 @@ class Product(models.Model):
 
 class ShopRating(models.Model):
     shop = models.ForeignKey(Shop, on_delete=models.CASCADE, related_name='ratings')
-    customer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='shop_ratings')
+    customer = models.ForeignKey(settings.AUTH_USER_MODEL,
+     on_delete=models.CASCADE, related_name='shop_ratings')
     rating = models.PositiveSmallIntegerField() # 1 to 5
     review = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)

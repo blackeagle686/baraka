@@ -36,6 +36,62 @@ class ShopViewSet(viewsets.ModelViewSet):
             return Response(serializer.data)
         return Response({'detail': 'No shop found.'}, status=status.HTTP_404_NOT_FOUND)
 
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
+    def rate(self, request, pk=None):
+        shop = self.get_object()
+        user = request.user
+        rating_val = request.data.get('rating')
+        review_val = request.data.get('review', '')
+
+        # Check if rating value is correct
+        try:
+            rating_val = int(rating_val)
+            if rating_val < 1 or rating_val > 5:
+                raise ValueError
+        except (TypeError, ValueError):
+            return Response({"detail": "Rating must be an integer between 1 and 5."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Check if the user has a completed order from this shop
+        from orders.models import Order, OrderStatus
+        has_bought = Order.objects.filter(customer=user, shop=shop, status=OrderStatus.DELIVERED).exists()
+        if not has_bought:
+            return Response(
+                {"detail": "Only customers who have successfully bought from this shop can rate it."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        from .models import ShopRating
+        from .serializers import ShopRatingSerializer
+        
+        # Create or update rating
+        rating_obj, created = ShopRating.objects.update_or_create(
+            shop=shop,
+            customer=user,
+            defaults={'rating': rating_val, 'review': review_val}
+        )
+        
+        serializer = ShopRatingSerializer(rating_obj)
+        return Response(serializer.data, status=status.HTTP_201_CREATED if created else status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['get'], permission_classes=[permissions.IsAuthenticated])
+    def rating_status(self, request, pk=None):
+        shop = self.get_object()
+        user = request.user
+        from orders.models import Order, OrderStatus
+        has_bought = Order.objects.filter(customer=user, shop=shop, status=OrderStatus.DELIVERED).exists()
+        
+        from .models import ShopRating
+        existing_rating = ShopRating.objects.filter(shop=shop, customer=user).first()
+        existing_data = {
+            'rating': existing_rating.rating,
+            'review': existing_rating.review
+        } if existing_rating else None
+
+        return Response({
+            'can_rate': has_bought,
+            'existing_rating': existing_data
+        })
+
 class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer

@@ -335,38 +335,109 @@ class OrderViewSet(viewsets.ModelViewSet):
             
         reason = request.data.get('reason', 'ظرف طارئ / عطل بالمركبة')
         
-        # Reset driver, picked_up_at, and status
+        # Determine if driver already took possession of the items
+        if order.status == 'ON_DELIVERY':
+            # Driver has the products! Set status to PENDING_RETURN. Keep driver assigned so we know who has it.
+            order.status = 'PENDING_RETURN'
+            order.save()
+            
+            # Notify all unique shop owners involved that they must receive their returned items
+            unique_shops = set(item.product.shop for item in order.items.select_related('product__shop').all() if item.product and item.product.shop)
+            for s in unique_shops:
+                Notification.objects.create(
+                    user=s.owner,
+                    shop=s,
+                    title="🚨 مرتجع عهدة طوارئ معلق",
+                    message=(
+                        f"أبلغ الطيار {request.user.phone} عن حالة طارئة ({reason}) بعد استلام المنتجات. "
+                        f"المنتجات حالياً في حوزة المندوب وهو مطالب بإرجاعها إليك فوراً. يرجى تأكيد الاستلام فور استلامها لتسوية حسابه."
+                    ),
+                    notification_type='driver_emergency_returned_pending'
+                )
+            
+            return Response({
+                "status": "PENDING_RETURN",
+                "detail": "تم تسجيل الحالة الطارئة. نظراً لأنك استلمت المنتجات بالفعل، تم تعليق حسابك مؤقتاً حتى تقوم بإرجاع المنتجات للمحلات وتأكيد استلامهم للعهدة."
+            })
+        else:
+            # Driver has NOT picked up the products yet! Safely release the order back to PENDING.
+            order.driver = None
+            order.picked_up_at = None
+            order.status = OrderStatus.PENDING
+            order.save()
+            
+            # Notify all unique shop owners involved
+            unique_shops = set(item.product.shop for item in order.items.select_related('product__shop').all() if item.product and item.product.shop)
+            for s in unique_shops:
+                Notification.objects.create(
+                    user=s.owner,
+                    shop=s,
+                    title="🚨 إلغاء توصيل الطلب لحالة طارئة",
+                    message=(
+                        f"اعتذر الطيار {request.user.phone} عن توصيل طلبك #{order.id} بسبب: ({reason}). "
+                        f"تم إرجاع الطلب فوراً للوحة الطلبات المتاحة للبحث عن طيار بديل."
+                    ),
+                    notification_type='driver_emergency_cancelled'
+                )
+                
+            # Notify the customer
+            Notification.objects.create(
+                user=order.customer,
+                title="⏳ جاري البحث عن طيار بديل لطلبك",
+                message=(
+                    f"نعتذر منك، الطيار المكلف بطلبك #{order.id} واجه ظرفاً طارئاً يمنعه من إكمال الرحلة. "
+                    f"تم إرجاع طلبك فوراً للبحث عن طيار آخر للتوصيل بأسرع وقت ممكن!"
+                ),
+                notification_type='driver_emergency_cancelled'
+            )
+            
+            return Response({
+                "status": "PENDING",
+                "detail": "تم إبلاغ النظام بالحالة الطارئة وإرجاع الطلب للوحة الطيارين بنجاح."
+            })
+
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
+    def confirm_emergency_returned(self, request, pk=None):
+        order = self.get_object()
+        
+        # Verify if the requesting user is a shop owner involved in this order
+        is_shop_owner = order.items.filter(product__shop__owner=request.user).exists()
+        if not is_shop_owner and not request.user.is_staff:
+            return Response({"detail": "Not authorized to confirm return receipt for this order."}, status=status.HTTP_403_FORBIDDEN)
+            
+        if order.status != 'PENDING_RETURN':
+            return Response({"detail": "هذا الطلب ليس بانتظار مرتجع طوارئ حالياً."}, status=status.HTTP_400_BAD_REQUEST)
+            
+        # Reset the order so a new driver can accept it!
+        old_driver = order.driver
         order.driver = None
         order.picked_up_at = None
         order.status = OrderStatus.PENDING
         order.save()
         
-        # Notify all unique shop owners involved
-        unique_shops = set(item.product.shop for item in order.items.select_related('product__shop').all() if item.product and item.product.shop)
-        for s in unique_shops:
+        # Notify the driver that the shop owner confirmed receipt and their account has been reactivated!
+        if old_driver:
             Notification.objects.create(
-                user=s.owner,
-                shop=s,
-                title="🚨 إلغاء توصيل الطلب لحالة طارئة",
+                user=old_driver,
+                title="✅ تم تسوية العهدة بنجاح",
                 message=(
-                    f"اعتذر الطيار {request.user.phone} عن توصيل طلبك #{order.id} بسبب: ({reason}). "
-                    f"تم إرجاع الطلب فوراً للوحة الطلبات المتاحة للبحث عن طيار بديل."
+                    f"أكد صاحب المحل استلام المنتجات المرتجعة للطلب #{order.id}. "
+                    f"تمت تسوية عهدتك وتنشيط حسابك لتلقي طلبات جديدة بنجاح! سلامتك تهمنا. ❤️"
                 ),
-                notification_type='driver_emergency_cancelled'
+                notification_type='driver_emergency_returned_confirmed'
             )
             
-        # Notify the customer
+        # Notify the customer that the order is back in queue
         Notification.objects.create(
             user=order.customer,
             title="⏳ جاري البحث عن طيار بديل لطلبك",
             message=(
-                f"نعتذر منك، الطيار المكلف بطلبك #{order.id} واجه ظرفاً طارئاً يمنعه من إكمال الرحلة. "
-                f"تم إرجاع طلبك فوراً للبحث عن طيار آخر للتوصيل بأسرع وقت ممكن!"
+                f"تمت إعادة جدولة طلبك #{order.id} للبحث عن طيار آخر للتوصيل بأسرع وقت ممكن! شكراً لصبرك."
             ),
             notification_type='driver_emergency_cancelled'
         )
         
-        return Response({"detail": "تم إبلاغ النظام بالحالة الطارئة وإرجاع الطلب للوحة الطيارين بنجاح."})
+        return Response({"detail": "تم تأكيد استلام المنتجات المرتجعة وإعادة طرح الطلب للطيارين بنجاح."})
 
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
     def rate_driver(self, request, pk=None):

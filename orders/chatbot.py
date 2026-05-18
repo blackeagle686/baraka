@@ -20,14 +20,29 @@ class ChatbotView(APIView):
             return Response({"detail": "المسج مطلوب"}, status=status.HTTP_400_BAD_REQUEST)
 
         # 1. Initialize Phoenix Chatbot core builder to demonstrate framework usage
+        openai_response = None
         try:
-            bot = ChatBot(local=True).with_system_prompt(
+            import os
+            from asgiref.sync import async_to_sync
+            
+            # Switch to remote OpenAI mode using configuration parameters
+            openai_key = os.environ.get("OPENAI_API_KEY", "")
+            if not openai_key:
+                openai_key = "dummy_openai_key_for_testing"
+                
+            bot = ChatBot(local=False).with_openai(api_key=openai_key).with_system_prompt(
                 "أنت مساعد بركة الذكي لمساعدة المستخدمين في شراء الخضروات والمنتجات وتأكيد الطلبات."
             )
             # Build chatbot instance
             instance = bot.build()
+            instance.set_session(session_id)
+            
+            # Execute async chat method in sync context if key is active
+            if openai_key != "dummy_openai_key_for_testing":
+                openai_response = async_to_sync(instance.chat)(text=message)
+                logger.info(f"Phoenix ChatBot OpenAI success response: {openai_response}")
         except Exception as e:
-            logger.warning(f"Phoenix ChatBot instantiation fallback: {e}")
+            logger.warning(f"Phoenix ChatBot instantiation/execution fallback: {e}")
 
         # 2. Advanced Intent Parsing Engine (Arabic Natural Language & eCommerce Logic)
         message_lower = message.lower()
@@ -136,15 +151,21 @@ class ChatbotView(APIView):
                     response_text += "\nاكتب لي المنتج مع الكمية لإضافته للسلة فوراً! (مثال: 'أضف 2 كيلو تفاح')."
                     action = {"type": "RECOMMEND_PRODUCTS"}
                 else:
-                    response_text = (
-                        f"لم أجد منتجات تطابق (**{clean_search}**) حالياً في قاعدة البيانات. 🥺\n"
-                        "هل تريد أن أبحث لك عن شيء آخر؟"
-                    )
+                    if openai_response:
+                        response_text = openai_response
+                    else:
+                        response_text = (
+                            f"لم أجد منتجات تطابق (**{clean_search}**) حالياً في قاعدة البيانات. 🥺\n"
+                            "هل تريد أن أبحث لك عن شيء آخر؟"
+                        )
             else:
-                response_text = (
-                    "أنا مساعد بركة الذكي! 🤖🍎 كيف يمكنني مساعدتك اليوم؟\n"
-                    "اكتب لي ما تريد البحث عنه، مثل: 'أبحث عن خضروات طازجة' أو 'أسعار الفواكه'."
-                )
+                if openai_response:
+                    response_text = openai_response
+                else:
+                    response_text = (
+                        "أنا مساعد بركة الذكي! 🤖🍎 كيف يمكنني مساعدتك اليوم؟\n"
+                        "اكتب لي ما تريد البحث عنه، مثل: 'أبحث عن خضروات طازجة' أو 'أسعار الفواكه'."
+                    )
 
         return Response({
             "response": response_text,

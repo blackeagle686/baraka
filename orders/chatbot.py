@@ -272,27 +272,39 @@ class ChatbotView(APIView):
                 response_data = {"response": text, "action": action, "products": prods}
             # Product not found — fall through to LLM for a helpful answer
 
-        action = None
-        try:
-            completion = _client.chat.completions.create(
-                model="LongCat-Flash-Lite",
-                messages=[
-                    {"role": "system", "content": SYSTEM_PROMPT},
-                    {"role": "user", "content": f"بيانات المنتجات:\n{db_context}\n\nسؤال المستخدم: {message}"},
-                ],
-                max_tokens=1000,
-            )
-            response_text = completion.choices[0].message.content.strip()
-            if products_data:
-                action = {"type": "RECOMMEND_PRODUCTS"}
-        except Exception as e:
-            logger.warning(f"LongCat call failed: {e}")
-            if products_data:
-                response_text = f"وجدت {len(products_data)} منتج! 🔍✨\n"
-                for i, p in enumerate(products_data[:5], 1):
-                    response_text += f"{i}. **{p['name']}** — {p['price']} ج.م في ({p['shop_name']})\n"
-                action = {"type": "RECOMMEND_PRODUCTS"}
-            else:
-                response_text = "عذراً، لم أجد منتجات تطابق بحثك حالياً. جرب كلمة أخرى! 🥺"
+        if not response_data:
+            # ── Layer 2: LLM with real database context ──
+            db_context, products_data = _build_db_context(message, request.user, cart_data)
 
-        return Response({"response": response_text, "action": action, "products": products_data})
+            response_text = ""
+            action = None
+            try:
+                completion = _client.chat.completions.create(
+                    model="LongCat-Flash-Lite",
+                    messages=[
+                        {"role": "system", "content": SYSTEM_PROMPT},
+                        {"role": "user", "content": f"بيانات المنتجات:\n{db_context}\n\nسؤال المستخدم: {message}"},
+                    ],
+                    max_tokens=1000,
+                )
+                response_text = completion.choices[0].message.content.strip()
+                if products_data:
+                    action = {"type": "RECOMMEND_PRODUCTS"}
+            except Exception as e:
+                logger.warning(f"LongCat call failed: {e}")
+                if products_data:
+                    response_text = f"وجدت {len(products_data)} منتج! 🔍✨\n"
+                    for i, p in enumerate(products_data[:5], 1):
+                        response_text += f"{i}. **{p['name']}** — {p['price']} ج.م في ({p['shop_name']})\n"
+                    action = {"type": "RECOMMEND_PRODUCTS"}
+                else:
+                    response_text = "عذراً، لم أجد منتجات تطابق بحثك حالياً. جرب كلمة أخرى! 🥺"
+
+            response_data = {"response": response_text, "action": action, "products": products_data}
+
+        # Generate Audio
+        audio_url = _generate_tts_audio(response_data.get("response", ""))
+        if audio_url:
+            response_data["audio_url"] = audio_url
+
+        return Response(response_data)

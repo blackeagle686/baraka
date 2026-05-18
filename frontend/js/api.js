@@ -292,5 +292,30 @@ const api = {
             if (!res.ok) throw await res.json();
             return await res.json();
         }
+    },
+    notifications: {
+        getAll: async (token) => {
+            const res = await fetch(`${API_BASE}/notifications/`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!res.ok) throw await res.json();
+            return await res.json();
+        },
+        markRead: async (token, id) => {
+            const res = await fetch(`${API_BASE}/notifications/${id}/mark_read/`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!res.ok) throw await res.json();
+            return await res.json();
+        },
+        markAllRead: async (token) => {
+            const res = await fetch(`${API_BASE}/notifications/mark_all_read/`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!res.ok) throw await res.json();
+            return await res.json();
+        }
     }
 };

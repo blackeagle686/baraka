@@ -53,6 +53,25 @@ const api = {
             if (!res.ok) throw await res.json();
             return await res.json();
         },
+        getRatingStatus: async (token, id) => {
+            const res = await fetch(`${API_BASE}/shops/${id}/rating_status/`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!res.ok) throw await res.json();
+            return await res.json();
+        },
+        rateShop: async (token, id, rating, review = '') => {
+            const res = await fetch(`${API_BASE}/shops/${id}/rate/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ rating, review })
+            });
+            if (!res.ok) throw await res.json();
+            return await res.json();
+        },
         getProducts: async (shopId) => {
             const res = await fetch(`${API_BASE}/products/?shop_id=${shopId}`);
             if (!res.ok) throw await res.json();

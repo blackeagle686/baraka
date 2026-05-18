@@ -681,24 +681,31 @@ function renderShopOrders(orders) {
                         <i class="bi bi-exclamation-octagon me-1"></i>الطلب قيد النزاع والمراجعة بواسطة إدارة بركة للفصل بين الطرفين.
                     </div>
                 `;
-            } else if (!order.is_paid_to_shop) {
-                actionsHtml = `
-                    <div class="d-flex flex-column gap-2 mt-2">
-                        <span class="text-danger small fw-bold"><i class="bi bi-exclamation-circle-fill me-1"></i>الطيار استلم المبلغ ولم يقم بتصفيته معك بعد!</span>
-                        <div class="d-flex gap-2">
-                            <button onclick="confirmShopPaymentReceived(${order.id}, ${order.total_price})" class="btn btn-sm btn-success rounded-pill px-3 fw-bold text-white shadow-sm flex-grow-1">
-                                <i class="bi bi-cash me-1"></i>تأكيد وتصفية الحساب
-                            </button>
-                            <button onclick="raiseOrderDispute(${order.id})" class="btn btn-sm btn-outline-danger rounded-pill px-2">
-                                <i class="bi bi-exclamation-octagon"></i>نزاع
-                            </button>
-                        </div>
-                    </div>
-                `;
             } else {
-                actionsHtml = `
-                    <span class="badge bg-success-subtle text-success rounded-pill px-3 py-2 small fw-bold"><i class="bi bi-wallet2 me-1"></i>تم استلام وتصفية الحساب</span>
-                `;
+                const hasPaidThisShop = order.paid_shops && order.paid_shops.split(',').includes(String(currentShopId));
+                if (hasPaidThisShop) {
+                    actionsHtml = `
+                        <span class="badge bg-success-subtle text-success rounded-pill px-3 py-2 small fw-bold"><i class="bi bi-wallet2 me-1"></i>تم استلام وتصفية الحساب</span>
+                    `;
+                } else if (!order.is_paid_to_shop) {
+                    actionsHtml = `
+                        <div class="d-flex flex-column gap-2 mt-2">
+                            <span class="text-danger small fw-bold"><i class="bi bi-exclamation-circle-fill me-1"></i>الطيار استلم المبلغ ولم يقم بتصفيته معك بعد!</span>
+                            <div class="d-flex gap-2">
+                                <button onclick="confirmShopPaymentReceived(${order.id}, ${order.total_price})" class="btn btn-sm btn-success rounded-pill px-3 fw-bold text-white shadow-sm flex-grow-1">
+                                    <i class="bi bi-cash me-1"></i>تأكيد وتصفية الحساب
+                                </button>
+                                <button onclick="raiseOrderDispute(${order.id})" class="btn btn-sm btn-outline-danger rounded-pill px-2">
+                                    <i class="bi bi-exclamation-octagon"></i>نزاع
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    actionsHtml = `
+                        <span class="badge bg-success-subtle text-success rounded-pill px-3 py-2 small fw-bold"><i class="bi bi-wallet2 me-1"></i>تم استلام وتصفية الحساب</span>
+                    `;
+                }
             }
         } else {
             actionsHtml = `<span class="text-muted small"><i class="bi bi-info-circle me-1"></i>لا توجد إجراءات معلقة</span>`;

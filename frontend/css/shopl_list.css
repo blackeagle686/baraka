@@ -278,21 +278,36 @@
 
 /* --- Responsive Layout Override --- */
 @media (max-width: 991.98px) {
+    body.overflow-hidden {
+        overflow: hidden !important;
+    }
     .shops-split-container {
-        flex-direction: column;
-        position: relative;
+        flex-direction: column !important;
+        position: relative !important;
+        height: calc(100vh - 65px) !important;
+        overflow: hidden !important;
     }
     .shops-sidebar {
         width: 100% !important;
         height: 100% !important;
-        max-height: none;
+        max-height: none !important;
         display: flex !important;
+        overflow: hidden !important;
+    }
+    .shops-list-scroll {
+        flex-grow: 1 !important;
+        overflow-y: auto !important;
+        height: auto !important;
     }
     .shops-map-wrapper {
         width: 100% !important;
         height: 100% !important;
-        min-height: none;
+        min-height: 100% !important;
         display: none; /* Hidden by default on mobile, toggled via JS */
+    }
+    #shopsDirectoryMap {
+        width: 100% !important;
+        height: 100% !important;
     }
     /* Set Leaflet zoom control layout for mobile */
     .leaflet-control-zoom {

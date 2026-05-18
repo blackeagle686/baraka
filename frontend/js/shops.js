@@ -144,8 +144,8 @@ function renderAllShops(shops) {
     }
 
     shops.forEach((shop, i) => {
-        // Calculate a realistic rating based on shop id
-        const rating = (4.4 + (shop.id % 6) * 0.1).toFixed(1);
+        // Use real rating from backend database
+        const rating = shop.average_rating !== undefined ? Number(shop.average_rating).toFixed(1) : '0.0';
         
         // Map category descriptions nicely to Egyptian Arabic
         let category = 'محل في قريتك';

@@ -664,17 +664,42 @@ function renderActiveTrips(trips) {
                         
                         const paidShopsList = trip.paid_shops ? trip.paid_shops.split(',') : [];
                         const unpaidShops = trip.shops_details ? trip.shops_details.filter(s => !paidShopsList.includes(String(s.id))) : [];
-                        const unpaidShopsNames = unpaidShops.map(s => s.name).join(' ، ') || (trip.shop_details ? trip.shop_details.name : 'المحل');
+                        
+                        let shopOtpsHtml = '';
+                        if (unpaidShops.length > 0) {
+                            shopOtpsHtml = unpaidShops.map(s => {
+                                const shopOtp = (trip.shop_otps_map && trip.shop_otps_map[String(s.id)]) || trip.driver_otp || '----';
+                                return `
+                                    <div class="d-flex justify-content-between align-items-center bg-light p-2.5 rounded-3 mb-2 border" style="border-color: rgba(201,153,151,0.08) !important;">
+                                        <div>
+                                            <span class="fw-bold text-espresso small"><i class="bi bi-shop text-marigold me-1"></i>${s.name}:</span>
+                                        </div>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <strong class="fs-6 text-success" style="font-family: monospace; letter-spacing: 2px;">${shopOtp}</strong>
+                                            <button class="btn btn-sm btn-outline-success p-1 border-0" onclick="event.stopPropagation(); showQrCodeForShopOtp('${trip.id}', '${s.name}', '${shopOtp}')" title="عرض رمز QR">
+                                                <i class="bi bi-qr-code fs-6"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('');
+                        } else {
+                            shopOtpsHtml = `
+                                <span class="small text-mesa d-block mb-1">رمز تصفية الحساب العام:</span>
+                                <strong class="fs-5 text-success" style="font-family: monospace; letter-spacing: 4px;">${trip.driver_otp || '----'}</strong>
+                            `;
+                        }
                         
                         return `
                             <div class="mt-2 p-2 bg-white rounded-3 border text-espresso text-center">
                                 ${timerBadge}
-                                <div class="alert alert-warning py-1.5 rounded-3 mb-2 border-0 small text-center fw-bold text- espresso">
-                                    المحلات المتبقية للسداد: <span class="text-danger">${unpaidShopsNames}</span>
+                                <div class="alert alert-warning py-1.5 rounded-3 mb-2 border-0 small text-center fw-bold text-espresso">
+                                    المحلات المتبقية لتسوية الكاش:
                                 </div>
-                                <span class="small text-mesa d-block mb-1">رمز تصفية حساب هذا المحل:</span>
-                                <strong class="fs-5 text-success" style="font-family: monospace; letter-spacing: 4px;">${trip.driver_otp || '----'}</strong>
-                                <div id="qrcode-driver-${trip.id}" class="d-flex justify-content-center my-2"></div>
+                                <div class="text-start">
+                                    ${shopOtpsHtml}
+                                </div>
+                                <div id="qrcode-driver-${trip.id}" class="d-flex justify-content-center my-2 d-none"></div>
                             </div>
                             <button onclick="raiseDriverDispute(${trip.id})" class="btn btn-sm btn-outline-danger rounded-pill w-100 mt-1">
                                 <i class="bi bi-exclamation-octagon me-1"></i>نزاع مع هذا المحل
@@ -909,4 +934,54 @@ window.reportTripEmergency = async function(orderIdsText) {
     } catch (error) {
         await showBarakaAlert('حدث خطأ أثناء الإبلاغ: ' + (error.detail || JSON.stringify(error)), 'warning', 'خطأ ⚠️');
     }
+}
+
+
+// ==========================================
+// Shop Settlement OTP QR Code Modal
+// ==========================================
+window.showQrCodeForShopOtp = function(tripId, shopName, shopOtp) {
+    const modalHtml = `
+        <div class="modal fade" id="shopOtpQrModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-sm">
+                <div class="modal-content border-0 rounded-4" style="background-color: var(--color-dune-light);">
+                    <div class="modal-header border-0 pb-0 justify-content-between" style="direction: rtl;">
+                        <h6 class="modal-title fw-bold text-espresso"><i class="bi bi-qr-code text-marigold me-1"></i>رمز QR لمحل ${shopName}</h6>
+                        <button type="button" class="btn-close ms-0 me-auto" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4 text-center">
+                        <div id="shop-otp-qrcode-container" class="d-flex justify-content-center mb-3"></div>
+                        <div class="fw-bold text-espresso fs-5 mb-1" style="font-family: monospace; letter-spacing: 4px;">${shopOtp}</div>
+                        <small class="text-muted">دع صاحب المحل يمسح الكود لتسوية الكاش تلقائياً 💰</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    const existing = document.getElementById('shopOtpQrModal');
+    if (existing) {
+        const bsModal = bootstrap.Modal.getInstance(existing);
+        if (bsModal) bsModal.dispose();
+        existing.remove();
+    }
+    
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    const modalEl = document.getElementById('shopOtpQrModal');
+    const modal = new bootstrap.Modal(modalEl);
+    modal.show();
+    
+    setTimeout(() => {
+        const container = document.getElementById('shop-otp-qrcode-container');
+        if (container && typeof QRCode !== 'undefined') {
+            new QRCode(container, {
+                text: shopOtp,
+                width: 160,
+                height: 160,
+                colorDark : "#198754",
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.H
+            });
+        }
+    }, 150);
 }

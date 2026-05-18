@@ -1,10 +1,12 @@
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from django.db import transaction
 from .models import Order, OrderItem, OrderStatus
 from .serializers import OrderSerializer
 from shops.models import Shop, Product
 from users.permissions import IsApprovedOrReadOnly
+
 
 class OrderViewSet(viewsets.ModelViewSet):
     serializer_class = OrderSerializer
@@ -16,7 +18,7 @@ class OrderViewSet(viewsets.ModelViewSet):
         base_qs = Order.objects.select_related(
             'customer', 'driver', 'shop', 'shop__owner'
         ).prefetch_related(
-            'items', 'items__product', 'items__product__shop'
+            'items', 'items__product'
         ).order_by('-created_at')
 
         # Admins have their own dedicated AdminOrderListView (/api/admin/orders/) for global access.
@@ -41,57 +43,81 @@ class OrderViewSet(viewsets.ModelViewSet):
         shop_id = data.get('shop')
         address = data.get('address')
         items_data = data.get('items', [])
-        
+
         if not shop_id or not items_data:
             return Response({"detail": "Missing shop or items data."}, status=status.HTTP_400_BAD_REQUEST)
-        
+
         try:
             shop = Shop.objects.get(id=shop_id)
         except Shop.DoesNotExist:
             return Response({"detail": "Shop not found."}, status=status.HTTP_404_NOT_FOUND)
-            
+
+        # ── 1) BULK fetch all products in ONE query (replaces N queries in loop) ──
+        product_ids = [it['product'] for it in items_data]
+        products_map = {
+            p.id: p for p in Product.objects.filter(id__in=product_ids, shop=shop)
+        }
+
+        # ── 2) Validate all items and compute totals (zero DB hits) ──
         total_price = 0
         order_items = []
-        
+
         for it in items_data:
-            try:
-                prod = Product.objects.get(id=it['product'], shop=shop)
-            except Product.DoesNotExist:
-                return Response({"detail": f"Product {it['product']} not found in this shop."}, status=status.HTTP_400_BAD_REQUEST)
-            
+            prod = products_map.get(int(it['product']))
+            if not prod:
+                return Response(
+                    {"detail": f"Product {it['product']} not found in this shop."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
             qty = int(it.get('quantity', 1))
             if qty > prod.quantity:
-                return Response({"detail": f"المنتج '{prod.name}' لا يحتوي على كمية كافية في المخزن! المتاح حالياً: {prod.quantity} فقط."}, status=status.HTTP_400_BAD_REQUEST)
-            
+                return Response(
+                    {"detail": f"المنتج '{prod.name}' لا يحتوي على كمية كافية في المخزن! المتاح حالياً: {prod.quantity} فقط."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
             price = prod.price
             total_price += price * qty
             order_items.append((prod, qty, price))
-            
-        order = Order.objects.create(
-            customer=request.user,
-            shop=shop,
-            total_price=total_price,
-            address=address or request.user.location or '',
-            status=OrderStatus.PENDING
-        )
-        
-        for prod, qty, price in order_items:
-            OrderItem.objects.create(
-                order=order,
-                product=prod,
-                quantity=qty,
-                price=price
+
+        # ── 3) Atomic transaction: single DB commit for order + items + stock ──
+        with transaction.atomic():
+            order = Order.objects.create(
+                customer=request.user,
+                shop=shop,
+                total_price=total_price,
+                address=address or request.user.location or '',
+                status=OrderStatus.PENDING,
             )
-            # Deduct stock and save
-            prod.quantity -= qty
-            if prod.quantity == 0:
-                prod.available = False
-            prod.save()
-            
-        # High-Performance Asynchronous Dispatch: Alert nearby drivers in the background
+
+            # Bulk insert all OrderItems in ONE query (replaces N inserts)
+            OrderItem.objects.bulk_create([
+                OrderItem(order=order, product=prod, quantity=qty, price=price)
+                for prod, qty, price in order_items
+            ])
+
+            # Bulk update all product stock in ONE query (replaces N updates)
+            products_to_update = []
+            for prod, qty, price in order_items:
+                prod.quantity -= qty
+                if prod.quantity == 0:
+                    prod.available = False
+                products_to_update.append(prod)
+
+            Product.objects.bulk_update(products_to_update, ['quantity', 'available'])
+
+        # ── 4) Async driver notification (non-blocking) ──
         from .tasks import send_order_notifications_to_drivers
         send_order_notifications_to_drivers.delay(order.id)
-            
+
+        # ── 5) Re-fetch with joins so the serializer doesn't trigger lazy queries ──
+        order = Order.objects.select_related(
+            'customer', 'driver', 'shop', 'shop__owner'
+        ).prefetch_related(
+            'items', 'items__product'
+        ).get(pk=order.pk)
+
         serializer = self.get_serializer(order)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 

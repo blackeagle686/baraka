@@ -1,11 +1,19 @@
-from rest_framework import viewsets, permissions, status
+from rest_framework import viewsets, permissions, status, generics
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.pagination import PageNumberPagination
+
 from django.db import transaction
+from django.db.models import Q
+
 from .models import Order, OrderItem, OrderStatus
+from shops.models import Shop, Product, Notification
+
 from .serializers import OrderSerializer
-from shops.models import Shop, Product
+
 from users.permissions import IsApprovedOrReadOnly
+from users.permissions import IsAdminUserRole
+from .tasks import send_order_notifications_to_drivers
 
 class OrderViewSet(viewsets.ModelViewSet):
     serializer_class = OrderSerializer
@@ -15,21 +23,22 @@ class OrderViewSet(viewsets.ModelViewSet):
         user = self.request.user
         # High-Performance Query Optimization: join related objects in a single query
         base_qs = Order.objects.select_related(
-            'customer', 'driver', 'shop', 'shop__owner'
-        ).prefetch_related(
-            'items', 'items__product'
-        ).order_by('-created_at')
+            'customer', 'driver',
+            'shop', 'shop__owner'
+        ).prefetch_related( 'items',
+                           'items__product').order_by('-created_at')
 
         # Admins have their own dedicated AdminOrderListView (/api/admin/orders/) for global access.
         # When an admin uses the standard order endpoint (e.g. from their personal cart),
         # they should only see their own personal orders.
         if user.role == 'SHOP_OWNER':
             return base_qs.filter(shop__owner=user)
+        
         elif user.role == 'DRIVER':
-            from django.db.models import Q
             return base_qs.filter(
                 Q(driver=user) | Q(driver__isnull=True, status__in=['PENDING', 'ACCEPTED', 'PREPARING', 'ON_DELIVERY'])
             )
+            
         else:
             # Customer
             return base_qs.filter(customer=user)
@@ -106,8 +115,19 @@ class OrderViewSet(viewsets.ModelViewSet):
 
             Product.objects.bulk_update(products_to_update, ['quantity', 'available'])
 
+            # Notify the shop owner about the new order.
+            Notification.objects.create(
+                user=shop.owner,
+                shop=shop,
+                title="طلب جديد من الزبون",
+                message=(
+                    f"تلقيت طلبًا جديدًا من عميلك على متجر '{shop.name}'. "
+                    f"إجمالي الطلب: {total_price:.2f} ج.م. راجع الطلب الآن لإدارته."
+                ),
+                notification_type='new_order'
+            )
+
         # ── 4) Async driver notification (non-blocking) ──
-        from .tasks import send_order_notifications_to_drivers
         send_order_notifications_to_drivers.delay(order.id)
 
         # ── 5) Re-fetch with joins so the serializer doesn't trigger lazy queries ──
@@ -190,6 +210,18 @@ class OrderViewSet(viewsets.ModelViewSet):
         order.driver = request.user
         order.status = OrderStatus.ON_DELIVERY
         order.save()
+
+        Notification.objects.create(
+            user=order.shop.owner,
+            shop=order.shop,
+            title="السائق قبل طلب التوصيل",
+            message=(
+                f"تم قبول طلب #{order.id} من قبل السائق {request.user.phone}. "
+                f"يمكنك متابعة حالة التوصيل الآن."
+            ),
+            notification_type='driver_accepted_order'
+        )
+
         return Response(self.get_serializer(order).data)
 
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
@@ -277,6 +309,19 @@ class OrderViewSet(viewsets.ModelViewSet):
                 'review': review_val
             }
         )
+
+        if order.driver:
+            reviewer = 'العميل' if is_customer else 'صاحب المحل'
+            Notification.objects.create(
+                user=order.driver,
+                shop=order.shop,
+                title='تم تقييمك كسائق',
+                message=(
+                    f'لقد قام {reviewer} بتقييمك على طلب #{order.id}. ' 
+                    f'التقييم: {rating_val} نجوم. راجع التفاصيل في لوحة التحكم الخاصة بك.'
+                ),
+                notification_type='driver_rated'
+            )
         
         serializer = DriverRatingSerializer(rating_obj)
         return Response(serializer.data, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
@@ -314,19 +359,13 @@ class OrderViewSet(viewsets.ModelViewSet):
             'driver_phone': order.driver.phone if order.driver else None
         })
 
-# ==========================================
-# Admin Dashboard - All Orders View
-# ==========================================
-from rest_framework import generics
-from rest_framework.pagination import PageNumberPagination
-from django.db.models import Q
-from users.permissions import IsAdminUserRole
+
+#===== Admin Dashboard - All Orders View ==========================================
 
 class AdminOrderPagination(PageNumberPagination):
     page_size = 15
     page_size_query_param = 'page_size'
     max_page_size = 100
-
 
 class AdminOrderListView(generics.ListAPIView):
     """Admin can view all orders with search and filter."""

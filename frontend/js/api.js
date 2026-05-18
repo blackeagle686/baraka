@@ -303,6 +303,15 @@ const api = {
             if (!res.ok) throw await res.json();
             return await res.json();
         },
+        getByRole: async (token, role) => {
+            // The backend returns the logged-in user's own notifications.
+            // Role is included here for frontend clarity and future role-specific behavior.
+            return await api.notifications.getAll(token);
+        },
+        getUnreadCount: async (token) => {
+            const notifications = await api.notifications.getAll(token);
+            return notifications.filter(n => !n.is_read).length;
+        },
         markRead: async (token, id) => {
             const res = await fetch(`${API_BASE}/notifications/${id}/mark_read/`, {
                 method: 'POST',

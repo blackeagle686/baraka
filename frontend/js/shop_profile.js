@@ -704,9 +704,16 @@ function renderShopOrders(orders) {
                     const shopItems = order.items.filter(item => item.product_details && item.product_details.shop_id === currentShopId);
                     const shopShare = shopItems.reduce((sum, item) => sum + (parseFloat(item.price) * item.quantity), 0);
                     
+                    const postponedShopsList = order.postponed_shops ? order.postponed_shops.split(',') : [];
+                    const isPostponed = postponedShopsList.includes(String(currentShopId));
+                    
                     actionsHtml = `
                         <div class="d-flex flex-column gap-2 mt-2">
-                            <span class="text-danger small fw-bold"><i class="bi bi-exclamation-circle-fill me-1"></i>الطيار استلم المبلغ ولم يقم بتصفيته معك بعد!</span>
+                            ${isPostponed ? `
+                                <span class="text-warning small fw-bold"><i class="bi bi-door-closed-fill me-1"></i>تم تأجيل السداد مؤقتاً بواسطة الطيار لإغلاق المحل 🚪</span>
+                            ` : `
+                                <span class="text-danger small fw-bold"><i class="bi bi-exclamation-circle-fill me-1"></i>الطيار استلم المبلغ ولم يقم بتصفيته معك بعد!</span>
+                            `}
                             <div class="d-flex gap-2">
                                 <button onclick="confirmShopPaymentReceived(${order.id}, ${shopShare})" class="btn btn-sm btn-success rounded-pill px-3 fw-bold text-white shadow-sm flex-grow-1">
                                     <i class="bi bi-cash me-1"></i>تأكيد وتصفية الحساب (${shopShare} ج.م)

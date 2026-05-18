@@ -264,6 +264,23 @@ window.sendBarakaChatMessage = async function(event) {
     }
 }
 
+// Global Quick Reply Handler
+window.sendQuickReply = function(text) {
+    const input = document.getElementById('aiChatInput');
+    if (input) {
+        input.value = text;
+        const form = document.getElementById('aiChatForm');
+        if (form) {
+            // Trigger submit event
+            const event = new Event('submit', { cancelable: true });
+            form.dispatchEvent(event);
+            if (!event.defaultPrevented) {
+                window.sendBarakaChatMessage(event);
+            }
+        }
+    }
+}
+
 // Global Cart Addition Handler from Chatbot recommendations
 window.addChatbotItemToCart = function(id, name, price, image = '', maxQty = 999, shopId, shopName) {
     const token = localStorage.getItem('access_token');

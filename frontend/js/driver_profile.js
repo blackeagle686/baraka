@@ -354,9 +354,14 @@ function renderOrderItems(order) {
 
 function renderShopStops(group) {
     return group.shops.map((shop, index) => {
-        const readyBadge = shop.allItemsReady 
-            ? `<span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-1 fw-bold" style="font-size: 0.76rem;"><i class="bi bi-check-circle-fill me-1"></i>الطلب جاهز للاستلام 🟢</span>` 
-            : `<span class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill px-2 py-1 fw-bold" style="font-size: 0.76rem;"><i class="bi bi-hourglass-split me-1"></i>جاري التحضير بالمحل ⏳</span>`;
+        const order = group.orders[0];
+        const isShopPaid = order && order.paid_shops && order.paid_shops.split(',').includes(String(shop.id));
+        
+        const readyBadge = isShopPaid
+            ? `<span class="badge bg-success text-white border border-success rounded-pill px-2 py-1 fw-bold" style="font-size: 0.76rem;"><i class="bi bi-check-circle-fill me-1"></i>تم سداد مستحقات المحل ✅</span>`
+            : (shop.allItemsReady 
+                ? `<span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-1 fw-bold" style="font-size: 0.76rem;"><i class="bi bi-check-circle-fill me-1"></i>الطلب جاهز للاستلام 🟢</span>` 
+                : `<span class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill px-2 py-1 fw-bold" style="font-size: 0.76rem;"><i class="bi bi-hourglass-split me-1"></i>جاري التحضير بالمحل ⏳</span>`);
             
         return `
             <div class="transit-stop-card transit-pickup animate-up">
@@ -656,9 +661,17 @@ function renderActiveTrips(trips) {
                             const remMins = Math.floor((remainingHours - remHrs) * 60);
                             timerBadge = `<div class="badge bg-warning-subtle text-warning border border-warning-subtle w-100 py-2 rounded-3 fw-bold mb-2 fs-7"><i class="bi bi-clock-history me-1"></i>متبقي للتسوية: ${remHrs} ساعة و ${remMins} دقيقة ⏳</div>`;
                         }
+                        
+                        const paidShopsList = trip.paid_shops ? trip.paid_shops.split(',') : [];
+                        const unpaidShops = trip.shops_details ? trip.shops_details.filter(s => !paidShopsList.includes(String(s.id))) : [];
+                        const unpaidShopsNames = unpaidShops.map(s => s.name).join(' ، ') || (trip.shop_details ? trip.shop_details.name : 'المحل');
+                        
                         return `
                             <div class="mt-2 p-2 bg-white rounded-3 border text-espresso text-center">
                                 ${timerBadge}
+                                <div class="alert alert-warning py-1.5 rounded-3 mb-2 border-0 small text-center fw-bold text- espresso">
+                                    المحلات المتبقية للسداد: <span class="text-danger">${unpaidShopsNames}</span>
+                                </div>
                                 <span class="small text-mesa d-block mb-1">رمز تصفية حساب هذا المحل:</span>
                                 <strong class="fs-5 text-success" style="font-family: monospace; letter-spacing: 4px;">${trip.driver_otp || '----'}</strong>
                                 <div id="qrcode-driver-${trip.id}" class="d-flex justify-content-center my-2"></div>

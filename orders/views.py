@@ -202,6 +202,93 @@ class OrderViewSet(viewsets.ModelViewSet):
         order.save()
         return Response(self.get_serializer(order).data)
 
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
+    def rate_driver(self, request, pk=None):
+        order = self.get_object()
+        user = request.user
+        
+        if order.status != OrderStatus.DELIVERED:
+            return Response(
+                {"detail": "يمكنك تقييم الطيار فقط بعد توصيل الطلب بنجاح."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+            
+        if not order.driver:
+            return Response(
+                {"detail": "لم يتم تعيين طيار لهذا الطلب بعد."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+            
+        is_customer = (order.customer == user)
+        is_shop_owner = (order.shop.owner == user)
+        
+        if not (is_customer or is_shop_owner):
+            return Response(
+                {"detail": "غير مصرح لك بتقييم الطيار لهذا الطلب."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+            
+        rater_type = 'CUSTOMER' if is_customer else 'SHOP_OWNER'
+        rating_val = request.data.get('rating')
+        review_val = request.data.get('review', '')
+        
+        try:
+            rating_val = int(rating_val)
+            if rating_val < 1 or rating_val > 5:
+                raise ValueError
+        except (TypeError, ValueError):
+            return Response({"detail": "التقييم يجب أن يكون رقماً صحيحاً بين 1 و 5."}, status=status.HTTP_400_BAD_REQUEST)
+            
+        from .models import DriverRating
+        from .serializers import DriverRatingSerializer
+        
+        rating_obj, created = DriverRating.objects.update_or_create(
+            order=order,
+            rater=user,
+            rater_type=rater_type,
+            defaults={
+                'driver': order.driver,
+                'rating': rating_val,
+                'review': review_val
+            }
+        )
+        
+        serializer = DriverRatingSerializer(rating_obj)
+        return Response(serializer.data, status=status.HTTP_201_CREATED if created else status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['get'], permission_classes=[permissions.IsAuthenticated])
+    def driver_rating_status(self, request, pk=None):
+        order = self.get_object()
+        user = request.user
+        
+        is_customer = (order.customer == user)
+        is_shop_owner = (order.shop.owner == user)
+        
+        can_rate = (
+            order.status == OrderStatus.DELIVERED and 
+            order.driver is not None and 
+            (is_customer or is_shop_owner)
+        )
+        
+        from .models import DriverRating
+        existing_rating = None
+        if can_rate:
+            existing_rating_obj = DriverRating.objects.filter(
+                order=order, rater=user
+            ).first()
+            if existing_rating_obj:
+                existing_rating = {
+                    'rating': existing_rating_obj.rating,
+                    'review': existing_rating_obj.review
+                }
+                
+        return Response({
+            'can_rate': can_rate,
+            'existing_rating': existing_rating,
+            'driver_name': order.driver.first_name if order.driver else None,
+            'driver_phone': order.driver.phone if order.driver else None
+        })
+
 
 # ==========================================
 # Admin Dashboard - All Orders View

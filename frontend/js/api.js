@@ -204,6 +204,25 @@ const api = {
             });
             if (!res.ok) throw await res.json();
             return await res.json();
+        },
+        getDriverRatingStatus: async (token, orderId) => {
+            const res = await fetch(`${API_BASE}/orders/${orderId}/driver_rating_status/`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!res.ok) throw await res.json();
+            return await res.json();
+        },
+        rateDriver: async (token, orderId, rating, review = '') => {
+            const res = await fetch(`${API_BASE}/orders/${orderId}/rate_driver/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ rating, review })
+            });
+            if (!res.ok) throw await res.json();
+            return await res.json();
         }
     },
     admin: {

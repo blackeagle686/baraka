@@ -1,7 +1,17 @@
 from rest_framework import serializers
-from .models import Order, OrderItem
+from .models import Order, OrderItem, DriverRating
 from shops.serializers import ProductSerializer, ShopSerializer
 from users.serializers import UserSerializer
+
+class DriverRatingSerializer(serializers.ModelSerializer):
+    rater_name = serializers.ReadOnlyField(source='rater.first_name')
+    rater_phone = serializers.ReadOnlyField(source='rater.phone')
+    driver_name = serializers.ReadOnlyField(source='driver.first_name')
+
+    class Meta:
+        model = DriverRating
+        fields = ['id', 'order', 'driver', 'driver_name', 'rater', 'rater_name', 'rater_phone', 'rater_type', 'rating', 'review', 'created_at']
+        read_only_fields = ['rater', 'driver', 'rater_type']
 
 class OrderItemSerializer(serializers.ModelSerializer):
     product_details = ProductSerializer(source='product', read_only=True)

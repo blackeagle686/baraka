@@ -7,13 +7,36 @@
     min-height: 100vh;
     display: flex;
     align-items: center;
+    position: relative;
+    overflow: hidden;
+    padding-top: 100px; /* Offset for glass navbar */
+}
+
+/* Background image with brightness animation */
+.hero-section::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     background: linear-gradient(135deg, rgba(50, 4, 4, 0.494) 0%, rgba(20, 2, 2, 0.396) 100%), url('../images/village2.jpg');
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-    position: relative;
-    overflow: hidden;
-    padding-top: 100px; /* Offset for glass navbar */
+    z-index: 0;
+    pointer-events: none;
+    animation: background-brightness 10s infinite alternate ease-in-out;
+    will-change: filter;
+}
+
+@keyframes background-brightness {
+    0% {
+        filter: brightness(0.2);
+    }
+    100% {
+        filter: brightness(0.6);
+    }
 }
 
 /* Ambient Background Glows */

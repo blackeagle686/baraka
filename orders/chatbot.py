@@ -25,12 +25,17 @@ class ChatbotView(APIView):
             import os
             from asgiref.sync import async_to_sync
             
-            # Switch to remote OpenAI mode using configuration parameters
-            openai_key = os.environ.get("OPENAI_API_KEY", "")
-            if not openai_key:
-                openai_key = "dummy_openai_key_for_testing"
+            # Switch to remote OpenAI mode using LongCat LLM configuration
+            openai_key = "ak_2yp3Xw1Ny7ky2pF7er9x93ZO9jj6G"
+            openai_url = "https://api.longcat.chat/openai"
+            openai_model = "LongCat-Flash-Lite"
                 
-            bot = ChatBot(local=False).with_openai(api_key=openai_key).with_system_prompt(
+            bot = ChatBot(local=False).with_openai(
+                api_key=openai_key,
+                base_url=openai_url
+            ).with_model(
+                llm=openai_model
+            ).with_system_prompt(
                 "أنت مساعد بركة الذكي لمساعدة المستخدمين في شراء الخضروات والمنتجات وتأكيد الطلبات."
             )
             # Build chatbot instance
@@ -38,8 +43,8 @@ class ChatbotView(APIView):
             instance.set_session(session_id)
             
             # Execute async chat method in sync context if key is active
-            if openai_key != "dummy_openai_key_for_testing":
-                openai_response = async_to_sync(instance.chat)(text=message)
+            # Execute async chat method in sync context using LongCat
+            openai_response = async_to_sync(instance.chat)(text=message)
                 logger.info(f"Phoenix ChatBot OpenAI success response: {openai_response}")
         except Exception as e:
             logger.warning(f"Phoenix ChatBot instantiation/execution fallback: {e}")

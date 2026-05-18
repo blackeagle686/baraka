@@ -302,11 +302,11 @@
 /* --- Desktop Layout Safeguard --- */
 @media (min-width: 992px) {
     .shops-sidebar {
-        width: 58% !important;
-        display: flex !important;
+        width: 58%;
+        display: flex;
     }
     .shops-map-wrapper {
-        width: 42% !important;
-        display: block !important;
+        width: 42%;
+        display: block;
     }
 }

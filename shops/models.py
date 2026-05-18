@@ -10,6 +10,8 @@ class Shop(models.Model):
     latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     is_open = models.BooleanField(default=True)
+    opening_time = models.TimeField(null=True, blank=True)
+    closing_time = models.TimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -50,3 +52,18 @@ class ShopRating(models.Model):
 
     def __str__(self):
         return f"{self.customer} rated {self.shop.name} - {self.rating}★"
+
+class Notification(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='notifications')
+    shop = models.ForeignKey(Shop, on_delete=models.CASCADE, null=True, blank=True, related_name='notifications')
+    title = models.CharField(max_length=255)
+    message = models.TextField()
+    notification_type = models.CharField(max_length=50, default='info') # 'shop_open_alert', 'shop_close_alert', 'info'
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.user.username} - {self.title}"

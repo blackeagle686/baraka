@@ -2,8 +2,8 @@ from rest_framework import viewsets, permissions, status, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
-from .models import Shop, Category, Product
-from .serializers import ShopSerializer, CategorySerializer, ProductSerializer
+from .models import Shop, Category, Product, Notification
+from .serializers import ShopSerializer, CategorySerializer, ProductSerializer, NotificationSerializer
 from .permissions import IsOwnerOrReadOnly
 from users.permissions import IsApprovedOrReadOnly
 
@@ -120,3 +120,22 @@ class ProductViewSet(viewsets.ModelViewSet):
         if shop_id is not None:
             queryset = queryset.filter(shop_id=shop_id)
         return queryset
+
+class NotificationViewSet(viewsets.ModelViewSet):
+    serializer_class = NotificationSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return Notification.objects.filter(user=self.request.user)
+
+    @action(detail=True, methods=['post'])
+    def mark_read(self, request, pk=None):
+        notification = self.get_object()
+        notification.is_read = True
+        notification.save()
+        return Response({'status': 'marked as read'})
+
+    @action(detail=False, methods=['post'])
+    def mark_all_read(self, request):
+        self.get_queryset().update(is_read=True)
+        return Response({'status': 'all marked as read'})

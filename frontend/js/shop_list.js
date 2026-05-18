@@ -99,6 +99,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (window.directoryMapInstance) {
                         setTimeout(() => {
                             window.directoryMapInstance.invalidateSize();
+                            if (window.directoryMapBounds && window.directoryMapBounds.length > 0) {
+                                window.directoryMapInstance.fitBounds(window.directoryMapBounds, { padding: [50, 50], maxZoom: 15 });
+                            }
                         }, 150);
                     }
                 } else {
@@ -126,6 +129,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (window.directoryMapInstance) {
                         setTimeout(() => {
                             window.directoryMapInstance.invalidateSize();
+                            if (window.directoryMapBounds && window.directoryMapBounds.length > 0) {
+                                window.directoryMapInstance.fitBounds(window.directoryMapBounds, { padding: [50, 50], maxZoom: 15 });
+                            }
                         }, 150);
                     }
                 } else {

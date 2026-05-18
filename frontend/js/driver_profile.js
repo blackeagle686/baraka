@@ -217,10 +217,10 @@ async function loadDriverOrders() {
         renderAvailableOrders(availableOrders);
 
         // 2. Active trips: assigned to this driver, not delivered/cancelled OR delivered but unpaid to shop
-        const myActiveTrips = orders.filter(o => o.driver == currentDriver.id && (['ON_DELIVERY', 'ACCEPTED', 'PREPARING'].includes(o.status) || (o.status === 'DELIVERED' && !o.is_paid_to_shop)));
+        const myActiveTrips = orders.filter(o => o.driver == currentDriver.id && (['ON_DELIVERY', 'ACCEPTED', 'PREPARING', 'PENDING_RETURN'].includes(o.status) || (o.status === 'DELIVERED' && !o.is_paid_to_shop)));
         
         // Calculate remaining capacity and suspension
-        const activeInTransitCount = myActiveTrips.filter(o => ['ON_DELIVERY', 'ACCEPTED', 'PREPARING'].includes(o.status)).length;
+        const activeInTransitCount = myActiveTrips.filter(o => ['ON_DELIVERY', 'ACCEPTED', 'PREPARING', 'PENDING_RETURN'].includes(o.status)).length;
         currentRemainingCapacity = Math.max(0, 5 - activeInTransitCount);
         
         const overdueDues = myActiveTrips.filter(o => {
@@ -231,7 +231,8 @@ async function loadDriverOrders() {
             }
             return false;
         });
-        isAccountSuspended = overdueDues.length > 0;
+        const hasPendingReturn = myActiveTrips.some(o => o.status === 'PENDING_RETURN');
+        isAccountSuspended = overdueDues.length > 0 || hasPendingReturn;
         
         renderActiveTrips(myActiveTrips);
 
@@ -642,13 +643,14 @@ function renderActiveTrips(trips) {
         const ordersHtml = group.orders.map((trip) => {
             const isDisputed = trip.dispute_status === 'PENDING';
             const isDeliveredUnpaid = trip.status === 'DELIVERED' && !trip.is_paid_to_shop;
-            const orderStatus = isDisputed ? 'قيد النزاع' : isDeliveredUnpaid ? 'تم التسليم - ينتظر تصفية المحل' : trip.status === 'DELIVERED' ? 'تم التسليم' : 'جاري التوصيل';
+            const isPendingReturn = trip.status === 'PENDING_RETURN';
+            const orderStatus = isDisputed ? 'قيد النزاع' : isDeliveredUnpaid ? 'تم التسليم - ينتظر تصفية المحل' : isPendingReturn ? 'بانتظار إرجاع المرتجعات للمحل 📥' : trip.status === 'DELIVERED' ? 'تم التسليم' : 'جاري التوصيل';
 
             return `
                 <div class="bg-white rounded-3 p-2 mb-2" style="border: 1px solid rgba(201,153,151,0.08);">
                     <div class="d-flex justify-content-between align-items-center mb-1">
                         <span class="fw-bold text-espresso small">طلب #${trip.id}</span>
-                        <span class="badge ${isDisputed ? 'bg-danger text-white' : isDeliveredUnpaid ? 'bg-danger-subtle text-danger' : 'bg-success-subtle text-success'} rounded-pill px-2 py-1">${orderStatus}</span>
+                        <span class="badge ${isDisputed || isPendingReturn ? 'bg-danger text-white' : isDeliveredUnpaid ? 'bg-danger-subtle text-danger' : 'bg-success-subtle text-success'} rounded-pill px-2 py-1">${orderStatus}</span>
                     </div>
                     <div class="text-muted small mb-1"><i class="bi bi-shop me-1"></i>${
                         trip.shops_details && trip.shops_details.length > 0
@@ -693,7 +695,15 @@ function renderActiveTrips(trips) {
         }).join('');
 
         let actionHtmlBlock = '';
-        if (disputedOrders.length) {
+        const tripHasPendingReturn = group.orders.some(o => o.status === 'PENDING_RETURN');
+        
+        if (tripHasPendingReturn) {
+            actionHtmlBlock = `
+                <div class="alert alert-danger text-center py-3 rounded-4 mb-0 border-0 fw-bold shadow-sm flex-grow-1 animate-pulse" style="background-color: rgba(220,53,69,0.08); color: var(--color-terracotta);">
+                    <div><i class="bi bi-exclamation-octagon-fill me-1"></i>حسابك معلق مؤقتاً! يجب عليك التوجه للمحلات وإرجاع المنتجات. اطلب من صاحب المحل تأكيد استلام المرتجعات لإعادة تنشيط حسابك.</div>
+                </div>
+            `;
+        } else if (disputedOrders.length) {
             actionHtmlBlock = `
                 <div class="alert alert-danger text-center py-2 rounded-pill small mb-0 fw-bold border-0 flex-grow-1" style="background-color: rgba(220,53,69,0.08); color: var(--color-terracotta);">
                     <i class="bi bi-exclamation-circle me-1"></i>يوجد طلب قيد النزاع والمراجعة.

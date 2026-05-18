@@ -596,6 +596,10 @@ function renderShopOrders(orders) {
                 statusClass = 'bg-danger';
                 statusText = 'ملغي';
                 break;
+            case 'PENDING_RETURN':
+                statusClass = 'bg-danger text-white animate-pulse';
+                statusText = 'مرتجع طوارئ معلق 📥';
+                break;
         }
 
         // Render items list
@@ -658,6 +662,17 @@ function renderShopOrders(orders) {
         } else if (order.status === 'ON_DELIVERY') {
             actionsHtml = `
                 <span class="text-muted small"><i class="bi bi-truck me-1"></i>المندوب: ${order.driver_details ? order.driver_details.name : 'جاري التحديد'}</span>
+            `;
+        } else if (order.status === 'PENDING_RETURN') {
+            const driverPhone = order.driver_details ? order.driver_details.phone : 'غير معروف';
+            const driverName = order.driver_details ? order.driver_details.name : 'المندوب';
+            actionsHtml = `
+                <div class="d-flex flex-column gap-2 mt-2 w-100">
+                    <span class="text-danger small fw-bold"><i class="bi bi-exclamation-triangle-fill me-1"></i>الطيار ${driverName} (${driverPhone}) أبلغ عن حالة طارئة. العهدة حالياً معه حتى يقوم بإرجاعها إليك!</span>
+                    <button onclick="confirmEmergencyReturned(${order.id})" class="btn btn-sm btn-danger rounded-pill px-3 fw-bold text-white shadow-sm w-100 py-2">
+                        <i class="bi bi-arrow-counterclockwise me-1"></i>تأكيد استلام المنتجات وتنشيط المندوب 📥
+                    </button>
+                </div>
             `;
         } else if (order.status === 'DELIVERED') {
             if (order.dispute_status === 'PENDING') {
@@ -996,5 +1011,26 @@ window.toggleShopItemReady = async function(orderId, itemId) {
         loadShopOrders();
     } catch (error) {
         alert('حدث خطأ أثناء تحديث جاهزية المنتج: ' + JSON.stringify(error));
+    }
+}
+
+window.confirmEmergencyReturned = async function(orderId) {
+    const token = localStorage.getItem('access_token');
+    
+    // Quick confirmation dialog
+    if (!confirm("هل تؤكد استلام المنتجات المرتجعة للطلب من المندوب وإبراء ذمته المالية برمجياً؟")) {
+        return;
+    }
+    
+    try {
+        await api.orders.confirmEmergencyReturned(token, orderId);
+        if (window.showBarakaToast) {
+            window.showBarakaToast('تم تأكيد استلام العهدة المرتجعة وتنشيط المندوب بنجاح! تم إرجاع الطلب للبحث عن طيار بديل.', 'success', 'bi-check-circle-fill');
+        } else {
+            alert('تم تأكيد استلام العهدة المرتجعة وتنشيط المندوب بنجاح!');
+        }
+        loadShopOrders();
+    } catch (error) {
+        alert('حدث خطأ أثناء تأكيد استلام العهدة المرتجعة: ' + JSON.stringify(error));
     }
 }

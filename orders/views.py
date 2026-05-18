@@ -54,42 +54,42 @@ class OrderViewSet(viewsets.ModelViewSet):
         if not items_data:
             return Response({"detail": "Missing items data."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # ── 1) BULK fetch all products in ONE query (replaces N queries in loop) ──
-        product_ids = [it['product'] for it in items_data]
-        products_map = {
-            p.id: p for p in Product.objects.filter(id__in=product_ids).select_related('shop', 'shop__owner')
-        }
-
-        # ── 2) Validate all items and compute totals (zero DB hits) ──
-        total_price = 0
-        order_items = []
-        unique_shops = set()
-
-        for it in items_data:
-            prod = products_map.get(int(it['product']))
-            if not prod:
-                return Response(
-                    {"detail": f"المنتج {it['product']} غير موجود."},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-
-            qty = int(it.get('quantity', 1))
-            if qty > prod.quantity:
-                return Response(
-                    {"detail": f"المنتج '{prod.name}' لا يحتوي على كمية كافية في المخزن! المتاح حالياً: {prod.quantity} فقط."},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-
-            price = prod.price
-            total_price += price * qty
-            order_items.append((prod, qty, price))
-            if prod.shop:
-                unique_shops.add(prod.shop)
-
-        order_shop = list(unique_shops)[0] if len(unique_shops) == 1 else None
-
-        # ── 3) Atomic transaction: single DB commit for order + items + stock ──
+        # ── 1) Atomic transaction: single DB commit for order + items + stock + race protection ──
         with transaction.atomic():
+            product_ids = [it['product'] for it in items_data]
+            # Use select_for_update() to lock the product rows and prevent concurrent checkout stock race conditions!
+            products_map = {
+                p.id: p for p in Product.objects.select_for_update().filter(id__in=product_ids).select_related('shop', 'shop__owner')
+            }
+
+            # ── 2) Validate all items and compute totals (zero DB hits, thread-safe) ──
+            total_price = 0
+            order_items = []
+            unique_shops = set()
+
+            for it in items_data:
+                prod = products_map.get(int(it['product']))
+                if not prod:
+                    return Response(
+                        {"detail": f"المنتج {it['product']} غير موجود."},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+
+                qty = int(it.get('quantity', 1))
+                if qty > prod.quantity:
+                    return Response(
+                        {"detail": f"المنتج '{prod.name}' لا يحتوي على كمية كافية في المخزن! المتاح حالياً: {prod.quantity} فقط."},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+
+                price = prod.price
+                total_price += price * qty
+                order_items.append((prod, qty, price))
+                if prod.shop:
+                    unique_shops.add(prod.shop)
+
+            order_shop = list(unique_shops)[0] if len(unique_shops) == 1 else None
+
             order = Order.objects.create(
                 customer=request.user,
                 shop=order_shop,

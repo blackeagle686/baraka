@@ -157,13 +157,15 @@ window.sendBarakaChatMessage = async function(event) {
             productTitle.innerHTML = `<i class="bi bi-star-fill text-warning me-1"></i>المنتجات المرشحة لك:`;
             botMsgDiv.appendChild(productTitle);
             
+            const mediaBase = (window.location.port === '8080') ? 'http://127.0.0.1:8000' : '';
             data.products.forEach(prod => {
                 const prodCard = document.createElement('div');
                 prodCard.className = 'chat-product-card d-flex flex-column animate-up mt-2';
                 
                 let imgHtml = '';
                 if (prod.image) {
-                    imgHtml = `<img src="${prod.image}" class="chat-product-img">`;
+                    const imgSrc = prod.image.startsWith('http') ? prod.image : `${mediaBase}${prod.image}`;
+                    imgHtml = `<img src="${imgSrc}" class="chat-product-img">`;
                 } else {
                     imgHtml = `<div class="chat-product-img d-flex align-items-center justify-content-center text-marigold fw-bold fs-4" style="height: 80px; background-color: rgba(194, 146, 64, 0.05);"><i class="bi bi-box-seam"></i></div>`;
                 }

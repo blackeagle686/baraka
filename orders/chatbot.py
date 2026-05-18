@@ -67,7 +67,7 @@ def _handle_add_to_cart(message):
         return None, None, None
 
     # Search DB for matching product
-    products = Product.objects.filter(available=True, quantity__gt=0).select_related('shop')
+    products = Product.objects.filter(available=True, quantity__gt=0, shop__is_open=True).select_related('shop')
     best = None
     for prod in products:
         pname = prod.name.lower()
@@ -111,7 +111,7 @@ def _build_db_context(message):
     shop_names = [s.name for s in open_shops]
 
     all_products = (
-        Product.objects.filter(available=True, quantity__gt=0)
+        Product.objects.filter(available=True, quantity__gt=0, shop__is_open=True)
         .select_related('shop', 'category')
         .order_by('-created_at')
     )

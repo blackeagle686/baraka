@@ -37,3 +37,16 @@ class Product(models.Model):
 
     def __str__(self):
         return self.name
+
+class ShopRating(models.Model):
+    shop = models.ForeignKey(Shop, on_delete=models.CASCADE, related_name='ratings')
+    customer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='shop_ratings')
+    rating = models.PositiveSmallIntegerField() # 1 to 5
+    review = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('shop', 'customer')
+
+    def __str__(self):
+        return f"{self.customer} rated {self.shop.name} - {self.rating}★"

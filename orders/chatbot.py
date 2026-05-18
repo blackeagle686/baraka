@@ -4,24 +4,25 @@ from rest_framework.response import Response
 from rest_framework import permissions, status
 from django.db.models import Q
 from shops.models import Product, Shop
-from phoenix.services.llm.openai import OpenAILLM
 from phoenix.services.observability.logger import get_logger
 
 logger = get_logger("Baraka.Chatbot")
 
-# ── Singleton LLM instance (initialized once, reused across requests) ──
-_llm_instance = None
+# ── Singleton OpenAI client (initialized once, reused across requests) ──
+_openai_client = None
 
-def _get_llm():
-    """Return a cached OpenAILLM instance pointing at LongCat."""
-    global _llm_instance
-    if _llm_instance is None:
-        _llm_instance = OpenAILLM(
+def _get_openai_client():
+    """Return a cached synchronous OpenAI client pointing at LongCat."""
+    global _openai_client
+    if _openai_client is None:
+        from openai import OpenAI
+        import httpx
+        _openai_client = OpenAI(
             api_key="ak_2yp3Xw1Ny7ky2pF7er9x93ZO9jj6G",
             base_url="https://api.longcat.chat/openai",
-            model="LongCat-Flash-Lite",
+            timeout=httpx.Timeout(60.0, connect=30.0),
         )
-    return _llm_instance
+    return _openai_client
 
 
 class ChatbotView(APIView):
@@ -34,24 +35,25 @@ class ChatbotView(APIView):
         if not message:
             return Response({"detail": "المسج مطلوب"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # 1. Call LongCat LLM directly via Phoenix OpenAILLM service (lightweight, no heavy SDK init)
+        # 1. Call LongCat LLM directly (synchronous — no async_to_sync issues)
         openai_response = None
         try:
-            from asgiref.sync import async_to_sync
-
-            llm = _get_llm()
-            # Ensure the async client is initialized
-            if llm.client is None:
-                async_to_sync(llm.init)()
-
+            client = _get_openai_client()
             system_prompt = (
                 "أنت مساعد بركة الذكي لمساعدة المستخدمين في شراء الخضروات والمنتجات وتأكيد الطلبات. "
                 "أجب بالعربية بشكل ودود ومختصر. لا تستخدم أكثر من 3 أسطر في الرد."
             )
-            full_prompt = f"{system_prompt}\n\nالمستخدم: {message}"
-
-            openai_response = async_to_sync(llm.generate)(prompt=full_prompt)
-            logger.info(f"LongCat LLM response received successfully.")
+            completion = client.chat.completions.create(
+                model="LongCat-Flash-Lite",
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": message},
+                ],
+                max_tokens=512,
+            )
+            if completion and completion.choices:
+                openai_response = completion.choices[0].message.content.strip()
+                logger.info(f"LongCat LLM response received successfully.")
         except Exception as e:
             logger.warning(f"LongCat LLM call failed, falling back to local engine: {e}")
 
@@ -98,7 +100,6 @@ class ChatbotView(APIView):
                 qty = int(qty_match.group(1))
 
             # Try to extract product name from database
-            # Remove command keywords and numbers
             clean_msg = message
             for kw in ["أضف", "اضف", "كيلو", "حبة", "من", "محل", "شراء", "اريد", "أريد", "المنتج", "رقم"]:
                 clean_msg = clean_msg.replace(kw, "")
@@ -108,7 +109,6 @@ class ChatbotView(APIView):
             matching_products = Product.objects.filter(available=True)
             best_product = None
             
-            # Simple keyword matching on product names
             for prod in matching_products:
                 if prod.name.lower() in clean_msg.lower() or clean_msg.lower() in prod.name.lower():
                     best_product = prod
@@ -157,7 +157,8 @@ class ChatbotView(APIView):
                             "price": float(prod.price),
                             "shop_id": prod.shop.id if prod.shop else None,
                             "shop_name": shop_name,
-                            "image": prod.image.url if prod.image else None
+                            "image": prod.image.url if prod.image else None,
+                            "quantity": prod.quantity if hasattr(prod, 'quantity') else 999,
                         })
                     response_text += "\nاكتب لي المنتج مع الكمية لإضافته للسلة فوراً! (مثال: 'أضف 2 كيلو تفاح')."
                     action = {"type": "RECOMMEND_PRODUCTS"}

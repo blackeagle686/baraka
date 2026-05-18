@@ -977,8 +977,16 @@ function renderShopsMap(shops) {
             </div>
         `;
 
-        // Create Pin Marker
-        const marker = L.marker([lat, lon]).addTo(directoryMapInstance)
+        // Create 3D Bouncing Pin Marker
+        const customIcon = L.divIcon({
+            className: 'custom-div-icon',
+            html: `<div class="map-marker-3d"><div class="marker-pulse-ring"></div></div>`,
+            iconSize: [40, 40],
+            iconAnchor: [20, 40], // Point of the icon which will correspond to marker's location
+            popupAnchor: [0, -40] // Point from which the popup should open relative to the iconAnchor
+        });
+
+        const marker = L.marker([lat, lon], { icon: customIcon }).addTo(directoryMapInstance)
             .bindPopup(popupContent, { minWidth: 220, closeButton: true });
 
         directoryMarkersGroup.push(marker);

@@ -178,7 +178,7 @@ function renderAllShops(shops) {
         }
 
         const shopHtml = `
-            <div class="col-12 col-sm-6 col-lg-4 col-xxl-3 animate-up" style="animation-delay: ${i * 0.08}s;">
+            <div class="col-6 col-sm-6 col-lg-4 col-xxl-3 animate-up" style="animation-delay: ${i * 0.08}s;">
                 <a href="/html/shops/details.html?id=${shop.id}" class="shop-card-split h-100 d-flex flex-column mb-0">
                     <div class="shop-card-split-img">
                         <span class="shop-rating-badge">

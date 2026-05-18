@@ -909,6 +909,7 @@ function renderShopsMap(shops) {
     } else {
         // Initialize Map
         directoryMapInstance = L.map('shopsDirectoryMap').setView([defaultLat, defaultLon], 13);
+        window.directoryMapInstance = directoryMapInstance;
 
         // Load premium tiles
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {

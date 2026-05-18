@@ -329,39 +329,20 @@ window.submitCartCheckout = async function() {
     const checkoutBtn = document.getElementById('cartCheckoutBtn');
     if (checkoutBtn) {
         checkoutBtn.disabled = true;
-        checkoutBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-2" role="status"></span>جاري تأكيد طلباتك...`;
+        checkoutBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-2" role="status"></span>جاري تأكيد طلبك...`;
     }
     
-    // Group items by shop ID
-    const grouped = {};
-    cart.forEach(item => {
-        const sid = item.shop || 9999;
-        if (!grouped[sid]) {
-            grouped[sid] = [];
-        }
-        grouped[sid].push(item);
-    });
-    
-    const shopIds = Object.keys(grouped);
-    let successCount = 0;
-    
     try {
-        // Place an order for each shop in parallel
-        await Promise.all(shopIds.map(async (sid) => {
-            const items = grouped[sid];
-            const orderData = {
-                shop: parseInt(sid),
-                address: address,
-                items: items.map(it => ({ product: it.product, quantity: it.quantity }))
-            };
-            await api.orders.create(token, orderData);
-            successCount++;
-        }));
+        const orderData = {
+            address: address,
+            items: cart.map(it => ({ product: it.product, quantity: it.quantity }))
+        };
+        await api.orders.create(token, orderData);
         
         if (window.showBarakaToast) {
-            window.showBarakaToast(`يا فرج الله! تم تأكيد ${successCount} طلب بنجاح وسيوصلك المندوبين فوراً!`, 'success', 'bi-check-all');
+            window.showBarakaToast(`يا فرج الله! تم تأكيد طلبك بنجاح وسيوصلك المندوب فوراً!`, 'success', 'bi-check-all');
         } else {
-            alert(`تم تأكيد ${successCount} طلب بنجاح!`);
+            alert(`تم تأكيد طلبك بنجاح!`);
         }
         
         // Clear local cart
@@ -375,14 +356,14 @@ window.submitCartCheckout = async function() {
         switchCartTab('order-tracking');
     } catch (error) {
         window.isSubmittingCartCheckout = false; // Reset lock on error
-        alert('حدث خطأ أثناء إرسال بعض الطلبات: ' + JSON.stringify(error));
+        alert('حدث خطأ أثناء إرسال الطلب: ' + JSON.stringify(error));
         // Reload cart to reflect remaining items
         loadLocalCart();
     } finally {
         if (!window.isSubmittingCartCheckout) { // Only re-enable if block is released (i.e. error occurred)
             if (checkoutBtn) {
                 checkoutBtn.disabled = false;
-                checkoutBtn.innerHTML = `<i class="bi bi-check-all me-1"></i>تأكيد الطلبات ودليفري فوري!`;
+                checkoutBtn.innerHTML = `<i class="bi bi-check-all me-1"></i>تأكيد الطلب ودليفري فوري!`;
             }
         }
     }
@@ -513,15 +494,19 @@ function renderCartOrdersList() {
         const isCompleted = ['DELIVERED', 'CANCELLED'].includes(order.status);
         
         // Product list breakdown HTML
-        const itemsList = order.items.map(it => `
-            <div class="d-flex justify-content-between align-items-center py-2 border-bottom" style="border-color: rgba(201,153,151,0.06) !important;">
-                <div class="d-flex align-items-center gap-2">
-                    <span class="badge bg-marigold bg-opacity-15 text-marigold rounded-pill px-2" style="font-size: 0.8rem;">x${it.quantity}</span>
-                    <span class="text-espresso fw-bold" style="font-size: 0.95rem;">${it.product_details ? it.product_details.name : 'منتج فريش'}</span>
+        const itemsList = order.items.map(it => {
+            const prodName = it.product_details ? it.product_details.name : 'منتج فريش';
+            const shopSuffix = (it.product_details && it.product_details.shop_name) ? ` <small class="text-mesa fw-normal">(${it.product_details.shop_name})</small>` : '';
+            return `
+                <div class="d-flex justify-content-between align-items-center py-2 border-bottom" style="border-color: rgba(201,153,151,0.06) !important;">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-marigold bg-opacity-15 text-marigold rounded-pill px-2" style="font-size: 0.8rem;">x${it.quantity}</span>
+                        <span class="text-espresso fw-bold" style="font-size: 0.95rem;">${prodName}${shopSuffix}</span>
+                    </div>
+                    <span class="text-marigold fw-bold" style="font-size: 0.95rem;">${it.price} ج.م</span>
                 </div>
-                <span class="text-marigold fw-bold" style="font-size: 0.95rem;">${it.price} ج.م</span>
-            </div>
-        `).join('');
+            `;
+        }).join('');
         
         // OTP Delivery block
         let otpHtml = '';
@@ -585,9 +570,17 @@ function renderCartOrdersList() {
  
                 <!-- Shop & Driver Delivery Details -->
                 <div class="mt-3 p-3 rounded-3" style="background: rgba(253, 245, 241, 0.45); border: 1px solid rgba(201,153,151,0.06);">
-                    <div class="d-flex align-items-center gap-2 mb-2" style="font-size: 0.95rem;">
-                        <i class="bi bi-shop text-marigold fs-5"></i>
-                        <span class="text-espresso fw-bold">${order.shop_details ? order.shop_details.name : 'محل بركة'}</span>
+                    <div class="d-flex align-items-start gap-2 mb-2" style="font-size: 0.95rem;">
+                        <i class="bi bi-shop text-marigold fs-5 mt-0.5"></i>
+                        <div>
+                            <span class="text-espresso fw-bold">
+                                الطلب يشمل: ${
+                                    order.shops_details && order.shops_details.length > 0
+                                        ? order.shops_details.map(s => s.name).join(' ، ')
+                                        : (order.shop_details ? order.shop_details.name : 'محل بركة')
+                                }
+                            </span>
+                        </div>
                     </div>
                     ${order.driver_details ? `
                     <div class="d-flex align-items-center gap-2" style="font-size: 0.95rem;">

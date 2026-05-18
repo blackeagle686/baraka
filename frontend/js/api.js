@@ -183,6 +183,18 @@ const api = {
             if (!res.ok) throw await res.json();
             return await res.json();
         },
+        acceptCombinedDelivery: async (token, orderIds, deliveryPrice) => {
+            const res = await fetch(`${API_BASE}/orders/accept_combined_delivery/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ order_ids: orderIds, delivery_price: deliveryPrice })
+            });
+            if (!res.ok) throw await res.json();
+            return await res.json();
+        },
         confirmPaymentReceived: async (token, orderId, driverOtp) => {
             const res = await fetch(`${API_BASE}/orders/${orderId}/confirm_payment_received/`, {
                 method: 'POST',
@@ -203,6 +215,18 @@ const api = {
                     'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify({ reason })
+            });
+            if (!res.ok) throw await res.json();
+            return await res.json();
+        },
+        toggleItemReady: async (token, orderId, itemId) => {
+            const res = await fetch(`${API_BASE}/orders/${orderId}/toggle_item_ready/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ item_id: itemId })
             });
             if (!res.ok) throw await res.json();
             return await res.json();

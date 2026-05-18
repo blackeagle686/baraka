@@ -21,7 +21,7 @@ class OrderStatus(models.TextChoices):
 
 class Order(models.Model):
     customer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='customer_orders')
-    shop = models.ForeignKey(Shop, on_delete=models.CASCADE, related_name='shop_orders')
+    shop = models.ForeignKey(Shop, on_delete=models.SET_NULL, null=True, blank=True, related_name='shop_orders')
     driver = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='driver_orders')
     total_price = models.DecimalField(max_digits=10, decimal_places=2)
     delivery_price = models.DecimalField(max_digits=6, decimal_places=2, default=0.00)
@@ -54,6 +54,7 @@ class OrderItem(models.Model):
     product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True)
     quantity = models.PositiveIntegerField(default=1)
     price = models.DecimalField(max_digits=10, decimal_places=2) # Snapshot of price at the time of order
+    is_ready = models.BooleanField(default=False)
 
 class DriverRating(models.Model):
     class RaterType(models.TextChoices):

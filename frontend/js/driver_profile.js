@@ -241,6 +241,148 @@ window.changeAvailablePage = function(page) {
     renderAvailableOrders(currentAvailableOrders);
 };
 
+function getCustomerGroupKey(order) {
+    const customerId = order.customer || order.customer_details?.id || order.customer_details?.phone || 'unknown';
+    return `${customerId}`;
+}
+
+function getCustomerName(order) {
+    return order.customer_details?.name || order.customer_details?.phone || 'عميل بركة';
+}
+
+function getCustomerPhone(order) {
+    return order.customer_details?.phone || '';
+}
+
+function moneyValue(value) {
+    return (parseFloat(value) || 0).toFixed(2);
+}
+
+function sumOrderTotals(orders, field) {
+    return orders.reduce((sum, order) => sum + (parseFloat(order[field]) || 0), 0);
+}
+
+function groupOrdersByCustomer(orders) {
+    const groupsMap = new Map();
+
+    orders.forEach((order) => {
+        const key = getCustomerGroupKey(order);
+        if (!groupsMap.has(key)) {
+            groupsMap.set(key, {
+                key,
+                customerName: getCustomerName(order),
+                customerPhone: getCustomerPhone(order),
+                address: order.address || 'العنوان الافتراضي',
+                orders: []
+            });
+        }
+        groupsMap.get(key).orders.push(order);
+    });
+
+    return Array.from(groupsMap.values()).map((group) => {
+        const shopsMap = new Map();
+        group.orders.forEach((order) => {
+            if (order.shops_details && order.shops_details.length > 0) {
+                order.shops_details.forEach(s => {
+                    const shopKey = s.id;
+                    if (!shopsMap.has(shopKey)) {
+                        shopsMap.set(shopKey, {
+                            name: s.name,
+                            address: s.address || '',
+                            total: 0,
+                            orders: [],
+                            allItemsReady: true
+                        });
+                    }
+                    const shop = shopsMap.get(shopKey);
+                    const shopItems = order.items.filter(it => it.product_details && it.product_details.shop_id === s.id);
+                    const shopTotal = shopItems.reduce((sum, it) => sum + (parseFloat(it.price) * it.quantity), 0);
+                    shop.total += shopTotal;
+                    
+                    const hasUnready = shopItems.some(it => !it.is_ready);
+                    if (hasUnready) {
+                        shop.allItemsReady = false;
+                    }
+                    
+                    if (!shop.orders.includes(order)) {
+                        shop.orders.push(order);
+                    }
+                });
+            } else {
+                const shopKey = order.shop || order.shop_details?.id || `shop-${order.id}`;
+                if (!shopsMap.has(shopKey)) {
+                    shopsMap.set(shopKey, {
+                        name: order.shop_details?.name || 'محل بركة',
+                        address: order.shop_details?.address || '',
+                        total: 0,
+                        orders: [],
+                        allItemsReady: true
+                    });
+                }
+                const shop = shopsMap.get(shopKey);
+                shop.total += parseFloat(order.total_price) || 0;
+                
+                const hasUnready = order.items ? order.items.some(it => !it.is_ready) : false;
+                if (hasUnready) {
+                    shop.allItemsReady = false;
+                }
+                
+                shop.orders.push(order);
+            }
+        });
+
+        group.shops = Array.from(shopsMap.values());
+        group.totalProducts = sumOrderTotals(group.orders, 'total_price');
+        group.totalDelivery = sumOrderTotals(group.orders, 'delivery_price');
+        group.latestCreatedAt = group.orders
+            .map(order => new Date(order.created_at).getTime())
+            .filter(Boolean)
+            .sort((a, b) => b - a)[0] || Date.now();
+        return group;
+    }).sort((a, b) => b.latestCreatedAt - a.latestCreatedAt);
+}
+
+function renderOrderItems(order) {
+    return order.items.map(it => {
+        const itemReadyBadge = it.is_ready 
+            ? `<span class="badge bg-success-subtle text-success rounded-pill px-2 py-0.5 fw-bold" style="font-size: 0.68rem;">جاهز 🟢</span>` 
+            : `<span class="badge bg-warning-subtle text-warning rounded-pill px-2 py-0.5 fw-bold" style="font-size: 0.68rem;">يُحضّر ⏳</span>`;
+        return `
+            <div class="d-flex justify-content-between align-items-center text-muted small py-1.5 border-bottom border-light">
+                <span>- ${it.product_details ? it.product_details.name : 'منتج'} (x${it.quantity})</span>
+                ${itemReadyBadge}
+            </div>
+        `;
+    }).join('');
+}
+
+function renderShopStops(group) {
+    return group.shops.map((shop, index) => {
+        const readyBadge = shop.allItemsReady 
+            ? `<span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-1 fw-bold" style="font-size: 0.76rem;"><i class="bi bi-check-circle-fill me-1"></i>الطلب جاهز للاستلام 🟢</span>` 
+            : `<span class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill px-2 py-1 fw-bold" style="font-size: 0.76rem;"><i class="bi bi-hourglass-split me-1"></i>جاري التحضير بالمحل ⏳</span>`;
+            
+        return `
+            <div class="transit-stop-card transit-pickup animate-up">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+                            <span class="badge bg-marigold text-white rounded-pill px-2 py-1 small" style="font-size: 0.8rem;">استلام من محل ${index + 1}</span>
+                            ${readyBadge}
+                        </div>
+                        <div class="transit-title mt-1">${shop.name}</div>
+                        <div class="transit-address"><i class="bi bi-geo-alt-fill text-marigold me-1"></i>${shop.address || 'عنوان المحل'}</div>
+                    </div>
+                    <div class="text-end">
+                        <span class="text-marigold fw-extrabold fs-5">${moneyValue(shop.total)} ج.م</span>
+                        <div class="text-muted small mt-1" style="font-size: 0.72rem;">طلبات: ${shop.orders.map(order => `#${order.id}`).join('، ')}</div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
 function renderAvailableOrders(orders) {
     currentAvailableOrders = orders;
     const container = document.getElementById('availableOrdersList');
@@ -266,8 +408,8 @@ function renderAvailableOrders(orders) {
         return;
     }
 
-    // Slicing for pagination
-    const totalItems = orders.length;
+    const groups = groupOrdersByCustomer(orders);
+    const totalItems = groups.length;
     const totalPages = Math.ceil(totalItems / AVAILABLE_PAGE_SIZE);
     if (currentAvailablePage > totalPages) {
         currentAvailablePage = Math.max(1, totalPages);
@@ -275,57 +417,110 @@ function renderAvailableOrders(orders) {
     
     const startIndex = (currentAvailablePage - 1) * AVAILABLE_PAGE_SIZE;
     const endIndex = Math.min(startIndex + AVAILABLE_PAGE_SIZE, totalItems);
-    const slicedOrders = orders.slice(startIndex, endIndex);
+    const slicedGroups = groups.slice(startIndex, endIndex);
 
-    slicedOrders.forEach((order, i) => {
-        const dateFormatted = new Date(order.created_at).toLocaleString('ar-EG', {
+    slicedGroups.forEach((group, i) => {
+        const dateFormatted = new Date(group.latestCreatedAt).toLocaleString('ar-EG', {
             hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short'
         });
 
-        // Calculate max allowed delivery fee: minimum 15, max 2% of total order price
-        const maxAllowedPrice = Math.max(15.00, parseFloat(order.total_price) * 0.02).toFixed(2);
-
-        // Items summary list
-        const itemsList = order.items.map(it => `
-            <div class="d-flex justify-content-between text-muted small py-1">
-                <span>- ${it.product_details ? it.product_details.name : 'منتج'} (x${it.quantity})</span>
-            </div>
+        const orderBlocks = group.orders.map((order) => `
+                <div class="bg-white rounded-3 p-2 mb-2" style="border: 1px solid rgba(201,153,151,0.08);">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="fw-bold text-espresso small">طلب #${order.id}</span>
+                        <span class="badge bg-warning-subtle text-warning rounded-pill px-2 py-1">${order.status === 'PREPARING' ? 'قيد التحضير' : 'ينتظر طيار'}</span>
+                    </div>
+                    <div class="text-muted small mb-1"><i class="bi bi-shop me-1"></i>${
+                        order.shops_details && order.shops_details.length > 0
+                            ? order.shops_details.map(s => s.name).join(' ، ')
+                            : (order.shop_details ? order.shop_details.name : 'محل بركة')
+                    }</div>
+                    ${renderOrderItems(order)}
+                    <div class="d-flex justify-content-between align-items-center mt-2 fw-bold text-espresso pt-1 border-top" style="border-color: rgba(201,153,151,0.08) !important;">
+                        <span>حساب المحل:</span>
+                        <span class="text-marigold">${moneyValue(order.total_price)} ج.م</span>
+                    </div>
+                </div>
         `).join('');
+
+        const orderIds = group.orders.map(order => order.id).join(',');
+        const priceInputId = `combinedDeliveryPriceInput-${group.orders[0].id}`;
+        const maxAllowedPrice = Math.max(15.00, group.totalProducts * 0.02).toFixed(2);
+        const isCombined = group.orders.length > 1;
 
         const html = `
             <div class="col-md-6 mb-3 animate-up" style="animation-delay: ${i * 0.05}s;">
-                <div class="dashboard-card p-3 h-100 d-flex flex-column border" style="background-color: rgba(255,255,255,0.7); border-color: rgba(201,153,151,0.12) !important;">
+                <div class="dashboard-card p-3 h-100 d-flex flex-column border shadow-sm" style="background-color: rgba(255,255,255,0.78); border-color: rgba(201,153,151,0.15) !important; border-radius: 20px;">
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <span class="fw-bold text-espresso">الطلب #${order.id}</span>
-                        <span class="badge bg-warning-subtle text-warning rounded-pill px-2 py-1">${order.status === 'PREPARING' ? 'قيد التحضير بالمحل' : 'مقبول وينتظر طيار'}</span>
+                        <span class="badge ${isCombined ? 'bg-success text-white' : 'bg-warning text-dark'} rounded-pill px-3 py-2 fw-bold" style="font-size: 0.9rem;">
+                            <i class="bi ${isCombined ? 'bi-truck-flatbed' : 'bi-truck'} me-1"></i>${isCombined ? 'رحلة مجمعة' : 'طلب واحد'} (${group.orders.length} طلبات)
+                        </span>
+                        <span class="text-muted small"><i class="bi bi-clock me-1"></i>آخر طلب: ${dateFormatted}</span>
                     </div>
 
+                    <!-- Pickup Locations -->
                     <div class="mb-3">
-                        <div class="text-muted small mb-1"><i class="bi bi-shop me-1"></i>من محل: <strong class="text-espresso">${order.shop_details ? order.shop_details.name : 'محل بركة'}</strong> (${order.shop_details ? order.shop_details.address : ''})</div>
-                        <div class="text-muted small mb-1"><i class="bi bi-geo-alt me-1"></i>توصيل إلى: <strong class="text-espresso">${order.address || 'العنوان المفتوح'}</strong></div>
-                        <div class="text-muted small mb-2"><i class="bi bi-clock me-1"></i>وقت الطلب: ${dateFormatted}</div>
+                        <div class="text-espresso fw-bold mb-2 pb-1 border-bottom d-flex align-items-center gap-2" style="font-size: 1rem;">
+                            <i class="bi bi-shop text-marigold fs-5"></i>
+                            <span>1. محطات استلام المنتجات من المحلات:</span>
+                        </div>
+                        ${renderShopStops(group)}
                     </div>
 
-                    <div class="bg-white rounded-3 p-2 mb-3 flex-grow-1" style="border: 1px solid rgba(201,153,151,0.08);">
-                        <div class="text-muted small mb-2 border-bottom pb-1 fw-bold">المنتجات المطلوب نقلها:</div>
-                        ${itemsList}
-                        <div class="d-flex justify-content-between align-items-center mt-2 fw-bold text-espresso pt-1">
-                            <span>حساب المنتجات بالمحل:</span>
-                            <span class="text-marigold">${order.total_price} ج.م</span>
+                    <!-- Destination Location -->
+                    <div class="mb-3">
+                        <div class="text-espresso fw-bold mb-2 pb-1 border-bottom d-flex align-items-center gap-2" style="font-size: 1rem;">
+                            <i class="bi bi-geo-alt-fill text-terracotta fs-5"></i>
+                            <span>2. محطة تسليم العميل:</span>
+                        </div>
+                        <div class="transit-stop-card transit-dropoff">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="transit-title">${group.customerName}</div>
+                                    <div class="transit-address"><i class="bi bi-house-door-fill text-terracotta me-1"></i>العنوان: <strong class="fs-5 text-espresso">${group.address}</strong></div>
+                                </div>
+                                ${group.customerPhone ? `
+                                <div>
+                                    <a href="tel:${group.customerPhone}" class="transit-phone-btn">
+                                        <i class="bi bi-telephone-fill"></i>اتصال
+                                    </a>
+                                </div>` : ''}
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Custom Delivery Price input section -->
-                    <div class="mb-3">
-                        <label class="form-label text-espresso small fw-bold mb-1"><i class="bi bi-cash-stack me-1 text-marigold"></i>سعر التوصيل الذي تطلبه (ج.م):</label>
-                        <input type="number" class="form-control rounded-pill px-3 py-1 mb-1" id="deliveryPriceInput-${order.id}" value="15" min="15" max="${maxAllowedPrice}" step="1">
-                        <span class="d-block text-muted px-2" style="font-size: 0.72rem; line-height: 1.2;">
-                            <i class="bi bi-info-circle me-1 text-marigold"></i>الحد الأدنى: <strong>15 ج.م</strong> | الحد الأقصى (2%): <strong>${maxAllowedPrice} ج.م</strong>
-                        </span>
+                    <!-- Hidden/Collapsed Details -->
+                    <details class="transit-details mb-3">
+                        <summary class="cursor-pointer small fw-bold text-espresso mb-1">📦 عرض تفاصيل محتويات الطلب والمنتجات</summary>
+                        <div class="mt-2 bg-white rounded-3 p-2 border">
+                            ${orderBlocks}
+                        </div>
+                    </details>
+
+                    <!-- Financial Summary & Bid Input -->
+                    <div class="mt-auto pt-3 border-top" style="border-color: rgba(201,153,151,0.1) !important;">
+                        <div class="giant-badge-shop-total mb-3">
+                            <span class="small fw-bold"><i class="bi bi-shop me-1"></i>إجمالي حساب المحلات:</span>
+                            <span>${moneyValue(group.totalProducts)} ج.م</span>
+                        </div>
+
+                        <div class="mb-3 p-3 rounded-4" style="background: rgba(194, 146, 64, 0.04); border: 1px dashed rgba(194, 146, 64, 0.15);">
+                            <label class="form-label text-espresso small fw-extrabold mb-1 d-flex align-items-center gap-1">
+                                <i class="bi bi-cash-stack text-marigold fs-5"></i>
+                                <span>حدد سعر خدمة التوصيل للرحلة كاملة:</span>
+                            </label>
+                            <div class="input-group shadow-none mt-1">
+                                <span class="input-group-text bg-white border-end-0 rounded-end-pill px-3 fw-bold text-espresso">ج.م</span>
+                                <input type="number" class="form-control bg-white border-start-0 rounded-start-pill px-3 py-2 fw-extrabold text-espresso fs-5 text-center shadow-none" id="${priceInputId}" value="15" min="15" max="${maxAllowedPrice}" step="1">
+                            </div>
+                            <span class="d-block text-muted px-2 mt-1" style="font-size: 0.72rem; line-height: 1.3;">
+                                سعر موحد عادل لجميع طلبات العميل في هذه الرحلة | الحد الأدنى 15 ج.م | الحد الأقصى ${maxAllowedPrice} ج.م (2% من إجمالي الطلب)
+                            </span>
+                        </div>
                     </div>
 
-                    <button class="btn btn-primary rounded-pill w-100 py-2 fw-bold mt-auto" onclick="acceptDeliveryTrip(${order.id})">
-                        <i class="bi bi-check2-circle me-1"></i>قبول الطلب وتحديد سعر التوصيل
+                    <button class="btn btn-primary rounded-pill w-100 py-3 fw-bold fs-5 shadow-sm mt-2" onclick="acceptCombinedDeliveryTrip('${orderIds}', '${priceInputId}')">
+                        <i class="bi bi-check2-circle me-1"></i>قبول وتأكيد الرحلة المجمعة
                     </button>
                 </div>
             </div>
@@ -370,103 +565,130 @@ function renderActiveTrips(trips) {
         return;
     }
 
-    // Slicing for pagination
-    const totalItems = trips.length;
+    const groups = groupOrdersByCustomer(trips);
+    const totalItems = groups.length;
     const totalPages = Math.ceil(totalItems / TRIPS_PAGE_SIZE);
     if (currentTripsPage > totalPages) {
         currentTripsPage = Math.max(1, totalPages);
     }
-    
+
     const startIndex = (currentTripsPage - 1) * TRIPS_PAGE_SIZE;
     const endIndex = Math.min(startIndex + TRIPS_PAGE_SIZE, totalItems);
-    const slicedTrips = trips.slice(startIndex, endIndex);
+    const slicedGroups = groups.slice(startIndex, endIndex);
 
-    let allHtml = '';
-
-    slicedTrips.forEach((trip, i) => {
-        const dateFormatted = new Date(trip.created_at).toLocaleString('ar-EG', {
+    container.innerHTML = slicedGroups.map((group, i) => {
+        const dateFormatted = new Date(group.latestCreatedAt).toLocaleString('ar-EG', {
             hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short'
         });
-        
-        const isDisputed = (trip.dispute_status === 'PENDING');
-        const isDeliveredUnpaid = (trip.status === 'DELIVERED' && !trip.is_paid_to_shop);
-        
+        const orderIds = group.orders.map(order => order.id).join(',');
+        const undeliveredOrders = group.orders.filter(order => order.status !== 'DELIVERED' && order.dispute_status !== 'PENDING');
+        const deliveredUnpaidOrders = group.orders.filter(order => order.status === 'DELIVERED' && !order.is_paid_to_shop);
+        const disputedOrders = group.orders.filter(order => order.dispute_status === 'PENDING');
+        const isCombined = group.orders.length > 1;
+
         let statusBadgeHtml = `<span class="badge bg-success-subtle text-success rounded-pill px-2 py-1">جاري التوصيل للعميل</span>`;
-        if (isDisputed) {
-            statusBadgeHtml = `<span class="badge bg-danger text-white rounded-pill px-2 py-1">قيد النزاع ⚠️</span>`;
-        } else if (isDeliveredUnpaid) {
-            statusBadgeHtml = `<span class="badge bg-danger-subtle text-danger rounded-pill px-2 py-1">بانتظار سداد الحساب للمحل</span>`;
+        if (disputedOrders.length) {
+            statusBadgeHtml = `<span class="badge bg-danger text-white rounded-pill px-2 py-1">بها نزاع</span>`;
+        } else if (!undeliveredOrders.length && deliveredUnpaidOrders.length) {
+            statusBadgeHtml = `<span class="badge bg-danger-subtle text-danger rounded-pill px-2 py-1">بانتظار سداد حساب المحلات</span>`;
         }
 
-        let cardTitle = `رحلة نشطة #${trip.id}`;
-        if (isDisputed) {
-            cardTitle = `رحلة متنازع عليها #${trip.id}`;
-        } else if (isDeliveredUnpaid) {
-            cardTitle = `رحلة مكتملة بانتظار السداد #${trip.id}`;
-        }
+        const ordersHtml = group.orders.map((trip) => {
+            const isDisputed = trip.dispute_status === 'PENDING';
+            const isDeliveredUnpaid = trip.status === 'DELIVERED' && !trip.is_paid_to_shop;
+            const orderStatus = isDisputed ? 'قيد النزاع' : isDeliveredUnpaid ? 'تم التسليم - ينتظر تصفية المحل' : trip.status === 'DELIVERED' ? 'تم التسليم' : 'جاري التوصيل';
 
-        let actionHtmlBlock = `
-            <button class="btn btn-success flex-grow-1 rounded-pill py-2 fw-bold" onclick="completeDeliveryTrip(${trip.id})">
-                <i class="bi bi-check2-all me-1"></i>تم التوصيل بنجاح للعميل
-            </button>
-        `;
-        if (isDisputed) {
-            actionHtmlBlock = `
-                <div class="alert alert-danger text-center py-2 rounded-pill small mb-0 fw-bold border-0" style="background-color: rgba(220,53,69,0.08); color: var(--color-terracotta);">
-                    <i class="bi bi-exclamation-circle me-1"></i>الطلب قيد النزاع والمراجعة. جاري التحقق للفصل بين الطرفين.
+            return `
+                <div class="bg-white rounded-3 p-2 mb-2" style="border: 1px solid rgba(201,153,151,0.08);">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="fw-bold text-espresso small">طلب #${trip.id}</span>
+                        <span class="badge ${isDisputed ? 'bg-danger text-white' : isDeliveredUnpaid ? 'bg-danger-subtle text-danger' : 'bg-success-subtle text-success'} rounded-pill px-2 py-1">${orderStatus}</span>
+                    </div>
+                    <div class="text-muted small mb-1"><i class="bi bi-shop me-1"></i>${
+                        trip.shops_details && trip.shops_details.length > 0
+                            ? trip.shops_details.map(s => s.name).join(' ، ')
+                            : (trip.shop_details ? trip.shop_details.name : 'محل بركة')
+                    }</div>
+                    ${renderOrderItems(trip)}
+                    <div class="d-flex justify-content-between align-items-center mt-2 fw-bold text-espresso pt-1 border-top" style="border-color: rgba(201,153,151,0.08) !important;">
+                        <span>حساب المحل:</span>
+                        <span class="text-marigold">${moneyValue(trip.total_price)} ج.م</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mt-1 fw-bold text-success pt-1">
+                        <span>خدمة التوصيل:</span>
+                        <span>${moneyValue(trip.delivery_price)} ج.م</span>
+                    </div>
+                    ${isDeliveredUnpaid ? `
+                        <div class="mt-2 p-2 bg-white rounded-3 border text-espresso text-center">
+                            <span class="small text-mesa d-block mb-1">رمز تصفية حساب هذا المحل:</span>
+                            <strong class="fs-5 text-success" style="font-family: monospace; letter-spacing: 4px;">${trip.driver_otp || '----'}</strong>
+                            <div id="qrcode-driver-${trip.id}" class="d-flex justify-content-center my-2"></div>
+                        </div>
+                        <button onclick="raiseDriverDispute(${trip.id})" class="btn btn-sm btn-outline-danger rounded-pill w-100 mt-1">
+                            <i class="bi bi-exclamation-octagon me-1"></i>نزاع مع هذا المحل
+                        </button>
+                    ` : ''}
                 </div>
             `;
-        } else if (isDeliveredUnpaid) {
+        }).join('');
+
+        let actionHtmlBlock = '';
+        if (disputedOrders.length) {
             actionHtmlBlock = `
-                <div class="alert alert-danger text-center py-3 rounded-4 mb-2 border-0 fw-bold shadow-sm" style="background-color: rgba(220,53,69,0.06); color: var(--color-terracotta);">
-                    <div class="mb-1"><i class="bi bi-exclamation-triangle-fill me-1"></i>يرجى سداد ${trip.total_price} ج.م للمحل لتصفية الحساب.</div>
-                    <div class="mt-2 p-2 bg-white rounded-3 border text-espresso text-center">
-                        <span class="small text-mesa d-block mb-1">اعطِ هذا الرمز أو أظهر رمز QR لصاحب المحل بعد الدفع:</span>
-                        <strong class="fs-4 text-success tracking-wide" style="font-family: monospace; letter-spacing: 4px;">${trip.driver_otp || '----'}</strong>
-                        <div id="qrcode-driver-${trip.id}" class="d-flex justify-content-center my-2"></div>
-                    </div>
+                <div class="alert alert-danger text-center py-2 rounded-pill small mb-0 fw-bold border-0 flex-grow-1" style="background-color: rgba(220,53,69,0.08); color: var(--color-terracotta);">
+                    <i class="bi bi-exclamation-circle me-1"></i>يوجد طلب قيد النزاع والمراجعة.
                 </div>
-                <button onclick="raiseDriverDispute(${trip.id})" class="btn btn-sm btn-outline-danger rounded-pill w-100 mt-1">
-                    <i class="bi bi-exclamation-octagon me-1"></i>تقديم شكوى / نزاع مع المحل
+            `;
+        } else if (undeliveredOrders.length) {
+            actionHtmlBlock = `
+                <button class="btn btn-success flex-grow-1 rounded-pill py-2 fw-bold" onclick="completeCombinedDeliveryTrip('${orderIds}')">
+                    <i class="bi bi-check2-all me-1"></i>${isCombined ? 'تسليم كل طلبات العميل' : 'تم التوصيل بنجاح للعميل'}
                 </button>
             `;
+        } else if (deliveredUnpaidOrders.length) {
+            actionHtmlBlock = `
+                <div class="alert alert-danger text-center py-3 rounded-4 mb-0 border-0 fw-bold shadow-sm flex-grow-1" style="background-color: rgba(220,53,69,0.06); color: var(--color-terracotta);">
+                    <div><i class="bi bi-exclamation-triangle-fill me-1"></i>بعد استلام الكاش من العميل، ارجع مبلغ كل محل كما هو موضح في خط السير.</div>
+                </div>
+            `;
         }
 
-        const itemsList = trip.items.map(it => `
-            <div class="d-flex justify-content-between text-muted small py-1">
-                <span>- ${it.product_details ? it.product_details.name : 'منتج'} (x${it.quantity})</span>
-            </div>
-        `).join('');
-
-        const html = `
+        return `
             <div class="col-md-6 mb-3 animate-up" style="animation-delay: ${i * 0.05}s;">
                 <div class="dashboard-card p-3 h-100 d-flex flex-column border" style="background-color: rgba(255,255,255,0.7); border-color: rgba(201,153,151,0.12) !important;">
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <span class="fw-bold text-espresso">${cardTitle}</span>
+                        <span class="fw-bold text-espresso">${isCombined ? 'رحلة مجمعة' : 'رحلة'} للعميل: ${group.customerName}</span>
                         ${statusBadgeHtml}
                     </div>
 
                     <div class="mb-3">
-                        <div class="text-muted small mb-1"><i class="bi bi-shop me-1"></i>استلام من: <strong class="text-espresso">${trip.shop_details ? trip.shop_details.name : 'محل بركة'}</strong> (${trip.shop_details ? trip.shop_details.address : ''})</div>
-                        <div class="text-muted small mb-1"><i class="bi bi-person me-1"></i>اسم العميل: <strong class="text-espresso">${trip.customer_details ? trip.customer_details.name : 'عميل بركة'}</strong> (${trip.customer_details ? trip.customer_details.phone : ''})</div>
-                        <div class="text-muted small mb-1"><i class="bi bi-geo-alt me-1"></i>عنوان العميل: <strong class="text-espresso">${trip.address || 'العنوان الافتراضي'}</strong></div>
-                        <div class="text-muted small mb-2"><i class="bi bi-clock me-1"></i>تاريخ الاستلام: ${dateFormatted}</div>
+                        <div class="text-muted small mb-1"><i class="bi bi-person me-1"></i>اسم العميل: <strong class="text-espresso">${group.customerName}</strong> ${group.customerPhone ? `(${group.customerPhone})` : ''}</div>
+                        <div class="text-muted small mb-1"><i class="bi bi-geo-alt me-1"></i>عنوان العميل: <strong class="text-espresso">${group.address}</strong></div>
+                        <div class="text-muted small mb-2"><i class="bi bi-clock me-1"></i>آخر تحديث: ${dateFormatted}</div>
                     </div>
 
-                    <div class="bg-white rounded-3 p-2 mb-3 flex-grow-1" style="border: 1px solid rgba(201,153,151,0.08);">
-                        <div class="text-muted small mb-2 border-bottom pb-1 fw-bold">المنتجات المطلوب نقلها:</div>
-                        ${itemsList}
-                        <div class="d-flex justify-content-between align-items-center mt-2 fw-bold text-espresso pt-1">
-                            <span>حساب المحل:</span>
-                            <span class="text-marigold">${trip.total_price} ج.م</span>
+                    <div class="mb-3">
+                        <div class="text-muted small mb-2 border-bottom pb-1 fw-bold">خط سير المحلات والمبلغ الراجع لكل محل:</div>
+                        ${renderShopStops(group)}
+                    </div>
+
+                    <div class="flex-grow-1 mb-3">
+                        <div class="text-muted small mb-2 border-bottom pb-1 fw-bold">تفاصيل الطلبات:</div>
+                        ${ordersHtml}
+                    </div>
+
+                    <div class="bg-white rounded-3 p-2 mb-3" style="border: 1px solid rgba(201,153,151,0.08);">
+                        <div class="d-flex justify-content-between fw-bold text-espresso">
+                            <span>إجمالي حساب المحلات:</span>
+                            <span class="text-marigold">${moneyValue(group.totalProducts)} ج.م</span>
                         </div>
-                        <div class="d-flex justify-content-between align-items-center mt-1 fw-bold text-success pt-1 border-top" style="border-color: rgba(201,153,151,0.05) !important;">
-                            <span>خدمة توصيل طيار:</span>
-                            <span>${trip.delivery_price} ج.م</span>
+                        <div class="d-flex justify-content-between fw-bold text-success">
+                            <span>إجمالي خدمة التوصيل:</span>
+                            <span>${moneyValue(group.totalDelivery)} ج.م</span>
                         </div>
-                        <div class="d-flex justify-content-between align-items-center mt-1 fw-bold text-espresso pt-1 border-top" style="border-color: rgba(201,153,151,0.1) !important;">
-                            <span>إجمالي المطلوب من العميل:</span>
-                            <span class="text-marigold">${(parseFloat(trip.total_price) + parseFloat(trip.delivery_price)).toFixed(2)} ج.م</span>
+                        <div class="d-flex justify-content-between fw-bold text-espresso border-top mt-1 pt-1" style="border-color: rgba(201,153,151,0.1) !important;">
+                            <span>المطلوب من العميل:</span>
+                            <span class="text-marigold">${moneyValue(group.totalProducts + group.totalDelivery)} ج.م</span>
                         </div>
                     </div>
 
@@ -476,13 +698,9 @@ function renderActiveTrips(trips) {
                 </div>
             </div>
         `;
-        allHtml += html;
-    });
+    }).join('');
 
-    container.innerHTML = allHtml;
-
-    // Generate QR Codes for sliced trips
-    slicedTrips.forEach((trip) => {
+    slicedGroups.flatMap(group => group.orders).forEach((trip) => {
         const isDeliveredUnpaid = (trip.status === 'DELIVERED' && !trip.is_paid_to_shop);
         if (isDeliveredUnpaid && trip.driver_otp) {
             const qrContainer = document.getElementById(`qrcode-driver-${trip.id}`);
@@ -490,9 +708,9 @@ function renderActiveTrips(trips) {
                 qrContainer.innerHTML = '';
                 new QRCode(qrContainer, {
                     text: trip.driver_otp,
-                    width: 140,
-                    height: 140,
-                    colorDark : "#198754", // text-success color
+                    width: 120,
+                    height: 120,
+                    colorDark : "#198754",
                     colorLight : "#ffffff",
                     correctLevel : QRCode.CorrectLevel.H
                 });
@@ -503,6 +721,7 @@ function renderActiveTrips(trips) {
     if (window.renderClientPagination) {
         window.renderClientPagination('driverTripsPagination', totalItems, currentTripsPage, TRIPS_PAGE_SIZE, 'window.changeTripsPage');
     }
+    return;
 }
 
 window.acceptDeliveryTrip = async function(orderId) {
@@ -516,6 +735,36 @@ window.acceptDeliveryTrip = async function(orderId) {
         loadDriverOrders();
     } catch (error) {
         await showBarakaAlert('حدث خطأ أثناء قبول الرحلة: ' + (error.detail || JSON.stringify(error)), 'warning', 'خطأ في القبول ⚠️');
+    }
+}
+
+window.acceptCombinedDeliveryTrip = async function(orderIdsText, priceInputId = null) {
+    const token = localStorage.getItem('access_token');
+    const orderIds = String(orderIdsText).split(',').map(id => parseInt(id, 10)).filter(Boolean);
+    if (!orderIds.length) return;
+
+    try {
+        const fallbackPriceInput = document.getElementById(`deliveryPriceInput-${orderIds[0]}`);
+        const sharedPriceInput = priceInputId ? document.getElementById(priceInputId) : fallbackPriceInput;
+        const deliveryPrice = parseFloat(sharedPriceInput?.value) || 15.00;
+
+        if (api.orders.acceptCombinedDelivery) {
+            await api.orders.acceptCombinedDelivery(token, orderIds, deliveryPrice);
+        } else {
+            await api.orders.acceptDelivery(token, orderIds[0], deliveryPrice);
+            for (const orderId of orderIds.slice(1)) {
+                await api.orders.acceptDelivery(token, orderId, 15.00);
+            }
+        }
+
+        const message = orderIds.length > 1
+            ? `تم قبول ${orderIds.length} طلبات لنفس العميل في رحلة واحدة بسعر توصيل واحد (${deliveryPrice.toFixed(2)} ج.م). اذهب للمحلات بالترتيب واجمع حساب كل محل، ثم سلّم للعميل.`
+            : 'تم قبول الرحلة وتعيينك طياراً للتوصيل بنجاح!';
+        await showBarakaAlert(message, 'info', 'تم القبول ✅');
+        loadDriverOrders();
+    } catch (error) {
+        await showBarakaAlert('حدث خطأ أثناء قبول الرحلة المجمعة: ' + (error.detail || JSON.stringify(error)), 'warning', 'خطأ في القبول ⚠️');
+        loadDriverOrders();
     }
 }
 
@@ -538,6 +787,33 @@ window.completeDeliveryTrip = async function(orderId) {
         loadDriverOrders();
     } catch (error) {
         await showBarakaAlert('حدث خطأ أثناء إكمال التوصيل: ' + (error.detail || JSON.stringify(error)), 'warning', 'خطأ في التوصيل ⚠️');
+    }
+}
+
+window.completeCombinedDeliveryTrip = async function(orderIdsText) {
+    const token = localStorage.getItem('access_token');
+    const orderIds = String(orderIdsText).split(',').map(id => parseInt(id, 10)).filter(Boolean);
+    if (!orderIds.length) return;
+
+    try {
+        for (const orderId of orderIds) {
+            const trip = currentActiveTrips.find(order => order.id === orderId);
+            if (!trip || trip.status === 'DELIVERED' || trip.dispute_status === 'PENDING') continue;
+
+            let customerOtp = await showBarakaQRScanner(`مسح رمز QR للعميل - طلب #${orderId} 📦`);
+            if (!customerOtp) {
+                customerOtp = await showBarakaPrompt(`أدخل رمز تحقق العميل لطلب #${orderId}:`, 'مثال: 1234', `تأكيد تسليم طلب #${orderId}`);
+            }
+            if (!customerOtp) return;
+
+            await api.orders.updateStatus(token, orderId, 'DELIVERED', { customer_otp: customerOtp });
+        }
+
+        await showBarakaAlert('تم تأكيد تسليم طلبات العميل بنجاح. ستظهر لك الآن مبالغ التصفية الراجعة لكل محل.', 'info', 'تم التوصيل 🎉');
+        loadDriverOrders();
+    } catch (error) {
+        await showBarakaAlert('حدث خطأ أثناء إكمال التوصيل المجمع: ' + (error.detail || JSON.stringify(error)), 'warning', 'خطأ في التوصيل ⚠️');
+        loadDriverOrders();
     }
 }
 

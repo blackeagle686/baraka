@@ -74,9 +74,9 @@ class ShopViewSet(viewsets.ModelViewSet):
         except (TypeError, ValueError):
             return Response({"detail": "Rating must be an integer between 1 and 5."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Check if the user has a completed order from this shop
+        # Check if the user has a completed order from this shop (including multi-shop orders)
         from orders.models import Order, OrderStatus
-        has_bought = Order.objects.filter(customer=user, shop=shop, status=OrderStatus.DELIVERED).exists()
+        has_bought = Order.objects.filter(customer=user, items__product__shop=shop, status=OrderStatus.DELIVERED).exists()
         if not has_bought:
             return Response(
                 {"detail": "Only customers who have successfully bought from this shop can rate it."},
@@ -112,7 +112,7 @@ class ShopViewSet(viewsets.ModelViewSet):
         shop = self.get_object()
         user = request.user
         from orders.models import Order, OrderStatus
-        has_bought = Order.objects.filter(customer=user, shop=shop, status=OrderStatus.DELIVERED).exists()
+        has_bought = Order.objects.filter(customer=user, items__product__shop=shop, status=OrderStatus.DELIVERED).exists()
         
         from .models import ShopRating
         existing_rating = ShopRating.objects.filter(shop=shop, customer=user).first()

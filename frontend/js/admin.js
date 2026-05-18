@@ -273,7 +273,12 @@ function renderOrdersTable(orders) {
     tbody.innerHTML = orders.map(o => {
         const date = new Date(o.created_at).toLocaleDateString('ar-EG', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
         const customerName = o.customer_details?.name || o.customer_details?.phone || '—';
-        const shopName = o.shop_details?.name || '—';
+        let shopName = '—';
+        if (o.shops_details && o.shops_details.length > 0) {
+            shopName = o.shops_details.map(s => s.name).join(' ، ');
+        } else if (o.shop_details) {
+            shopName = o.shop_details.name;
+        }
         const driverName = o.driver_details?.name || o.driver_details?.phone || 'لم يُعيَّن';
 
         return `
@@ -323,7 +328,11 @@ function viewOrderDetails(orderId) {
             <div class="col-md-6">
                 <div class="p-3 rounded" style="background: rgba(255,255,255,0.05);">
                     <h6 class="text-marigold mb-3"><i class="bi bi-shop"></i> المحل والطيار</h6>
-                    <p class="mb-1"><strong>المحل:</strong> ${order.shop_details?.name || '—'}</p>
+                    <p class="mb-1"><strong>المحلات:</strong> ${
+                        order.shops_details && order.shops_details.length > 0
+                            ? order.shops_details.map(s => s.name).join(' ، ')
+                            : (order.shop_details ? order.shop_details.name : '—')
+                    }</p>
                     <p class="mb-1"><strong>هاتف المحل:</strong> <span dir="ltr">${order.shop_details?.phone || order.shop_details?.owner_phone || '—'}</span></p>
                     <p class="mb-1"><strong>الطيار:</strong> ${order.driver_details?.name || 'لم يُعيّن'}</p>
                     <p class="mb-1"><strong>هاتف الطيار:</strong> <span dir="ltr">${order.driver_details?.phone || '—'}</span></p>

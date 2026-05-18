@@ -32,7 +32,7 @@ class OrderViewSet(viewsets.ModelViewSet):
         # When an admin uses the standard order endpoint (e.g. from their personal cart),
         # they should only see their own personal orders.
         if user.role == 'SHOP_OWNER':
-            return base_qs.filter(shop__owner=user)
+            return base_qs.filter(items__product__shop__owner=user).distinct()
         
         elif user.role == 'DRIVER':
             return base_qs.filter(
@@ -48,33 +48,28 @@ class OrderViewSet(viewsets.ModelViewSet):
             return Response({"detail": "Only customers can place orders."}, status=status.HTTP_403_FORBIDDEN)
 
         data = request.data
-        shop_id = data.get('shop')
         address = data.get('address')
         items_data = data.get('items', [])
 
-        if not shop_id or not items_data:
-            return Response({"detail": "Missing shop or items data."}, status=status.HTTP_400_BAD_REQUEST)
-
-        try:
-            shop = Shop.objects.get(id=shop_id)
-        except Shop.DoesNotExist:
-            return Response({"detail": "Shop not found."}, status=status.HTTP_404_NOT_FOUND)
+        if not items_data:
+            return Response({"detail": "Missing items data."}, status=status.HTTP_400_BAD_REQUEST)
 
         # ── 1) BULK fetch all products in ONE query (replaces N queries in loop) ──
         product_ids = [it['product'] for it in items_data]
         products_map = {
-            p.id: p for p in Product.objects.filter(id__in=product_ids, shop=shop)
+            p.id: p for p in Product.objects.filter(id__in=product_ids).select_related('shop', 'shop__owner')
         }
 
         # ── 2) Validate all items and compute totals (zero DB hits) ──
         total_price = 0
         order_items = []
+        unique_shops = set()
 
         for it in items_data:
             prod = products_map.get(int(it['product']))
             if not prod:
                 return Response(
-                    {"detail": f"Product {it['product']} not found in this shop."},
+                    {"detail": f"المنتج {it['product']} غير موجود."},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
@@ -88,12 +83,16 @@ class OrderViewSet(viewsets.ModelViewSet):
             price = prod.price
             total_price += price * qty
             order_items.append((prod, qty, price))
+            if prod.shop:
+                unique_shops.add(prod.shop)
+
+        order_shop = list(unique_shops)[0] if len(unique_shops) == 1 else None
 
         # ── 3) Atomic transaction: single DB commit for order + items + stock ──
         with transaction.atomic():
             order = Order.objects.create(
                 customer=request.user,
-                shop=shop,
+                shop=order_shop,
                 total_price=total_price,
                 address=address or request.user.location or '',
                 status=OrderStatus.PENDING,
@@ -115,17 +114,18 @@ class OrderViewSet(viewsets.ModelViewSet):
 
             Product.objects.bulk_update(products_to_update, ['quantity', 'available'])
 
-            # Notify the shop owner about the new order.
-            Notification.objects.create(
-                user=shop.owner,
-                shop=shop,
-                title="طلب جديد من الزبون",
-                message=(
-                    f"تلقيت طلبًا جديدًا من عميلك على متجر '{shop.name}'. "
-                    f"إجمالي الطلب: {total_price:.2f} ج.م. راجع الطلب الآن لإدارته."
-                ),
-                notification_type='new_order'
-            )
+            # Notify all unique shop owners about the new order.
+            for s in unique_shops:
+                Notification.objects.create(
+                    user=s.owner,
+                    shop=s,
+                    title="طلب جديد من الزبون",
+                    message=(
+                        f"تلقيت طلبًا جديدًا من عميلك يشمل متجر '{s.name}'. "
+                        f"إجمالي الطلب: {total_price:.2f} ج.م. راجع الطلب الآن لإدارته."
+                    ),
+                    notification_type='new_order'
+                )
 
         # ── 4) Async driver notification (non-blocking) ──
         send_order_notifications_to_drivers.delay(order.id)
@@ -145,7 +145,7 @@ class OrderViewSet(viewsets.ModelViewSet):
         order = self.get_object()
         new_status = request.data.get('status')
         
-        is_shop_owner = (order.shop.owner == request.user)
+        is_shop_owner = order.items.filter(product__shop__owner=request.user).exists()
         is_driver = (order.driver == request.user)
         
         if not (is_shop_owner or is_driver or request.user.is_staff):
@@ -211,23 +211,27 @@ class OrderViewSet(viewsets.ModelViewSet):
         order.status = OrderStatus.ON_DELIVERY
         order.save()
 
-        Notification.objects.create(
-            user=order.shop.owner,
-            shop=order.shop,
-            title="السائق قبل طلب التوصيل",
-            message=(
-                f"تم قبول طلب #{order.id} من قبل السائق {request.user.phone}. "
-                f"يمكنك متابعة حالة التوصيل الآن."
-            ),
-            notification_type='driver_accepted_order'
-        )
+        # Notify all unique shop owners involved in this order
+        unique_shops = set(item.product.shop for item in order.items.select_related('product__shop').all() if item.product and item.product.shop)
+        for s in unique_shops:
+            Notification.objects.create(
+                user=s.owner,
+                shop=s,
+                title="السائق قبل طلب التوصيل",
+                message=(
+                    f"تم قبول طلب #{order.id} من قبل السائق {request.user.phone}. "
+                    f"يمكنك متابعة حالة التوصيل الآن."
+                ),
+                notification_type='driver_accepted_order'
+            )
 
         return Response(self.get_serializer(order).data)
 
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
     def confirm_payment_received(self, request, pk=None):
         order = self.get_object()
-        if order.shop.owner != request.user and not request.user.is_staff:
+        is_shop_owner = order.items.filter(product__shop__owner=request.user).exists()
+        if not is_shop_owner and not request.user.is_staff:
             return Response({"detail": "Not authorized to settle this order's cash."}, status=status.HTTP_403_FORBIDDEN)
             
         # Enforce Driver OTP code verification for shop owners confirming receipt of money
@@ -243,7 +247,7 @@ class OrderViewSet(viewsets.ModelViewSet):
     def raise_dispute(self, request, pk=None):
         order = self.get_object()
         is_customer = (order.customer == request.user)
-        is_shop_owner = (order.shop.owner == request.user)
+        is_shop_owner = order.items.filter(product__shop__owner=request.user).exists()
         is_driver = (order.driver == request.user)
         
         if not (is_customer or is_shop_owner or is_driver or request.user.is_staff):
@@ -258,6 +262,32 @@ class OrderViewSet(viewsets.ModelViewSet):
         order.disputed_by = request.user
         order.save()
         return Response(self.get_serializer(order).data)
+
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
+    def toggle_item_ready(self, request, pk=None):
+        order = self.get_object()
+        user = request.user
+        item_id = request.data.get('item_id')
+        
+        if not item_id:
+            return Response({"detail": "Missing item_id parameter."}, status=status.HTTP_400_BAD_REQUEST)
+            
+        try:
+            item = order.items.get(id=item_id)
+        except OrderItem.DoesNotExist:
+            return Response({"detail": "Item not found in this order."}, status=status.HTTP_404_NOT_FOUND)
+            
+        if user.role != 'SHOP_OWNER' or item.product.shop.owner != user:
+            return Response({"detail": "Not authorized to update this item's readiness."}, status=status.HTTP_403_FORBIDDEN)
+            
+        item.is_ready = not item.is_ready
+        item.save()
+        
+        return Response({
+            "item_id": item.id,
+            "is_ready": item.is_ready,
+            "detail": f"Item marked as {'ready' if item.is_ready else 'not ready'}."
+        })
 
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
     def rate_driver(self, request, pk=None):
@@ -277,7 +307,7 @@ class OrderViewSet(viewsets.ModelViewSet):
             )
             
         is_customer = (order.customer == user)
-        is_shop_owner = (order.shop.owner == user)
+        is_shop_owner = order.items.filter(product__shop__owner=user).exists()
         
         if not (is_customer or is_shop_owner):
             return Response(
@@ -332,7 +362,7 @@ class OrderViewSet(viewsets.ModelViewSet):
         user = request.user
         
         is_customer = (order.customer == user)
-        is_shop_owner = (order.shop.owner == user)
+        is_shop_owner = order.items.filter(product__shop__owner=user).exists()
         
         can_rate = (
             order.status == OrderStatus.DELIVERED and 

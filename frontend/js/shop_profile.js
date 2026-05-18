@@ -602,10 +602,30 @@ function renderShopOrders(orders) {
         let itemsHtml = '';
         if (order.items && order.items.length > 0) {
             order.items.forEach(item => {
+                // Filter items to show only items belonging to this shop owner's shop
+                if (item.product_details && item.product_details.shop_id !== currentShopId) {
+                    return;
+                }
+                
+                const isClickable = ['PENDING', 'ACCEPTED', 'PREPARING'].includes(order.status);
+                const badgeClass = item.is_ready ? 'bg-success text-white' : 'bg-warning text-dark';
+                const badgeText = item.is_ready ? 'جاهز للاستلام 🟢' : 'تحت التحضير ⏳';
+                
+                const toggleAction = isClickable 
+                    ? `onclick="toggleShopItemReady(${order.id}, ${item.id})"` 
+                    : '';
+                
                 itemsHtml += `
-                    <div class="d-flex justify-content-between align-items-center mb-1 border-bottom border-light pb-1 small">
-                        <span class="text-espresso fw-bold">${item.product_details ? item.product_details.name : 'منتج'}</span>
-                        <span class="text-mesa">${item.quantity} × ${item.price} ج.م</span>
+                    <div class="d-flex justify-content-between align-items-center mb-2 border-bottom border-light pb-2 small">
+                        <div>
+                            <span class="text-espresso fw-bold fs-6">${item.product_details ? item.product_details.name : 'منتج'}</span>
+                            <div class="text-mesa" style="font-size: 0.78rem;">الكمية: ${item.quantity} × ${item.price} ج.م</div>
+                        </div>
+                        <div>
+                            <button ${toggleAction} class="btn btn-sm ${badgeClass} rounded-pill px-3 py-1 fw-bold border-0 shadow-sm" style="font-size: 0.78rem; transition: all 0.2s;" ${!isClickable ? 'disabled' : ''}>
+                                ${badgeText}
+                            </button>
+                        </div>
                     </div>
                 `;
             });
@@ -963,5 +983,18 @@ window.submitDriverRating = async function(orderId) {
         }
         submitBtn.disabled = false;
         submitBtn.innerHTML = `إرسال`;
+    }
+}
+
+window.toggleShopItemReady = async function(orderId, itemId) {
+    const token = localStorage.getItem('access_token');
+    try {
+        await api.orders.toggleItemReady(token, orderId, itemId);
+        if (window.showBarakaToast) {
+            window.showBarakaToast('تم تحديث حالة جاهزية المنتج بنجاح!', 'success', 'bi-check-circle-fill');
+        }
+        loadShopOrders();
+    } catch (error) {
+        alert('حدث خطأ أثناء تحديث جاهزية المنتج: ' + JSON.stringify(error));
     }
 }

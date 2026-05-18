@@ -288,15 +288,19 @@ function renderOrders(orders) {
         const isCompleted = ['DELIVERED', 'CANCELLED'].includes(order.status);
         
         // Items list
-        const itemsList = order.items.map(it => `
-            <div class="d-flex justify-content-between align-items-center py-2 border-bottom" style="border-color: rgba(201,153,151,0.06) !important;">
-                <div class="d-flex align-items-center gap-2">
-                    <span class="badge bg-marigold bg-opacity-15 text-marigold rounded-pill px-2" style="font-size: 0.8rem;">x${it.quantity}</span>
-                    <span class="text-espresso fw-bold" style="font-size: 0.98rem;">${it.product_details ? it.product_details.name : 'منتج'}</span>
+        const itemsList = order.items.map(it => {
+            const prodName = it.product_details ? it.product_details.name : 'منتج';
+            const shopSuffix = (it.product_details && it.product_details.shop_name) ? ` <small class="text-mesa fw-normal">(${it.product_details.shop_name})</small>` : '';
+            return `
+                <div class="d-flex justify-content-between align-items-center py-2 border-bottom" style="border-color: rgba(201,153,151,0.06) !important;">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-marigold bg-opacity-15 text-marigold rounded-pill px-2" style="font-size: 0.8rem;">x${it.quantity}</span>
+                        <span class="text-espresso fw-bold" style="font-size: 0.98rem;">${prodName}${shopSuffix}</span>
+                    </div>
+                    <span class="text-marigold fw-bold" style="font-size: 0.95rem;">${it.price} ج.م</span>
                 </div>
-                <span class="text-marigold fw-bold" style="font-size: 0.95rem;">${it.price} ج.م</span>
-            </div>
-        `).join('');
+            `;
+        }).join('');
         
         // Visual Order Stepper
         const stepperHtml = buildVisualStepper(order.status);
@@ -385,7 +389,11 @@ function renderOrders(orders) {
                 <div class="mt-3 p-3 rounded-3" style="background: rgba(253, 245, 241, 0.5);">
                     <div class="d-flex align-items-center gap-2 mb-2" style="font-size: 1rem;">
                         <i class="bi bi-shop text-marigold" style="font-size: 1.2rem;"></i>
-                        <span class="text-espresso fw-bold">${order.shop_details ? order.shop_details.name : 'محل بركة'}</span>
+                        <span class="text-espresso fw-bold">${
+                            order.shops_details && order.shops_details.length > 0
+                                ? order.shops_details.map(s => s.name).join(' ، ')
+                                : (order.shop_details ? order.shop_details.name : 'محل بركة')
+                        }</span>
                     </div>
                     ${order.driver_details ? `
                     <div class="d-flex align-items-center gap-2" style="font-size: 1rem;">

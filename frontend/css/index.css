@@ -33,10 +33,10 @@
 
 @keyframes background-brightness {
     0% {
-        filter: brightness(0.7);
+        filter: brightness(0.8);
     }
     100% {
-        filter: brightness(0.4);
+        filter: brightness(0.99);
     }
 }
 

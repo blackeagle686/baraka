@@ -776,6 +776,8 @@ window.toggleShopStatusFromNotification = async function(notifId, shopId, openSt
         if (window.location.pathname.includes('/profile/shop.html') && typeof loadShopDetails === 'function') {
             loadShopDetails();
         }
+        
+        setTimeout(() => location.reload(), 1500);
     } catch (error) {
         console.error("Error toggling shop status from notification:", error);
         showBarakaToast('عذراً، حدث خطأ أثناء تحديث حالة المحل.', 'danger');
@@ -831,6 +833,8 @@ window.toggleHeaderShopStatus = async function(openStatus) {
         }
         
         fetchMyShopHeaderStatus();
+        
+        setTimeout(() => location.reload(), 1500);
     } catch (error) {
         console.error("Error toggling shop status from header:", error);
         showBarakaToast('عذراً، حدث خطأ أثناء تحديث حالة المحل.', 'danger');

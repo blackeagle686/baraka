@@ -211,6 +211,7 @@ async function initShopDetails() {
     if(shopId) {
         try {
             const shop = await api.shops.getById(shopId);
+            window.currentShop = shop; // Store globally for render checks
             localStorage.setItem('current_shop_name', shop.name);
             renderShopHeader(shop);
             
@@ -509,9 +510,11 @@ function renderShopProducts(products) {
                         <div class="d-flex justify-content-between align-items-center mt-auto">
                             <span class="product-price">${product.price} ج.م</span>
                             ${(product.available && product.quantity > 0)
-                                ? `<button onclick="addToCart(${product.id}, '${product.name}', ${product.price}, '${product.image || ''}', ${product.quantity})" class="btn-add-circle" title="أضف للسلة">
-                                       <i class="bi bi-plus-lg"></i>
-                                   </button>`
+                                ? (window.currentShop && !window.currentShop.is_open)
+                                    ? `<span class="badge bg-secondary rounded-pill small">المحل مغلق</span>`
+                                    : `<button onclick="addToCart(${product.id}, '${product.name}', ${product.price}, '${product.image || ''}', ${product.quantity})" class="btn-add-circle" title="أضف للسلة">
+                                           <i class="bi bi-plus-lg"></i>
+                                       </button>`
                                 : `<span class="badge bg-danger rounded-pill small">خلصان</span>`
                             }
                         </div>
@@ -553,6 +556,15 @@ window.addToCart = function(id, name, price, image = '', maxQty = 999) {
     const params = new URLSearchParams(window.location.search);
     const shopId = parseInt(params.get('id'));
     const currentShopName = localStorage.getItem('current_shop_name') || 'محل بركة';
+    
+    if (window.currentShop && !window.currentShop.is_open) {
+        if(window.showBarakaToast) {
+            window.showBarakaToast('عذراً، هذا المحل مغلق حالياً. لا يمكنك الطلب منه.', 'error', 'bi-exclamation-triangle');
+        } else {
+            alert('عذراً، هذا المحل مغلق حالياً. لا يمكنك الطلب منه.');
+        }
+        return;
+    }
     
     const existing = cart.find(it => it.product === id);
     if (existing) {

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Shop, Category, Product, ShopRating
+from .models import Shop, Category, Product, ShopRating, Notification
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
@@ -43,3 +43,8 @@ class ShopSerializer(serializers.ModelSerializer):
 
     def get_total_ratings(self, obj):
         return obj.ratings.count()
+
+class NotificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Notification
+        fields = '__all__'

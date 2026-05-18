@@ -316,6 +316,53 @@ class OrderViewSet(viewsets.ModelViewSet):
         })
 
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
+    def report_emergency(self, request, pk=None):
+        if request.user.role != 'DRIVER':
+            return Response({"detail": "Only drivers can report a delivery emergency."}, status=status.HTTP_403_FORBIDDEN)
+            
+        order = self.get_object()
+        if order.driver != request.user:
+            return Response({"detail": "You are not the assigned driver for this order."}, status=status.HTTP_403_FORBIDDEN)
+            
+        if order.status not in ['ACCEPTED', 'PREPARING', 'ON_DELIVERY']:
+            return Response({"detail": "لا يمكن إلغاء هذا الطلب لأنه مكتمل أو غير نشط بالفعل."}, status=status.HTTP_400_BAD_REQUEST)
+            
+        reason = request.data.get('reason', 'ظرف طارئ / عطل بالمركبة')
+        
+        # Reset driver, picked_up_at, and status
+        order.driver = None
+        order.picked_up_at = None
+        order.status = OrderStatus.PENDING
+        order.save()
+        
+        # Notify all unique shop owners involved
+        unique_shops = set(item.product.shop for item in order.items.select_related('product__shop').all() if item.product and item.product.shop)
+        for s in unique_shops:
+            Notification.objects.create(
+                user=s.owner,
+                shop=s,
+                title="🚨 إلغاء توصيل الطلب لحالة طارئة",
+                message=(
+                    f"اعتذر الطيار {request.user.phone} عن توصيل طلبك #{order.id} بسبب: ({reason}). "
+                    f"تم إرجاع الطلب فوراً للوحة الطلبات المتاحة للبحث عن طيار بديل."
+                ),
+                notification_type='driver_emergency_cancelled'
+            )
+            
+        # Notify the customer
+        Notification.objects.create(
+            user=order.customer,
+            title="⏳ جاري البحث عن طيار بديل لطلبك",
+            message=(
+                f"نعتذر منك، الطيار المكلف بطلبك #{order.id} واجه ظرفاً طارئاً يمنعه من إكمال الرحلة. "
+                f"تم إرجاع طلبك فوراً للبحث عن طيار آخر للتوصيل بأسرع وقت ممكن!"
+            ),
+            notification_type='driver_emergency_cancelled'
+        )
+        
+        return Response({"detail": "تم إبلاغ النظام بالحالة الطارئة وإرجاع الطلب للوحة الطيارين بنجاح."})
+
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
     def rate_driver(self, request, pk=None):
         order = self.get_object()
         user = request.user

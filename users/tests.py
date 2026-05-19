@@ -117,6 +117,14 @@ from django.utils import timezone
 from datetime import timedelta
 from .models import PhoneOTP
 from orders.models import Order
+from rest_framework.throttling import SimpleRateThrottle
+
+SimpleRateThrottle.THROTTLE_RATES = {
+    'anon': '999999/day',
+    'user': '999999/day',
+    'auth': '999999/day',
+    'chatbot': '999999/day',
+}
 
 User = get_user_model()
 

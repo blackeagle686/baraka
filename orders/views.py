@@ -631,7 +631,6 @@ class OrderViewSet(viewsets.ModelViewSet):
             'driver_phone': order.driver.phone if order.driver else None
         })
 
-
 #===== Admin Dashboard - All Orders View ==========================================
 
 class AdminOrderPagination(PageNumberPagination):

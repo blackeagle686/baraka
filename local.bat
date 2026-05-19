@@ -10,7 +10,7 @@ start "Baraka Redis" cmd /k "echo Starting Redis... && redis-server"
 
 REM 2. Start PostgreSQL Database
 echo [2/4] Starting PostgreSQL Database Service...
-start "Baraka PostgreSQL" cmd /k "echo Assuring PostgreSQL Service... && net start postgresql-x64-18"
+start "Baraka PostgreSQL" cmd /k "echo Assuring PostgreSQL Service... && net start postgresql-x64-16"
 
 REM 3. Start Django Backend Server
 echo [3/4] Starting Django API Backend Server...

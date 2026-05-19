@@ -16,7 +16,7 @@ class ChatbotAPITests(APITestCase):
         self.shop = Shop.objects.create(
             name="محل تجريبي",
             owner=self.user,
-            is_approved=True
+            address="Test Address"
         )
         self.product = Product.objects.create(
             name="طماطم",

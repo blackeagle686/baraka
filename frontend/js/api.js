@@ -164,6 +164,24 @@ const api = {
             if (!res.ok) throw await res.json();
             return await res.json();
         },
+        sendOtp: async (phone) => {
+            const res = await fetch(`${API_BASE}/auth/send-otp/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ phone })
+            });
+            if (!res.ok) throw await res.json();
+            return await res.json();
+        },
+        verifyOtp: async (phone, otp) => {
+            const res = await fetch(`${API_BASE}/auth/verify-otp/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ phone, otp })
+            });
+            if (!res.ok) throw await res.json();
+            return await res.json();
+        },
         getProfile: async (token) => {
             const res = await fetch(`${API_BASE}/auth/profile/`, {
                 headers: { 'Authorization': `Bearer ${token}` }

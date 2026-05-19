@@ -28,11 +28,16 @@ commands_to_run = []
 
 # 1. Redis Server
 if redis_active:
-    if shutil.which("redis-server"):
-        commands_to_run.append(("Redis", "redis-server"))
+    if IS_WINDOWS:
+        if shutil.which("redis-server"):
+            commands_to_run.append(("Redis", "redis-server"))
+        else:
+            print("ℹ️  [Info] 'redis-server' was not found in PATH. Assuming Memurai/Redis is running as a background Windows service.\n")
     else:
-        print("⚠️  [Warning] Redis is active in .env but 'redis-server' was not found in PATH.")
-        print("    Skipping Redis launch. The system will fall back to local in-memory cache.\n")
+        if shutil.which("redis-server"):
+            commands_to_run.append(("Redis", "redis-server"))
+        else:
+            print("⚠️  [Warning] Redis is active in .env but 'redis-server' was not found in PATH. Celery might fail to connect.\n")
 else:
     print("ℹ️  [Info] Redis is commented out in .env. Skipping Redis (falling back to local memory cache).\n")
 

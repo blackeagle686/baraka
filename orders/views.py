@@ -386,6 +386,14 @@ class OrderViewSet(viewsets.ModelViewSet):
         order.disputed_by = request.user
         order.save()
         
+        # Create a Report in core app to make it visible in the admin dashboard reports panel
+        from core.models import Report
+        Report.objects.create(
+            user=request.user,
+            subject=f"نزاع على الطلب #{order.id}",
+            description=f"سبب تقديم الشكوى: {reason}"
+        )
+        
         # Schedule auto-escalation check after 6 hours (21600 seconds)
         auto_escalate_unresolved_disputes.apply_async(args=[order.id], countdown=21600)
         

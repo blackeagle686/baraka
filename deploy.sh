@@ -50,6 +50,7 @@ if [ ! -f ".env" ]; then
     sed -i 's/DB_HOST=/DB_HOST=127.0.0.1/g' .env
     sed -i 's/REDIS_URL=/REDIS_URL=redis:\/\/127.0.0.1:6379\/1/g' .env
     sed -i 's/CELERY_BROKER_URL=/CELERY_BROKER_URL=redis:\/\/127.0.0.1:6379\/1/g' .env
+    sed -i 's/ALLOWED_HOSTS=/ALLOWED_HOSTS=*,/g' .env
     echo "✅ Generated standard production .env file."
 fi
 
@@ -144,10 +145,46 @@ sudo systemctl enable baraka-backend
 sudo systemctl restart baraka-celery
 sudo systemctl enable baraka-celery
 
+# 10. Install & Configure Ngrok Tunnel
+echo "🚇 [10/10] Installing and configuring Ngrok Tunnel..."
+curl -s https://ngrok-agent.s3.amazonaws.com/ngrok.asc | sudo tee /etc/apt/trusted.gpg.d/ngrok.asc >/dev/null
+echo "deb https://ngrok-agent.s3.amazonaws.com buster main" | sudo tee /etc/apt/sources.list.d/ngrok.list
+sudo apt-get update -y
+sudo apt-get install -y ngrok
+
+# Configure ngrok auth token for root (since systemd service runs as root)
+sudo ngrok config add-authtoken 32oqG1HkcJP4KusIL9KIzUmLaLk_QjDFtKmxQpDXjNwoNJZQ
+
+# Create Ngrok Systemd Service
+sudo tee /etc/systemd/system/ngrok.service > /dev/null <<EOF
+[Unit]
+Description=ngrok tunnel for Baraka (Port 80)
+After=network.target nginx.service
+
+[Service]
+ExecStart=/usr/bin/ngrok http 80 --log=stdout
+Restart=always
+User=root
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# Enable and start ngrok service
+sudo systemctl daemon-reload
+sudo systemctl enable ngrok
+sudo systemctl restart ngrok
+
+# Wait for ngrok tunnel to be created and fetch url
+echo "⏳ Waiting for Ngrok tunnel to spin up..."
+sleep 5
+NGROK_URL=\$(python3 -c "import urllib.request, json; print(json.loads(urllib.request.urlopen('http://127.0.0.1:4040/api/tunnels').read().decode())['tunnels'][0]['public_url'])" 2>/dev/null || echo "Pending (check with 'curl http://127.0.0.1:4040/api/tunnels')")
+
 echo ""
 echo "========================================================================="
 echo "   ✨ Baraka SaaS Platform Deployment Completed Successfully!"
 echo "   🌎 Access your app on port 80 (http://your_server_ip)"
+echo "   🚇 Ngrok Live Tunnel URL: \$NGROK_URL"
 echo "   🔗 API Backend is running under reverse proxy at /api/"
 echo "   📦 Celery Background worker is active and listening for tasks!"
 echo "========================================================================="

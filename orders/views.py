@@ -13,7 +13,12 @@ from .serializers import OrderSerializer
 
 from users.permissions import IsApprovedOrReadOnly
 from users.permissions import IsAdminUserRole
-from .tasks import send_order_notifications_to_drivers
+from .tasks import (
+    send_order_notifications_to_drivers,
+    auto_cancel_expired_orders,
+    recalculate_driver_rating_stats,
+    auto_escalate_unresolved_disputes
+)
 
 class OrderViewSet(viewsets.ModelViewSet):
     serializer_class = OrderSerializer
@@ -135,6 +140,8 @@ class OrderViewSet(viewsets.ModelViewSet):
 
         # ── 4) Async driver notification (non-blocking) ──
         send_order_notifications_to_drivers.delay(order.id)
+        # Schedule auto-cancellation after 15 minutes (900 seconds) if order remains unaccepted (PENDING)
+        auto_cancel_expired_orders.apply_async(args=[order.id], countdown=900)
 
         # ── 5) Re-fetch with joins so the serializer doesn't trigger lazy queries ──
         order = Order.objects.select_related(
@@ -372,6 +379,10 @@ class OrderViewSet(viewsets.ModelViewSet):
         order.dispute_reason = reason
         order.disputed_by = request.user
         order.save()
+        
+        # Schedule auto-escalation check after 6 hours (21600 seconds)
+        auto_escalate_unresolved_disputes.apply_async(args=[order.id], countdown=21600)
+        
         return Response(self.get_serializer(order).data)
 
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
@@ -581,6 +592,8 @@ class OrderViewSet(viewsets.ModelViewSet):
                 ),
                 notification_type='driver_rated'
             )
+            # Trigger background aggregation task
+            recalculate_driver_rating_stats.delay(order.driver.id)
         
         serializer = DriverRatingSerializer(rating_obj)
         return Response(serializer.data, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)

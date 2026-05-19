@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
 from django.core.cache import cache
 import hashlib
+from orders.tasks import recalculate_shop_rating_stats
 from .models import Shop, Category, Product, Notification
 from .serializers import ShopSerializer, ShopCreateSerializer, CategorySerializer, ProductSerializer, NotificationSerializer
 from .permissions import IsOwnerOrReadOnly
@@ -124,6 +125,9 @@ class ShopViewSet(viewsets.ModelViewSet):
             ),
             notification_type='shop_rated'
         )
+        
+        # Trigger background stats recalculation
+        recalculate_shop_rating_stats.delay(shop.id)
         
         serializer = ShopRatingSerializer(rating_obj)
         return Response(serializer.data, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)

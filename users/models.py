@@ -37,6 +37,7 @@ class User(AbstractUser):
         default=UserRole.CUSTOMER
     )
     is_approved = models.BooleanField(default=True)
+    is_phone_verified = models.BooleanField(default=False)
 
     USERNAME_FIELD = 'phone'
     REQUIRED_FIELDS = []
@@ -45,3 +46,18 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.phone
+
+class PhoneOTP(models.Model):
+    """
+    Stores 6-digit One-Time Passwords for user phone verifications,
+    complete with request expiration times and attempt tracking.
+    """
+    phone = models.CharField(max_length=20, unique=True)
+    otp = models.CharField(max_length=6)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    attempts = models.IntegerField(default=0)
+    is_verified = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"OTP for {self.phone} (Code: {self.otp})"

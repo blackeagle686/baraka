@@ -166,7 +166,7 @@ function getRoleBadge(role) {
 function renderUsersTable(users) {
     const tbody = document.getElementById('usersTableBody');
     if (!users.length) {
-        tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state"><i class="bi bi-people"></i>لا يوجد مستخدمين مطابقين</div></td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="9"><div class="empty-state"><i class="bi bi-people"></i>لا يوجد مستخدمين مطابقين</div></td></tr>`;
         return;
     }
 
@@ -177,15 +177,23 @@ function renderUsersTable(users) {
         const approvalBadge = u.is_approved
             ? '<span class="badge-status approved">معتمد</span>'
             : '<span class="badge-status pending">في الانتظار</span>';
+        const phoneVerifiedBadge = u.is_phone_verified
+            ? '<span class="badge-status approved">مؤكد</span>'
+            : '<span class="badge-status pending">غير مؤكد</span>';
 
         let actions = '';
         if (!u.is_approved) {
-            actions += `<button class="btn-action approve" onclick="approveUser(${u.id})"><i class="bi bi-check-lg"></i> اعتماد</button>`;
+            actions += `<button class="btn-action approve me-1" onclick="approveUser(${u.id})"><i class="bi bi-check-lg"></i> اعتماد</button>`;
+        }
+        if (!u.is_phone_verified) {
+            actions += `<button class="btn-action approve me-1" onclick="verifyUserPhone(${u.id})"><i class="bi bi-shield-check"></i> تفعيل الهاتف</button>`;
+        } else {
+            actions += `<button class="btn-action block me-1" onclick="unverifyUserPhone(${u.id})"><i class="bi bi-shield-x"></i> إلغاء تفعيل الهاتف</button>`;
         }
         if (u.is_active) {
-            actions += `<button class="btn-action block" onclick="blockUser(${u.id})"><i class="bi bi-slash-circle"></i> حظر</button>`;
+            actions += `<button class="btn-action block me-1" onclick="blockUser(${u.id})"><i class="bi bi-slash-circle"></i> حظر</button>`;
         } else {
-            actions += `<button class="btn-action unblock" onclick="unblockUser(${u.id})"><i class="bi bi-unlock"></i> رفع الحظر</button>`;
+            actions += `<button class="btn-action unblock me-1" onclick="unblockUser(${u.id})"><i class="bi bi-unlock"></i> رفع الحظر</button>`;
         }
 
         const joinDate = new Date(u.date_joined).toLocaleDateString('ar-EG', { year: 'numeric', month: 'short', day: 'numeric' });
@@ -198,8 +206,9 @@ function renderUsersTable(users) {
                 <td>${getRoleBadge(u.role)}</td>
                 <td>${statusBadge}</td>
                 <td>${approvalBadge}</td>
+                <td>${phoneVerifiedBadge}</td>
                 <td>${joinDate}</td>
-                <td>${actions}</td>
+                <td><div class="d-flex flex-wrap gap-1">${actions}</div></td>
             </tr>
         `;
     }).join('');
@@ -208,6 +217,23 @@ function renderUsersTable(users) {
 async function approveUser(id) {
     try {
         await api.admin.updateUser(TOKEN, id, { is_approved: true });
+        loadUsers();
+        loadStats();
+    } catch (err) { console.error(err); }
+}
+
+async function verifyUserPhone(id) {
+    try {
+        await api.admin.updateUser(TOKEN, id, { is_phone_verified: true });
+        loadUsers();
+        loadStats();
+    } catch (err) { console.error(err); }
+}
+
+async function unverifyUserPhone(id) {
+    if (!confirm('هل أنت متأكد من إلغاء تفعيل توثيق هذا الهاتف؟')) return;
+    try {
+        await api.admin.updateUser(TOKEN, id, { is_phone_verified: false });
         loadUsers();
         loadStats();
     } catch (err) { console.error(err); }

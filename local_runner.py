@@ -7,57 +7,72 @@ import shutil
 
 IS_WINDOWS = os.name == 'nt'
 
-# Define commands depending on OS platform
-if IS_WINDOWS:
-    # Verify the commands are available or warning will be printed
-    commands_to_run = []
-    
-    # 1. Redis
+# Parse .env file for active services
+db_host_active = False
+redis_active = False
+
+if os.path.exists(".env"):
+    try:
+        with open(".env", "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if line.startswith("DB_HOST=") and not line.startswith("#"):
+                    db_host_active = True
+                elif (line.startswith("REDIS_URL=") or line.startswith("CELERY_BROKER_URL=")) and not line.startswith("#"):
+                    redis_active = True
+    except Exception as e:
+        print(f"⚠️  Could not parse .env configuration: {e}")
+
+# Build command list depending on OS platform and .env configuration
+commands_to_run = []
+
+# 1. Redis Server
+if redis_active:
     if shutil.which("redis-server"):
         commands_to_run.append(("Redis", "redis-server"))
     else:
-        print("⚠️  [Warning] 'redis-server' was not found in your PATH.")
-        print("    Redis won't be started. The system will fall back to local in-memory cache.\n")
-
-    # 2. PostgreSQL
-    commands_to_run.append(("PostgreSQL", "net start postgresql-x64-18"))
-
-    # 3. Django
-    commands_to_run.append(("Django Backend", "venv\\Scripts\\python.exe manage.py runserver 0.0.0.0:8000"))
-
-    # 4. Celery
-    if shutil.which("venv\\Scripts\\celery.exe") or shutil.which("celery"):
-        commands_to_run.append(("Celery Worker", "venv\\Scripts\\celery.exe -A backend worker --loglevel=info -P solo"))
-    else:
-        print("⚠️  [Warning] Celery executable was not found. Background worker task offloading won't be active.\n")
-
-    # 5. Frontend
-    commands_to_run.append(("Frontend Static", "python -m http.server 8080 --directory frontend"))
-
+        print("⚠️  [Warning] Redis is active in .env but 'redis-server' was not found in PATH.")
+        print("    Skipping Redis launch. The system will fall back to local in-memory cache.\n")
 else:
-    has_systemctl = os.path.exists("/bin/systemctl") or os.path.exists("/usr/bin/systemctl")
-    commands_to_run = []
+    print("ℹ️  [Info] Redis is commented out in .env. Skipping Redis (falling back to local memory cache).\n")
 
-    # 1. Redis
-    if shutil.which("redis-server"):
-        commands_to_run.append(("Redis", "redis-server"))
+# 2. PostgreSQL Service
+if db_host_active:
+    if IS_WINDOWS:
+        commands_to_run.append(("PostgreSQL", "net start postgresql-x64-18"))
     else:
-        print("⚠️  [Warning] 'redis-server' was not found in your PATH. Skipping Redis server.\n")
+        has_systemctl = os.path.exists("/bin/systemctl") or os.path.exists("/usr/bin/systemctl")
+        commands_to_run.append(("PostgreSQL", "sudo systemctl start postgresql" if has_systemctl else "echo PostgreSQL assumed running"))
+else:
+    print("ℹ️  [Info] DB_HOST is commented out in .env. Skipping PostgreSQL (falling back to SQLite database).\n")
 
-    # 2. PostgreSQL
-    commands_to_run.append(("PostgreSQL", "sudo systemctl start postgresql" if has_systemctl else "echo PostgreSQL assumed running"))
+# 3. Django Backend
+django_cmd = "venv\\Scripts\\python.exe manage.py runserver 0.0.0.0:8000" if IS_WINDOWS else "./venv/bin/python manage.py runserver 0.0.0.0:8000"
+commands_to_run.append(("Django Backend", django_cmd))
 
-    # 3. Django
-    commands_to_run.append(("Django Backend", "./venv/bin/python manage.py runserver 0.0.0.0:8000"))
-
-    # 4. Celery
-    if os.path.exists("./venv/bin/celery") or shutil.which("celery"):
-        commands_to_run.append(("Celery Worker", "./venv/bin/celery -A backend worker --loglevel=info"))
+# 4. Celery Worker (Only run if Redis is active in .env)
+if redis_active:
+    celery_found = False
+    celery_cmd = ""
+    if IS_WINDOWS:
+        if shutil.which("venv\\Scripts\\celery.exe") or shutil.which("celery"):
+            celery_cmd = "venv\\Scripts\\celery.exe -A backend worker --loglevel=info -P solo"
+            celery_found = True
     else:
-        print("⚠️  [Warning] Celery was not found. Skipping Celery background worker.\n")
+        if os.path.exists("./venv/bin/celery") or shutil.which("celery"):
+            celery_cmd = "./venv/bin/celery -A backend worker --loglevel=info"
+            celery_found = True
+            
+    if celery_found:
+        commands_to_run.append(("Celery Worker", celery_cmd))
+    else:
+        print("⚠️  [Warning] Celery was not found in path/virtualenv. Skipping Celery worker.\n")
+else:
+    print("ℹ️  [Info] Celery is not active in .env. Skipping Celery background workers (using Celery Eager tasks).\n")
 
-    # 5. Frontend
-    commands_to_run.append(("Frontend Static", "python3 -m http.server 8080 --directory frontend"))
+# 5. Frontend Static Server
+frontend_cmd = "python -m http.server 8080 --directory frontend" if IS_WINDOWS else "python3 -m http.server 8080 --directory frontend"
+commands_to_run.append(("Frontend Static", frontend_cmd))
 
 processes = []
 
@@ -92,11 +107,9 @@ print("===================================================\n")
 for name, cmd in commands_to_run:
     print(f"🚀 Starting {name}...")
     try:
-        # Start each command in the background with output printing to the current terminal
         if IS_WINDOWS:
             p = subprocess.Popen(cmd, shell=True)
         else:
-            # On Linux/macOS, use setsid to run in a new process group for group termination
             p = subprocess.Popen(cmd, shell=True, preexec_fn=os.setsid)
         processes.append((name, p))
     except Exception as e:

@@ -71,3 +71,31 @@ class Notification(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.title}"
+
+from django.db.models.signals import post_save, post_delete
+from django.dispatch import receiver
+from django.core.cache import cache
+
+@receiver([post_save, post_delete], sender=Shop)
+def invalidate_shops_cache(sender, instance, **kwargs):
+    try:
+        current_version = cache.get("shops_list_version", 1)
+        cache.set("shops_list_version", current_version + 1, timeout=None)
+    except Exception:
+        pass
+
+@receiver([post_save, post_delete], sender=Product)
+def invalidate_products_cache(sender, instance, **kwargs):
+    try:
+        current_version = cache.get("products_list_version", 1)
+        cache.set("products_list_version", current_version + 1, timeout=None)
+    except Exception:
+        pass
+
+@receiver([post_save, post_delete], sender=Category)
+def invalidate_categories_cache(sender, instance, **kwargs):
+    try:
+        current_version = cache.get("categories_version", 1)
+        cache.set("categories_version", current_version + 1, timeout=None)
+    except Exception:
+        pass

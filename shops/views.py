@@ -2,6 +2,8 @@ from rest_framework import viewsets, permissions, status, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
+from django.core.cache import cache
+import hashlib
 from .models import Shop, Category, Product, Notification
 from .serializers import ShopSerializer, ShopCreateSerializer, CategorySerializer, ProductSerializer, NotificationSerializer
 from .permissions import IsOwnerOrReadOnly
@@ -19,6 +21,25 @@ class ShopViewSet(viewsets.ModelViewSet):
     pagination_class = ShopPagination
     filter_backends = [filters.SearchFilter]
     search_fields = ['name', 'description', 'address']
+
+    def list(self, request, *args, **kwargs):
+        page = request.query_params.get('page', '1')
+        search = request.query_params.get('search', '')
+        page_size = request.query_params.get('page_size', '')
+        
+        hasher = hashlib.md5()
+        hasher.update(f"{page}::{search}::{page_size}".encode('utf-8'))
+        
+        version = cache.get("shops_list_version", 1)
+        cache_key = f"shops_list_v{version}_{hasher.hexdigest()}"
+        
+        cached_data = cache.get(cache_key)
+        if cached_data is not None:
+            return Response(cached_data)
+            
+        response = super().list(request, *args, **kwargs)
+        cache.set(cache_key, response.data, timeout=300)
+        return response
 
     def get_serializer_class(self):
         if self.action == 'create':
@@ -131,10 +152,41 @@ class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = CategorySerializer
     permission_classes = [permissions.AllowAny]
 
+    def list(self, request, *args, **kwargs):
+        version = cache.get("categories_version", 1)
+        cache_key = f"categories_v{version}"
+        
+        cached_data = cache.get(cache_key)
+        if cached_data is not None:
+            return Response(cached_data)
+            
+        response = super().list(request, *args, **kwargs)
+        cache.set(cache_key, response.data, timeout=900)
+        return response
+
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsApprovedOrReadOnly, IsOwnerOrReadOnly]
+
+    def list(self, request, *args, **kwargs):
+        shop_id = request.query_params.get('shop_id', '')
+        search = request.query_params.get('search', '')
+        page = request.query_params.get('page', '1')
+        
+        hasher = hashlib.md5()
+        hasher.update(f"{shop_id}::{search}::{page}".encode('utf-8'))
+        
+        version = cache.get("products_list_version", 1)
+        cache_key = f"products_list_v{version}_{hasher.hexdigest()}"
+        
+        cached_data = cache.get(cache_key)
+        if cached_data is not None:
+            return Response(cached_data)
+            
+        response = super().list(request, *args, **kwargs)
+        cache.set(cache_key, response.data, timeout=300)
+        return response
 
     def create(self, request, *args, **kwargs):
         if request.user.role != 'SHOP_OWNER' and not request.user.is_staff:

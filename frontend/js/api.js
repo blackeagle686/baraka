@@ -198,6 +198,24 @@ const api = {
             });
             if (!res.ok) throw await res.json();
             return await res.json();
+        },
+        requestPasswordReset: async (phone) => {
+            const res = await fetch(`${API_BASE}/auth/password-reset/request/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ phone })
+            });
+            if (!res.ok) throw await res.json();
+            return await res.json();
+        },
+        resetPassword: async (phone, otp, newPassword) => {
+            const res = await fetch(`${API_BASE}/auth/password-reset/confirm/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ phone, otp, new_password: newPassword })
+            });
+            if (!res.ok) throw await res.json();
+            return await res.json();
         }
     },
     shops: {

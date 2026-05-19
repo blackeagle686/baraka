@@ -2,7 +2,8 @@ from django.urls import path
 from .views import (
     RegisterView, ThrottledTokenObtainPairView, ThrottledTokenRefreshView,
     ProfileView, AdminUserListView, AdminUserDetailView, AdminStatsView,
-    SendOTPView, VerifyOTPView
+    SendOTPView, VerifyOTPView,
+    RequestPasswordResetOTPView, ResetPasswordWithOTPView
 )
 
 urlpatterns = [
@@ -12,6 +13,8 @@ urlpatterns = [
     path('profile/', ProfileView.as_view(), name='profile'),
     path('send-otp/', SendOTPView.as_view(), name='send_otp'),
     path('verify-otp/', VerifyOTPView.as_view(), name='verify_otp'),
+    path('password-reset/request/', RequestPasswordResetOTPView.as_view(), name='password_reset_request'),
+    path('password-reset/confirm/', ResetPasswordWithOTPView.as_view(), name='password_reset_confirm'),
 
     # Admin endpoints
     path('admin/users/', AdminUserListView.as_view(), name='admin-user-list'),

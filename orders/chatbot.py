@@ -161,8 +161,10 @@ def _build_db_context(message, user, cart_data):
     """Query the database and build context for the LLM."""
     products_data = []
 
-    open_shops = Shop.objects.filter(is_open=True)
-    shop_names = [s.name for s in open_shops]
+    all_shops = Shop.objects.all()
+    open_shops = all_shops.filter(is_open=True)
+    closed_shops = all_shops.filter(is_open=False)
+    shop_names = [s.name for s in all_shops]
 
     all_products = (
         Product.objects.filter(available=True, quantity__gt=0, shop__is_open=True)
@@ -182,7 +184,7 @@ def _build_db_context(message, user, cart_data):
 
     # Check if asking about a specific shop
     target_shop = None
-    for shop in open_shops:
+    for shop in all_shops:
         if shop.name in message:
             target_shop = shop
             break
@@ -201,6 +203,9 @@ def _build_db_context(message, user, cart_data):
     ctx = []
     shop_info_list = [f"{s.name} (العنوان: {s.address})" for s in open_shops]
     ctx.append(f"المحلات المفتوحة ({open_shops.count()}): {', '.join(shop_info_list) or 'لا توجد'}")
+    if closed_shops.exists():
+        closed_info_list = [f"{s.name} (العنوان: {s.address})" for s in closed_shops]
+        ctx.append(f"المحلات المغلقة حالياً ({closed_shops.count()}): {', '.join(closed_info_list)}")
     ctx.append(f"إجمالي المنتجات المتاحة: {all_products.count()}")
 
     if target_shop:

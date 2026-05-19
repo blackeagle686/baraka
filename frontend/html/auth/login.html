@@ -122,8 +122,10 @@
                             <span class="btn-text"><i class="bi bi-check-circle me-1"></i>تأكيد الرمز وتفعيل الحساب</span>
                             <span class="spinner-border spinner-border-sm position-absolute top-50 start-50 translate-middle d-none" role="status" aria-hidden="true"></span>
                         </button>
-                        <div class="text-center">
+                        <div class="text-center d-flex align-items-center justify-content-center gap-2">
                             <button type="button" class="btn btn-link text-mesa text-decoration-none small fw-bold" id="resendOtpBtn">إعادة إرسال رمز التحقق</button>
+                            <span class="text-muted small">|</span>
+                            <button type="button" class="btn btn-link text-secondary text-decoration-none small fw-bold" onclick="cancelOtpAndReturn()">العودة لتعديل البيانات</button>
                         </div>
                         <div id="otpErrorMsg" class="alert alert-danger text-center py-2 rounded-pill d-none small mt-3">
                             <i class="bi bi-exclamation-triangle me-1"></i>الرمز غير صحيح.

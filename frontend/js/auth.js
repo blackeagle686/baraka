@@ -15,6 +15,23 @@ document.addEventListener('DOMContentLoaded', () => {
         return; // Stop further execution
     }
 
+    // Check if there is a pending registration OTP session in progress
+    const tempPhone = sessionStorage.getItem('temp_reg_phone');
+    if (tempPhone) {
+        const otpTarget = document.getElementById('otpTargetPhone');
+        const otpWrapper = document.getElementById('otpFormWrapper');
+        const card = document.getElementById('authCard');
+        const subtitle = document.getElementById('authSubtitle');
+        
+        if (otpTarget && otpWrapper && card && subtitle) {
+            otpTarget.innerText = tempPhone;
+            otpWrapper.style.display = 'block';
+            card.classList.remove('mode-register', 'mode-login');
+            card.classList.add('mode-otp');
+            subtitle.innerText = 'أدخل رمز التحقق لتفعيل حسابك الجديد';
+        }
+    }
+
     const loginForm = document.getElementById('loginForm');
     const registerForm = document.getElementById('registerForm');
 
@@ -152,10 +169,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     console.error("Initial OTP send failed:", e);
                 }
                 
-                // Store registration data temporarily to auto-login after OTP verification
-                window.tempRegPhone = phone;
-                window.tempRegPassword = password;
-                window.tempRegName = name;
+                // Store registration data temporarily in sessionStorage to survive page refresh
+                sessionStorage.setItem('temp_reg_phone', phone);
+                sessionStorage.setItem('temp_reg_password', password);
+                sessionStorage.setItem('temp_reg_name', name);
 
                 // Shift UI state to OTP mode
                 document.getElementById('otpTargetPhone').innerText = phone;
@@ -201,9 +218,9 @@ document.addEventListener('DOMContentLoaded', () => {
         otpForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const otpCode = document.getElementById('otpCode').value.trim();
-            const phone = window.tempRegPhone;
-            const password = window.tempRegPassword;
-            const name = window.tempRegName;
+            const phone = sessionStorage.getItem('temp_reg_phone');
+            const password = sessionStorage.getItem('temp_reg_password');
+            const name = sessionStorage.getItem('temp_reg_name');
 
             const btn = document.getElementById('verifyOtpBtn');
             const btnText = btn.querySelector('.btn-text');
@@ -213,6 +230,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!phone || !password) {
                 errorMsg.innerText = "خطأ في الجلسة. يرجى إعادة تحميل الصفحة والمحاولة مجدداً.";
                 errorMsg.classList.remove('d-none');
+                errorMsg.classList.add('d-block');
+                errorMsg.style.setProperty('display', 'block', 'important');
+                errorMsg.style.opacity = '1';
                 return;
             }
 
@@ -221,6 +241,8 @@ document.addEventListener('DOMContentLoaded', () => {
             btnText.classList.add('invisible');
             spinner.classList.remove('d-none');
             errorMsg.classList.add('d-none');
+            errorMsg.classList.remove('d-block');
+            errorMsg.style.display = 'none';
 
             try {
                 // Verify OTP with backend
@@ -235,6 +257,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 localStorage.setItem('user_role', profile.role);
                 localStorage.setItem('user_name', profile.name || name || 'مستخدم بركة');
                 
+                // Clear session storage on successful verification/login
+                sessionStorage.removeItem('temp_reg_phone');
+                sessionStorage.removeItem('temp_reg_password');
+                sessionStorage.removeItem('temp_reg_name');
+
                 if (profile.role === 'ADMIN') {
                     window.location.href = '/html/admin/dashboard.html';
                 } else if (profile.role === 'DRIVER') {
@@ -251,6 +278,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 errorMsg.innerHTML = `<i class="bi bi-exclamation-triangle me-1"></i>${displayError}`;
                 errorMsg.classList.remove('d-none');
+                errorMsg.classList.add('d-block');
+                errorMsg.style.setProperty('display', 'block', 'important');
+                errorMsg.style.opacity = '1';
                 
                 // Shake animation on error
                 const card = document.getElementById('authCard');
@@ -269,7 +299,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const resendOtpBtn = document.getElementById('resendOtpBtn');
     if (resendOtpBtn) {
         resendOtpBtn.addEventListener('click', async () => {
-            const phone = window.tempRegPhone;
+            const phone = sessionStorage.getItem('temp_reg_phone');
             if (!phone) return;
 
             // Start 30s countdown to prevent resend spamming
@@ -295,6 +325,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 const errorMsg = document.getElementById('otpErrorMsg');
                 errorMsg.innerText = e.detail || "فشل إرسال رمز التحقق. يرجى المحاولة لاحقاً.";
                 errorMsg.classList.remove('d-none');
+                errorMsg.classList.add('d-block');
+                errorMsg.style.setProperty('display', 'block', 'important');
+                errorMsg.style.opacity = '1';
             }
         });
     }
@@ -313,5 +346,23 @@ window.togglePassword = function(inputId, button) {
         input.type = 'password';
         icon.classList.remove('bi-eye-slash');
         icon.classList.add('bi-eye');
+    }
+};
+
+// Cancel OTP verification and return to register
+window.cancelOtpAndReturn = function() {
+    sessionStorage.removeItem('temp_reg_phone');
+    sessionStorage.removeItem('temp_reg_password');
+    sessionStorage.removeItem('temp_reg_name');
+    
+    const card = document.getElementById('authCard');
+    const otpWrapper = document.getElementById('otpFormWrapper');
+    const subtitle = document.getElementById('authSubtitle');
+    
+    if (card && otpWrapper && subtitle) {
+        otpWrapper.style.display = 'none';
+        card.classList.remove('mode-otp');
+        card.classList.add('mode-register');
+        subtitle.innerText = 'انضم إلينا واطلب كل اللي تحتاجه طازة';
     }
 };

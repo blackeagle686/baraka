@@ -242,10 +242,10 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = False  # Keep cookie even if browser closes
 
 # Simple JWT Token Lifetimes (for REST API authentication)
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(days=5),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=5),
-    'ROTATE_REFRESH_TOKENS': False,
-    'BLACKLIST_AFTER_ROTATION': False,
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),  # 15 minutes secure standard
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=5),      # remember user for 5 days
+    'ROTATE_REFRESH_TOKENS': True,                    # rotate refresh tokens
+    'BLACKLIST_AFTER_ROTATION': True,                 # prevent token replay attacks
     'UPDATE_LAST_LOGIN': True,
 }
 

@@ -16,7 +16,35 @@ document.addEventListener('DOMContentLoaded', () => {
     if (imageInput) {
         imageInput.addEventListener('change', (e) => {
             if (e.target.files && e.target.files[0]) {
-                newImageFile = e.target.files[0];
+                const file = e.target.files[0];
+                
+                // 1. Size Validation (2MB limit)
+                const max_size = 2 * 1024 * 1024;
+                if (file.size > max_size) {
+                    if (window.showBarakaToast) {
+                        window.showBarakaToast('حجم الملف كبير جداً! الحد الأقصى هو 2 ميجابايت.', 'warning', 'bi-exclamation-triangle');
+                    } else {
+                        alert('حجم الملف كبير جداً! الحد الأقصى هو 2 ميجابايت.');
+                    }
+                    e.target.value = ''; // Reset input field
+                    return;
+                }
+
+                // 2. Format Extension Validation (.jpg, .jpeg, .png, .pdf)
+                const allowed_exts = ['.jpg', '.jpeg', '.png', '.pdf'];
+                const filename = file.name.toLowerCase();
+                const matched = allowed_exts.some(ext => filename.endsWith(ext));
+                if (!matched) {
+                    if (window.showBarakaToast) {
+                        window.showBarakaToast('صيغة الملف غير مدعومة! الصيغ المسموح بها: JPG, PNG, PDF.', 'warning', 'bi-exclamation-triangle');
+                    } else {
+                        alert('صيغة الملف غير مدعومة! الصيغ المسموح بها: JPG, PNG, PDF.');
+                    }
+                    e.target.value = ''; // Reset input field
+                    return;
+                }
+
+                newImageFile = file;
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     document.getElementById('profileImagePreview').innerHTML = `<img src="${e.target.result}" class="w-100 h-100 object-fit-cover">`;

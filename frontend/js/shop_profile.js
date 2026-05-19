@@ -21,7 +21,27 @@ document.addEventListener('DOMContentLoaded', () => {
     if (shopImageInput) {
         shopImageInput.addEventListener('change', (e) => {
             if (e.target.files && e.target.files[0]) {
-                newShopImageFile = e.target.files[0];
+                const file = e.target.files[0];
+                
+                // 1. Size Validation (2MB limit)
+                const max_size = 2 * 1024 * 1024;
+                if (file.size > max_size) {
+                    alert('حجم صورة المحل كبير جداً! الحد الأقصى هو 2 ميجابايت.');
+                    e.target.value = ''; // Reset input field
+                    return;
+                }
+
+                // 2. Format Extension Validation (.jpg, .jpeg, .png, .pdf)
+                const allowed_exts = ['.jpg', '.jpeg', '.png', '.pdf'];
+                const filename = file.name.toLowerCase();
+                const matched = allowed_exts.some(ext => filename.endsWith(ext));
+                if (!matched) {
+                    alert('صيغة الملف غير مدعومة! الصيغ المسموح بها: JPG, PNG, PDF.');
+                    e.target.value = ''; // Reset input field
+                    return;
+                }
+
+                newShopImageFile = file;
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     document.getElementById('shopImagePreview').innerHTML = `<img src="${e.target.result}" class="w-100 h-100 object-fit-cover">`;
@@ -45,7 +65,29 @@ document.addEventListener('DOMContentLoaded', () => {
     if (prodImageInput) {
         prodImageInput.addEventListener('change', (e) => {
             if (e.target.files && e.target.files[0]) {
-                newProdImageFile = e.target.files[0];
+                const file = e.target.files[0];
+                
+                // 1. Size Validation (2MB limit)
+                const max_size = 2 * 1024 * 1024;
+                if (file.size > max_size) {
+                    alert('حجم صورة المنتج كبير جداً! الحد الأقصى هو 2 ميجابايت.');
+                    e.target.value = ''; // Reset input field
+                    newProdImageFile = null;
+                    return;
+                }
+
+                // 2. Format Extension Validation (.jpg, .jpeg, .png, .pdf)
+                const allowed_exts = ['.jpg', '.jpeg', '.png', '.pdf'];
+                const filename = file.name.toLowerCase();
+                const matched = allowed_exts.some(ext => filename.endsWith(ext));
+                if (!matched) {
+                    alert('صيغة الملف غير مدعومة! الصيغ المسموح بها: JPG, PNG, PDF.');
+                    e.target.value = ''; // Reset input field
+                    newProdImageFile = null;
+                    return;
+                }
+
+                newProdImageFile = file;
             } else {
                 newProdImageFile = null;
             }

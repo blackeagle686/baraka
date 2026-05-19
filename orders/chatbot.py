@@ -258,6 +258,7 @@ def _build_db_context(message, user, cart_data):
 
 class ChatbotView(APIView):
     permission_classes = [permissions.IsAuthenticated]
+    throttle_classes = [ChatbotUserRateThrottle]
 
     def post(self, request):
         message = request.data.get('message', '').strip()
@@ -265,6 +266,10 @@ class ChatbotView(APIView):
         
         if not message:
             return Response({"detail": "المسج مطلوب"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Enforce max input text length of 500 characters
+        if len(message) > 500:
+            return Response({"detail": "نص الرسالة طويل جداً، الحد الأقصى هو 500 حرف."}, status=status.HTTP_400_BAD_REQUEST)
 
         message_lower = message.lower()
         response_data = {}

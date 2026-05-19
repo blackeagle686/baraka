@@ -103,6 +103,44 @@ document.addEventListener('DOMContentLoaded', () => {
             errorMsg.classList.add('d-none');
             errorMsg.classList.remove('d-block');
             errorMsg.style.display = 'none';
+
+            // Egyptian Phone regex validator
+            const phoneRegex = /^(01[0125]\d{8}|201[0125]\d{8}|\+201[0125]\d{8})$/;
+            if (!phoneRegex.test(phone.trim())) {
+                errorMsg.innerHTML = `<i class="bi bi-exclamation-triangle me-1"></i>رقم الهاتف غير صالح. يرجى إدخال رقم مصري صحيح (مثال: 01012345678).`;
+                errorMsg.classList.remove('d-none');
+                errorMsg.classList.add('d-block');
+                errorMsg.style.setProperty('display', 'block', 'important');
+                errorMsg.style.opacity = '1';
+                btn.disabled = false;
+                btnText.classList.remove('invisible');
+                spinner.classList.add('d-none');
+                
+                const card = document.querySelector('.auth-card');
+                card.classList.remove('shake');
+                void card.offsetWidth;
+                card.classList.add('shake');
+                return;
+            }
+
+            // Strong Password complexity validator
+            const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#\$%\^&\*\(\)_\+\-=\[\]\{\}\|;\'\:",\./<>\?]).{8,}$/;
+            if (!passwordRegex.test(password)) {
+                errorMsg.innerHTML = `<i class="bi bi-exclamation-triangle me-1"></i>كلمة المرور ضعيفة. يجب أن تحتوي على 8 أحرف على الأقل، تشمل حرفاً كبيراً، وحرفاً صغيراً، ورقماً، ورمزاً خاصاً.`;
+                errorMsg.classList.remove('d-none');
+                errorMsg.classList.add('d-block');
+                errorMsg.style.setProperty('display', 'block', 'important');
+                errorMsg.style.opacity = '1';
+                btn.disabled = false;
+                btnText.classList.remove('invisible');
+                spinner.classList.add('d-none');
+                
+                const card = document.querySelector('.auth-card');
+                card.classList.remove('shake');
+                void card.offsetWidth;
+                card.classList.add('shake');
+                return;
+            }
             
             try {
                 await api.auth.register({ name, phone, location, role, password });

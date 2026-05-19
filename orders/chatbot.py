@@ -11,6 +11,7 @@ from shops.models import Product, Shop, Category
 from .models import Order
 from openai import OpenAI
 from gtts import gTTS
+from users.throttles import ChatbotUserRateThrottle
 
 logger = logging.getLogger("Baraka.Chatbot")
 

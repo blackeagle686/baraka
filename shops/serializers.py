@@ -50,6 +50,13 @@ class ShopCreateSerializer(serializers.ModelSerializer):
 class ShopSerializer(serializers.ModelSerializer):
     products = ProductSerializer(many=True, read_only=True)
     owner_phone = serializers.ReadOnlyField(source='owner.phone')
+
+    def validate_image(self, value):
+        from django.core.exceptions import ValidationError as DjangoValidationError
+        try:
+            return validate_secure_file(value)
+        except DjangoValidationError as e:
+            raise serializers.ValidationError(e.message)
     average_rating = serializers.SerializerMethodField()
     total_ratings = serializers.SerializerMethodField()
     ratings_list = ShopRatingSerializer(source='ratings', many=True, read_only=True)

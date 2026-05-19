@@ -27,7 +27,7 @@ if IS_WINDOWS:
 
     # 4. Celery
     if shutil.which("venv\\Scripts\\celery.exe") or shutil.which("celery"):
-        commands_to_run.append(("Celery Worker", "venv\\Scripts\\celery.exe -A backend worker --loglevel=info"))
+        commands_to_run.append(("Celery Worker", "venv\\Scripts\\celery.exe -A backend worker --loglevel=info -P solo"))
     else:
         print("⚠️  [Warning] Celery executable was not found. Background worker task offloading won't be active.\n")
 

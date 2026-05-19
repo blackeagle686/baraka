@@ -11,7 +11,7 @@ from shops.models import Shop, Product, Notification
 
 from .serializers import OrderSerializer
 
-from users.permissions import IsApprovedOrReadOnly
+from users.permissions import IsApprovedOrReadOnly, IsApprovedUser
 from users.permissions import IsAdminUserRole
 from .tasks import (
     send_order_notifications_to_drivers,
@@ -40,6 +40,8 @@ class OrderViewSet(viewsets.ModelViewSet):
             return base_qs.filter(items__product__shop__owner=user).distinct()
         
         elif user.role == 'DRIVER':
+            if not user.is_approved:
+                return base_qs.filter(driver=user)
             return base_qs.filter(
                 Q(driver=user) | Q(driver__isnull=True, status__in=['PENDING', 'ACCEPTED', 'PREPARING', 'ON_DELIVERY'])
             )
@@ -198,7 +200,7 @@ class OrderViewSet(viewsets.ModelViewSet):
         order.save()
         return Response(self.get_serializer(order).data)
 
-    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated, IsApprovedUser])
     def accept_delivery(self, request, pk=None):
         if request.user.role != 'DRIVER':
             return Response({"detail": "Only drivers can accept delivery assignment."}, status=status.HTTP_403_FORBIDDEN)
@@ -286,7 +288,7 @@ class OrderViewSet(viewsets.ModelViewSet):
 
         return Response(self.get_serializer(order).data)
 
-    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated, IsApprovedUser])
     def confirm_payment_received(self, request, pk=None):
         order = self.get_object()
         
@@ -329,7 +331,7 @@ class OrderViewSet(viewsets.ModelViewSet):
         order.save()
         return Response(self.get_serializer(order).data)
 
-    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated, IsApprovedUser])
     def postpone_shop_settlement(self, request, pk=None):
         order = self.get_object()
         if order.driver != request.user:
@@ -367,7 +369,7 @@ class OrderViewSet(viewsets.ModelViewSet):
             
         return Response(self.get_serializer(order).data)
 
-    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated, IsApprovedUser])
     def raise_dispute(self, request, pk=None):
         order = self.get_object()
         is_customer = (order.customer == request.user)
@@ -399,7 +401,7 @@ class OrderViewSet(viewsets.ModelViewSet):
         
         return Response(self.get_serializer(order).data)
 
-    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated, IsApprovedUser])
     def toggle_item_ready(self, request, pk=None):
         order = self.get_object()
         user = request.user
@@ -425,7 +427,7 @@ class OrderViewSet(viewsets.ModelViewSet):
             "detail": f"Item marked as {'ready' if item.is_ready else 'not ready'}."
         })
 
-    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated, IsApprovedUser])
     def report_emergency(self, request, pk=None):
         if request.user.role != 'DRIVER':
             return Response({"detail": "Only drivers can report a delivery emergency."}, status=status.HTTP_403_FORBIDDEN)
@@ -500,7 +502,7 @@ class OrderViewSet(viewsets.ModelViewSet):
                 "detail": "تم إبلاغ النظام بالحالة الطارئة وإرجاع الطلب للوحة الطيارين بنجاح."
             })
 
-    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated, IsApprovedUser])
     def confirm_emergency_returned(self, request, pk=None):
         order = self.get_object()
         

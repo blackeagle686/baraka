@@ -108,7 +108,29 @@ document.addEventListener('DOMContentLoaded', () => {
     if (editProdImageInput) {
         editProdImageInput.addEventListener('change', (e) => {
             if (e.target.files && e.target.files[0]) {
-                newEditProdImageFile = e.target.files[0];
+                const file = e.target.files[0];
+                
+                // 1. Size Validation (2MB limit)
+                const max_size = 2 * 1024 * 1024;
+                if (file.size > max_size) {
+                    alert('حجم صورة تعديل المنتج كبير جداً! الحد الأقصى هو 2 ميجابايت.');
+                    e.target.value = ''; // Reset input field
+                    newEditProdImageFile = null;
+                    return;
+                }
+
+                // 2. Format Extension Validation (.jpg, .jpeg, .png, .pdf)
+                const allowed_exts = ['.jpg', '.jpeg', '.png', '.pdf'];
+                const filename = file.name.toLowerCase();
+                const matched = allowed_exts.some(ext => filename.endsWith(ext));
+                if (!matched) {
+                    alert('صيغة الملف غير مدعومة! الصيغ المسموح بها: JPG, PNG, PDF.');
+                    e.target.value = ''; // Reset input field
+                    newEditProdImageFile = null;
+                    return;
+                }
+
+                newEditProdImageFile = file;
             } else {
                 newEditProdImageFile = null;
             }

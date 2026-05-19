@@ -301,7 +301,7 @@ class DriverApprovalTestCase(APITestCase):
             customer=self.customer,
             shop=self.shop,
             status="PENDING",
-            delivery_address="Test Address",
+            address="Test Address",
             total_price=50.0
         )
         # Create OrderItem

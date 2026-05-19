@@ -52,6 +52,12 @@ class OrderViewSet(viewsets.ModelViewSet):
         if request.user.role != 'CUSTOMER' and not request.user.is_staff:
             return Response({"detail": "Only customers can place orders."}, status=status.HTTP_403_FORBIDDEN)
 
+        if not request.user.is_phone_verified and not request.user.is_staff:
+            return Response(
+                {"detail": "يرجى تفعيل حسابك عن طريق رمز التحقق المرسل لهاتفك أولاً لتتمكن من إتمام الطلبات."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
         data = request.data
         address = data.get('address')
         items_data = data.get('items', [])

@@ -705,9 +705,9 @@ function updateCartUI() {
         </div>
         <div class="mb-3">
             <label class="form-label text-espresso fw-bold small mb-1"><i class="bi bi-geo-alt-fill text-marigold me-1"></i>عنوان التوصيل في القرية</label>
-            <input type="text" class="form-control rounded-pill px-3 py-2" id="orderAddress" style="font-size:0.85rem;" placeholder="مثال: بحري البلد، جنب الجامع الكبير...">
+            <input type="text" class="form-control rounded-pill px-3 py-2" id="sidebarOrderAddress" style="font-size:0.85rem;" placeholder="مثال: بحري البلد، جنب الجامع الكبير...">
         </div>
-        <button onclick="submitOrder()" class="btn btn-marigold checkout-sidebar-btn text-white fw-bold" id="submitOrderBtn">
+        <button onclick="submitOrder()" class="btn btn-marigold checkout-sidebar-btn text-white fw-bold" id="sidebarSubmitOrderBtn">
             <i class="bi bi-check-all me-1"></i>تأكيد الطلب ودليفري!
         </button>
     `;
@@ -717,8 +717,14 @@ function updateCartUI() {
     if (token) {
         api.auth.getProfile(token).then(profile => {
             const addressInput = document.getElementById('orderAddress');
-            if (profile.location && addressInput && !addressInput.value.trim()) {
-                addressInput.value = profile.location;
+            const sidebarAddressInput = document.getElementById('sidebarOrderAddress');
+            if (profile.location) {
+                if (addressInput && !addressInput.value.trim()) {
+                    addressInput.value = profile.location;
+                }
+                if (sidebarAddressInput && !sidebarAddressInput.value.trim()) {
+                    sidebarAddressInput.value = profile.location;
+                }
             }
         }).catch(err => console.error("Error autofilling address:", err));
     }
@@ -817,10 +823,29 @@ window.submitOrder = async function() {
     if (window.isSubmittingOrder) return; // Prevent double submissions!
 
     const token = localStorage.getItem('access_token');
-    if (!token) return;
+    if (!token) {
+        if (window.showBarakaToast) {
+            window.showBarakaToast('يرجى تسجيل الدخول أولاً لإرسال الطلب.', 'warning', 'bi-shield-lock');
+        } else {
+            alert('يرجى تسجيل الدخول أولاً لإرسال الطلب.');
+        }
+        setTimeout(() => {
+            window.location.href = `/html/auth/login.html?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`;
+        }, 1500);
+        return;
+    }
     
-    const addressInput = document.getElementById('orderAddress');
-    const address = addressInput ? addressInput.value.trim() : '';
+    // Read address from either modal or sidebar inputs
+    const modalAddressEl = document.getElementById('orderAddress');
+    const sidebarAddressEl = document.getElementById('sidebarOrderAddress');
+    
+    let address = '';
+    if (modalAddressEl && modalAddressEl.value.trim()) {
+        address = modalAddressEl.value.trim();
+    } else if (sidebarAddressEl && sidebarAddressEl.value.trim()) {
+        address = sidebarAddressEl.value.trim();
+    }
+
     if (!address) {
         if (window.showBarakaToast) {
             window.showBarakaToast('يرجى تحديد عنوان التوصيل أولاً.', 'error', 'bi-geo-alt');
@@ -832,8 +857,12 @@ window.submitOrder = async function() {
     
     const params = new URLSearchParams(window.location.search);
     const shopId = parseInt(params.get('id'));
+    if (!shopId || isNaN(shopId)) {
+        alert('محل غير صالح!');
+        return;
+    }
+
     const shopCart = cart.filter(it => it.shop === shopId);
-    
     if (shopCart.length === 0) {
         alert('سلتك من هذا المحل فارغة!');
         return;
@@ -842,10 +871,20 @@ window.submitOrder = async function() {
     window.isSubmittingOrder = true; // Set block flag
 
     const submitBtn = document.getElementById('submitOrderBtn');
-    if (submitBtn) {
-        submitBtn.disabled = true;
-        submitBtn.innerText = 'جاري إرسال الطلب...';
-    }
+    const sidebarSubmitBtn = document.getElementById('sidebarSubmitOrderBtn');
+    
+    const setBtnState = (disabled, text) => {
+        [submitBtn, sidebarSubmitBtn].forEach(btn => {
+            if (btn) {
+                btn.disabled = disabled;
+                btn.innerHTML = disabled 
+                    ? `<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> ${text}`
+                    : `<i class="bi bi-check-all me-1"></i>${text}`;
+            }
+        });
+    };
+
+    setBtnState(true, 'جاري إرسال الطلب...');
     
     const orderData = {
         shop: shopId,
@@ -878,17 +917,29 @@ window.submitOrder = async function() {
         }, 1200);
     } catch (error) {
         window.isSubmittingOrder = false; // Reset lock on error
+        
+        let errMsg = 'حدث خطأ أثناء إرسال الطلب.';
+        if (error && error.detail) {
+            errMsg = error.detail;
+        } else if (typeof error === 'string') {
+            errMsg = error;
+        }
+        
         if (window.showBarakaToast) {
-            window.showBarakaToast('حدث خطأ أثناء إرسال الطلب.', 'error', 'bi-exclamation-triangle');
+            window.showBarakaToast(errMsg, 'error', 'bi-exclamation-triangle');
         } else {
-            alert('حدث خطأ أثناء إرسال الطلب: ' + JSON.stringify(error));
+            alert(errMsg);
+        }
+
+        // Redirection on phone verification requirement
+        if (error && error.detail && error.detail.includes('تفعيل حسابك')) {
+            setTimeout(() => {
+                window.location.href = `/html/auth/login.html?mode=otp`;
+            }, 2500);
         }
     } finally {
         if (!window.isSubmittingOrder) { // Only re-enable if lock is released (i.e. error occurred)
-            if (submitBtn) {
-                submitBtn.disabled = false;
-                submitBtn.innerText = 'تأكيد الطلب ودليفري!';
-            }
+            setBtnState(false, 'تأكيد الطلب ودليفري!');
         }
     }
 }

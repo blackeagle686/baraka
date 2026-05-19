@@ -5,6 +5,8 @@ from django.contrib.auth import get_user_model
 from django.db.models import Q
 from .serializers import UserSerializer, AdminUserSerializer
 from .permissions import IsAdminUserRole
+from .throttles import AuthAnonRateThrottle
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 User = get_user_model()
 
@@ -13,6 +15,15 @@ class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
     permission_classes = (permissions.AllowAny,)
     serializer_class = UserSerializer
+    throttle_classes = [AuthAnonRateThrottle]
+
+
+class ThrottledTokenObtainPairView(TokenObtainPairView):
+    throttle_classes = [AuthAnonRateThrottle]
+
+
+class ThrottledTokenRefreshView(TokenRefreshView):
+    throttle_classes = [AuthAnonRateThrottle]
 
 
 class ProfileView(generics.RetrieveUpdateAPIView):

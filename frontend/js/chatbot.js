@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     injectChatbotHTML();
+    loadChatbotShops();
 });
 
 function injectChatbotHTML() {
@@ -210,8 +211,8 @@ window.sendBarakaChatMessage = async function(event) {
         botMsgDiv.className = 'chat-message bot-message align-self-flex-start animate-up';
         
         let textContent = data.response || 'عذراً يا فندم، واجهت مشكلة في فهم طلبك.';
-        // Simple markdown formatter for newlines and bold texts
         textContent = formatMarkdown(textContent);
+        textContent = formatMessageWithShopMaps(textContent);
         
         // Unique button ID to identify this specific message's audio control
         const audioBtnId = `audio_btn_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
@@ -805,3 +806,135 @@ window.submitChatbotOrder = async function(btn) {
         }
     }
 };
+
+let chatbotShopsList = [];
+
+async function loadChatbotShops() {
+    try {
+        const res = await api.shops.getAll(1, '');
+        chatbotShopsList = res.results || res || [];
+    } catch (e) {
+        console.error("Failed to load shops for chatbot mapping:", e);
+    }
+}
+
+async function ensureLeafletLoaded() {
+    if (window.L) return;
+
+    if (!document.getElementById('leaflet-css')) {
+        const link = document.createElement('link');
+        link.id = 'leaflet-css';
+        link.rel = 'stylesheet';
+        link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+        document.head.appendChild(link);
+    }
+
+    if (!document.getElementById('leaflet-js')) {
+        const script = document.createElement('script');
+        script.id = 'leaflet-js';
+        script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+        document.body.appendChild(script);
+
+        await new Promise((resolve) => {
+            script.onload = resolve;
+        });
+    }
+}
+
+let chatbotMapInstance = null;
+
+window.showShopMapInChat = async function(shopId, name, lat, lon, image, description, address, isOpen) {
+    await ensureLeafletLoaded();
+
+    let modalEl = document.getElementById('chatbotShopMapModal');
+    if (!modalEl) {
+        modalEl = document.createElement('div');
+        modalEl.id = 'chatbotShopMapModal';
+        modalEl.className = 'modal fade';
+        modalEl.tabIndex = -1;
+        modalEl.style.zIndex = '100000';
+        modalEl.innerHTML = `
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden" style="direction: rtl;">
+                    <div class="modal-header bg-marigold text-white border-0 py-3">
+                        <h5 class="modal-title fw-bold" id="chatbotShopMapModalTitle">موقع المحل على الخريطة</h5>
+                        <button type="button" class="btn-close btn-close-white ms-0 me-auto" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-0">
+                        <div id="chatbotShopMapContainer" style="width: 100%; height: 450px; background: #eee;"></div>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modalEl);
+    }
+
+    document.getElementById('chatbotShopMapModalTitle').innerText = name || 'موقع المحل على الخريطة';
+
+    const modal = new bootstrap.Modal(modalEl);
+    modal.show();
+
+    modalEl.addEventListener('shown.bs.modal', function onShown() {
+        modalEl.removeEventListener('shown.bs.modal', onShown);
+
+        const latVal = parseFloat(lat);
+        const lonVal = parseFloat(lon);
+
+        if (chatbotMapInstance) {
+            chatbotMapInstance.remove();
+        }
+
+        chatbotMapInstance = L.map('chatbotShopMapContainer').setView([latVal, lonVal], 16);
+
+        L.tileLayer('http://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}', {
+            maxZoom: 20,
+            subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+            attribution: '© Google Satellite'
+        }).addTo(chatbotMapInstance);
+
+        const popupContent = `
+            <div class="shop-map-popup text-end" style="font-family: 'Cairo', sans-serif; direction: rtl; min-width: 200px;">
+                <div class="d-flex align-items-center gap-2 mb-2 pb-2 border-bottom" style="border-color: rgba(201,153,151,0.12) !important;">
+                    <div style="width: 45px; height: 45px; border-radius: 50%; overflow: hidden; background: #eee; flex-shrink: 0; border: 2px solid rgba(194, 146, 64, 0.15);">
+                        ${image 
+                            ? `<img src="${image}" style="width:100%; height:100%; object-fit:cover;">` 
+                            : `<div class="d-flex align-items-center justify-content-center h-100 text-white fw-bold" style="background: linear-gradient(135deg, var(--color-terracotta), var(--color-mesa)); font-size: 0.9rem;">${name.charAt(0)}</div>`
+                        }
+                    </div>
+                    <div>
+                        <h6 class="fw-bold text-espresso m-0" style="font-size: 0.95rem;">${name}</h6>
+                        <span class="badge ${isOpen ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger'} rounded-pill px-2 py-0.5 mt-1" style="font-size: 0.7rem;">
+                            ${isOpen ? 'مفتوح دلوقتي' : 'مقفول دلوقتي'}
+                        </span>
+                    </div>
+                </div>
+                <p class="text-mesa small mb-2" style="max-height: 3rem; overflow: hidden; font-size: 0.8rem;">${description || 'محل مميز في قرية بركة.'}</p>
+                <div class="text-muted small mb-3" style="font-size: 0.8rem;"><i class="bi bi-geo-alt-fill text-marigold me-1"></i>${address || 'عنوان في القرية'}</div>
+                <a href="/html/shops/details.html?id=${shopId}" class="btn btn-marigold btn-sm rounded-pill w-100 py-2 fw-bold text-white shadow-sm text-decoration-none text-center d-block">
+                    <i class="bi bi-shop me-1"></i>زيارة المحل
+                </a>
+            </div>
+        `;
+
+        const marker = L.marker([latVal, lonVal]).addTo(chatbotMapInstance);
+        marker.bindPopup(popupContent).openPopup();
+    });
+};
+
+function formatMessageWithShopMaps(text) {
+    if (!text) return '';
+    let formatted = text;
+    
+    chatbotShopsList.forEach(shop => {
+        if (!shop.name || !shop.latitude || !shop.longitude) return;
+        
+        const escapedName = shop.name.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+        const regex = new RegExp(`(?<!href="[^"]*|onclick="[^"]*|src="[^"]*)([^A-Za-z0-9_>"]|^)(${escapedName})([^A-Za-z0-9_<"]|$)`, 'g');
+        
+        const mapBtnHtml = `<span class="text-nowrap fw-bold text-espresso">${shop.name}<button class="btn btn-link text-marigold p-0 border-0 ms-1 me-1 align-baseline chatbot-map-inline-btn" onclick="window.showShopMapInChat(${shop.id}, '${escapeHtml(shop.name)}', ${shop.latitude}, ${shop.longitude}, '${shop.image || ''}', '${escapeHtml(shop.description || '')}', '${escapeHtml(shop.address || '')}', ${shop.is_open})" title="عرض على الخريطة" style="text-decoration: none; font-size: 0.9rem; line-height: 1;"><i class="bi bi-geo-alt-fill"></i></button></span>`;
+        
+        formatted = formatted.replace(regex, `$1${mapBtnHtml}$3`);
+    });
+    
+    return formatted;
+}

@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
+from .validators import validate_egyptian_phone, validate_strong_password, validate_secure_file
 
 User = get_user_model()
 
@@ -22,6 +23,27 @@ class UserSerializer(serializers.ModelSerializer):
         if instance.is_staff or instance.is_superuser:
             data['role'] = 'ADMIN'
         return data
+
+    def validate_phone(self, value):
+        from django.core.exceptions import ValidationError as DjangoValidationError
+        try:
+            return validate_egyptian_phone(value)
+        except DjangoValidationError as e:
+            raise serializers.ValidationError(e.message)
+
+    def validate_password(self, value):
+        from django.core.exceptions import ValidationError as DjangoValidationError
+        try:
+            return validate_strong_password(value)
+        except DjangoValidationError as e:
+            raise serializers.ValidationError(e.message)
+
+    def validate_image(self, value):
+        from django.core.exceptions import ValidationError as DjangoValidationError
+        try:
+            return validate_secure_file(value)
+        except DjangoValidationError as e:
+            raise serializers.ValidationError(e.message)
 
     def create(self, validated_data):
         role = validated_data.get('role', 'CUSTOMER')

@@ -2,6 +2,148 @@ const API_BASE = window.location.origin.includes('127.0.0.1') || window.location
     ? (window.location.port === '8080' ? 'http://127.0.0.1:8000/api' : '/api')
     : '/api';
 
+// ==========================================
+// JWT Transparent Auto-Refresh Interceptor
+// ==========================================
+let refreshInProgressPromise = null;
+
+async function getValidToken() {
+    let access = localStorage.getItem('access_token');
+    const refresh = localStorage.getItem('refresh_token');
+    
+    if (!access) return null;
+    
+    // Check if access token is expired or expiring in less than 30 seconds
+    let isExpired = true;
+    try {
+        const parts = access.split('.');
+        if (parts.length === 3) {
+            const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+            const now = Math.floor(Date.now() / 1000);
+            if (payload.exp > now + 30) {
+                isExpired = false;
+            }
+        }
+    } catch (e) {
+        isExpired = true;
+    }
+    
+    if (!isExpired) {
+        return access;
+    }
+    
+    if (!refresh) {
+        // Clear and force logout if refresh token doesn't exist
+        localStorage.clear();
+        return null;
+    }
+    
+    // Prevent simultaneous parallel refresh requests (thread safety)
+    if (refreshInProgressPromise) {
+        return await refreshInProgressPromise;
+    }
+    
+    refreshInProgressPromise = (async () => {
+        try {
+            const res = await fetch(`${API_BASE}/auth/token/refresh/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ refresh })
+            });
+            if (res.ok) {
+                const data = await res.json();
+                localStorage.setItem('access_token', data.access);
+                if (data.refresh) {
+                    localStorage.setItem('refresh_token', data.refresh);
+                }
+                return data.access;
+            } else {
+                // Refresh token invalid or blacklisted, clear session and redirect
+                localStorage.clear();
+                window.location.href = '/html/auth/login.html';
+                return null;
+            }
+        } catch (err) {
+            console.error("Transparent token refresh failed:", err);
+            return null;
+        } finally {
+            refreshInProgressPromise = null;
+        }
+    })();
+    
+    return await refreshInProgressPromise;
+}
+
+// Global fetch wrapper interceptor
+const originalFetch = window.fetch;
+window.fetch = async function (resource, config) {
+    let newConfig = config ? { ...config } : {};
+    
+    let hasAuthHeader = false;
+    let authHeaderValue = '';
+    
+    if (newConfig.headers) {
+        if (newConfig.headers instanceof Headers) {
+            if (newConfig.headers.has('Authorization')) {
+                authHeaderValue = newConfig.headers.get('Authorization');
+                hasAuthHeader = authHeaderValue.startsWith('Bearer ');
+            }
+        } else if (Array.isArray(newConfig.headers)) {
+            const authItem = newConfig.headers.find(h => h[0].toLowerCase() === 'authorization');
+            if (authItem) {
+                authHeaderValue = authItem[1];
+                hasAuthHeader = authHeaderValue.startsWith('Bearer ');
+            }
+        } else {
+            const key = Object.keys(newConfig.headers).find(k => k.toLowerCase() === 'authorization');
+            if (key) {
+                authHeaderValue = newConfig.headers[key];
+                hasAuthHeader = authHeaderValue.startsWith('Bearer ');
+            }
+        }
+    }
+    
+    if (hasAuthHeader) {
+        const validToken = await getValidToken();
+        if (validToken) {
+            if (newConfig.headers instanceof Headers) {
+                newConfig.headers.set('Authorization', `Bearer ${validToken}`);
+            } else if (Array.isArray(newConfig.headers)) {
+                newConfig.headers = newConfig.headers.map(h => 
+                    h[0].toLowerCase() === 'authorization' ? ['Authorization', `Bearer ${validToken}`] : h
+                );
+            } else {
+                const key = Object.keys(newConfig.headers).find(k => k.toLowerCase() === 'authorization') || 'Authorization';
+                newConfig.headers[key] = `Bearer ${validToken}`;
+            }
+        }
+    }
+    
+    let response = await originalFetch(resource, newConfig);
+    
+    // Auto-retry once on 401 Unauthorized
+    if (response.status === 401 && hasAuthHeader) {
+        console.warn("401 Unauthorized detected. Attempting proactive session token refresh...");
+        localStorage.removeItem('access_token');
+        const refreshedToken = await getValidToken();
+        if (refreshedToken) {
+            if (newConfig.headers instanceof Headers) {
+                newConfig.headers.set('Authorization', `Bearer ${refreshedToken}`);
+            } else if (Array.isArray(newConfig.headers)) {
+                newConfig.headers = newConfig.headers.map(h => 
+                    h[0].toLowerCase() === 'authorization' ? ['Authorization', `Bearer ${refreshedToken}`] : h
+                );
+            } else {
+                const key = Object.keys(newConfig.headers).find(k => k.toLowerCase() === 'authorization') || 'Authorization';
+                newConfig.headers[key] = `Bearer ${refreshedToken}`;
+            }
+            response = await originalFetch(resource, newConfig);
+        }
+    }
+    
+    return response;
+};
+
 const api = {
     auth: {
         login: async (phone, password) => {

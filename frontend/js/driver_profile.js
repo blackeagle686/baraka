@@ -64,6 +64,18 @@ async function initDriverDashboard() {
         // Initialize fields
         populateDriverProfile(currentDriver);
         
+        if (!currentDriver.is_approved) {
+            renderUnapprovedDriverState();
+            if (window.switchTab) {
+                window.switchTab('settings');
+            }
+            const profileForm = document.getElementById('driverProfileForm');
+            if (profileForm) {
+                profileForm.addEventListener('submit', handleDriverProfileSubmit);
+            }
+            return;
+        }
+
         // Load orders data
         await loadDriverOrders();
 
@@ -76,6 +88,68 @@ async function initDriverDashboard() {
         localStorage.clear();
         window.location.href = '/html/auth/login.html';
     }
+}
+
+function renderUnapprovedDriverState() {
+    const template = `
+        <div class="dashboard-card text-center p-5 animate-up border border-secondary border-opacity-10 shadow-lg rounded-4 bg-white" style="max-width: 650px; margin: 2rem auto; direction: rtl; text-align: right;">
+            <div class="mb-4 d-inline-flex align-items-center justify-content-center bg-warning bg-opacity-10 text-warning rounded-circle" style="width: 80px; height: 80px; font-size: 2.5rem; border: 2px dashed #ffc107;">
+                <i class="bi bi-clock-history animate-pulse"></i>
+            </div>
+            <h3 class="fw-bold text-espresso mb-3 text-center">حسابك قيد المراجعة والاعتماد</h3>
+            <p class="text-mesa mb-4 px-3 text-center" style="line-height: 1.7; font-size: 1.05rem;">
+                أهلاً بك يا بطل في عائلة طياري <strong>منصة بركة</strong>! 🌾<br>
+                يقوم فريق الإدارة حالياً بمراجعة طلب انضمامك وبياناتك للتأكد من مطابقتها وتفعيل حسابك. سيصلك إشعار فور اعتماد الحساب لتتمكن من استقبال طلبات التوصيل وجني الأرباح.
+            </p>
+            
+            <!-- Steps Progress Flow -->
+            <div class="row g-3 text-start mx-auto mb-4" style="max-width: 480px; direction: rtl; text-align: right;">
+                <div class="col-12 d-flex align-items-center gap-3 bg-white p-3 rounded-4 border border-success border-opacity-20 shadow-xs">
+                    <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; min-width: 32px;"><i class="bi bi-check-lg"></i></div>
+                    <div>
+                        <div class="fw-bold text-espresso small">الخطوة 1: التسجيل وتأكيد الهاتف</div>
+                        <div class="text-muted" style="font-size: 0.75rem;">تم بنجاح ✓</div>
+                    </div>
+                </div>
+                <div class="col-12 d-flex align-items-center gap-3 bg-white p-3 rounded-4 border border-warning border-opacity-20 shadow-xs">
+                    <div class="bg-warning text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; min-width: 32px;"><i class="bi bi-hourglass-split"></i></div>
+                    <div>
+                        <div class="fw-bold text-espresso small">الخطوة 2: مراجعة الحساب وتفعيله</div>
+                        <div class="text-warning fw-bold" style="font-size: 0.75rem;">جاري المراجعة من الإدارة...</div>
+                    </div>
+                </div>
+                <div class="col-12 d-flex align-items-center gap-3 bg-white p-3 rounded-4 opacity-50 border border-secondary border-opacity-10">
+                    <div class="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; min-width: 32px;"><i class="bi bi-lock-fill"></i></div>
+                    <div>
+                        <div class="fw-bold text-espresso small">الخطوة 3: بدء استقبال طلبات التوصيل</div>
+                        <div class="text-muted" style="font-size: 0.75rem;">مغلق حتى تفعيل الحساب</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="alert alert-info text-start d-flex align-items-start gap-3 rounded-4 py-3" style="direction: rtl; text-align: right;">
+                <i class="bi bi-info-circle-fill text-info fs-4"></i>
+                <div class="small text-espresso" style="line-height: 1.5;">
+                    <strong>تلميح هام:</strong> يرجى الانتقال إلى قسم <strong>إعدادات الحساب</strong> وتحديث بياناتك الشخصية (الاسم، العنوان، تحديد موقعك الجغرافي الدقيق على الخريطة) لتسريع عملية الاعتماد من قبل الإدارة.
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Hide sidebar badges
+    const availableBadge = document.getElementById('sidebarAvailableBadge');
+    const tripsBadge = document.getElementById('sidebarTripsBadge');
+    if (availableBadge) availableBadge.style.display = 'none';
+    if (tripsBadge) tripsBadge.style.display = 'none';
+
+    // Inject notice templates into panels
+    const availablePanel = document.getElementById('availablePanel');
+    const tripsPanel = document.getElementById('tripsPanel');
+    const revenuePanel = document.getElementById('revenuePanel');
+
+    if (availablePanel) availablePanel.innerHTML = template;
+    if (tripsPanel) tripsPanel.innerHTML = template;
+    if (revenuePanel) revenuePanel.innerHTML = template;
 }
 
 function populateDriverProfile(driver) {

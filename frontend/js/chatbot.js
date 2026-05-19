@@ -331,6 +331,62 @@ window.sendBarakaChatMessage = async function(event) {
             `;
             botMsgDiv.appendChild(quickReplies);
         }
+
+        // Render Checkout card if action.type is CHECKOUT
+        if (data.action && data.action.type === "CHECKOUT") {
+            const checkoutCard = document.createElement('div');
+            checkoutCard.className = 'chat-checkout-card mt-3 p-3 rounded-3 bg-light border border-warning shadow-sm';
+            
+            const token = localStorage.getItem('access_token');
+            const totalPrice = parseFloat(data.action.total_price || 0);
+            const deliveryPrice = parseFloat(data.action.delivery_price || 10);
+            const finalTotal = parseFloat(data.action.final_total || (totalPrice + deliveryPrice));
+            
+            checkoutCard.innerHTML = `
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <div class="checkout-icon bg-warning-light text-warning rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                        <i class="bi bi-cart-check-fill fs-5 text-marigold"></i>
+                    </div>
+                    <h6 class="mb-0 text-espresso fw-bold">تأكيد وإرسال الطلب 🛒</h6>
+                </div>
+                
+                <div class="checkout-details mb-3">
+                    <div class="d-flex justify-content-between mb-1 text-espresso small">
+                        <span>إجمالي المنتجات:</span>
+                        <span class="fw-bold">${totalPrice.toFixed(2)} ج.م</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-1 text-espresso small">
+                        <span>خدمة التوصيل:</span>
+                        <span class="fw-bold">${deliveryPrice.toFixed(2)} ج.م</span>
+                    </div>
+                    <hr class="my-2 border-dashed">
+                    <div class="d-flex justify-content-between text-espresso fw-bold fs-6">
+                        <span>الإجمالي النهائي:</span>
+                        <span class="text-marigold">${finalTotal.toFixed(2)} ج.م</span>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="chatbotAddressInput" class="form-label small fw-bold text-espresso mb-1">عنوان التوصيل 📍</label>
+                    <input type="text" id="chatbotAddressInput" class="form-control form-control-sm rounded-pill px-3" placeholder="اكتب عنوانك بالتفصيل (مثلاً: بجوار المسجد الكبير)" required>
+                </div>
+                
+                <button onclick="window.submitChatbotOrder(this)" class="btn btn-marigold btn-sm w-100 rounded-pill py-2 text-white fw-bold d-flex align-items-center justify-content-center gap-2 shadow-xs">
+                    <i class="bi bi-send-fill"></i>
+                    <span>تأكيد وإرسال الطلب</span>
+                </button>
+            `;
+            botMsgDiv.appendChild(checkoutCard);
+            
+            if (token) {
+                api.auth.getProfile(token).then(profile => {
+                    if (profile && profile.location) {
+                        const addrInput = document.getElementById('chatbotAddressInput');
+                        if (addrInput) addrInput.value = profile.location;
+                    }
+                }).catch(err => console.error("Error pre-filling location:", err));
+            }
+        }
         
         messagesContainer.appendChild(botMsgDiv);
         

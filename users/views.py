@@ -226,3 +226,100 @@ class VerifyOTPView(APIView):
             "detail": "تم تفعيل وتأكيد رقم الهاتف بنجاح! حسابك نشط الآن.",
             "is_verified": True
         }, status=status.HTTP_200_OK)
+
+
+class RequestPasswordResetOTPView(APIView):
+    """
+    Checks if user exists, generates OTP, and sends it for password reset.
+    """
+    permission_classes = [permissions.AllowAny]
+    throttle_classes = [AuthAnonRateThrottle]
+
+    def post(self, request):
+        phone = request.data.get('phone')
+        if not phone:
+            return Response({"detail": "رقم الهاتف مطلوب."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            phone = validate_egyptian_phone(phone)
+        except DjangoValidationError as e:
+            return Response({"detail": e.message}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Check if user exists
+        if not User.objects.filter(phone=phone).exists():
+            return Response({"detail": "هذا الرقم غير مسجل لدينا."}, status=status.HTTP_404_NOT_FOUND)
+
+        otp = f"{random.randint(100000, 999999)}"
+        expires_at = timezone.now() + timedelta(minutes=5)
+
+        PhoneOTP.objects.update_or_create(
+            phone=phone,
+            defaults={'otp': otp, 'expires_at': expires_at, 'attempts': 0, 'is_verified': False}
+        )
+
+        async_send_sms_otp.delay(phone, otp)
+
+        return Response({
+            "detail": "تم إرسال رمز التحقق بنجاح إلى هاتفك.",
+            "phone": phone
+        }, status=status.HTTP_200_OK)
+
+
+class ResetPasswordWithOTPView(APIView):
+    """
+    Verifies OTP and resets the user's password.
+    """
+    permission_classes = [permissions.AllowAny]
+    throttle_classes = [AuthAnonRateThrottle]
+
+    def post(self, request):
+        from .validators import validate_strong_password
+        
+        phone = request.data.get('phone')
+        otp = request.data.get('otp')
+        new_password = request.data.get('new_password')
+
+        if not all([phone, otp, new_password]):
+            return Response({"detail": "رقم الهاتف، الرمز، وكلمة المرور الجديدة مطلوبة."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            phone = validate_egyptian_phone(phone)
+        except DjangoValidationError as e:
+            return Response({"detail": e.message}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            new_password = validate_strong_password(new_password)
+        except DjangoValidationError as e:
+            return Response({"detail": e.message}, status=status.HTTP_400_BAD_REQUEST)
+
+        # OTP Verification Logic (similar to VerifyOTPView)
+        try:
+            otp_record = PhoneOTP.objects.get(phone=phone)
+        except PhoneOTP.DoesNotExist:
+            return Response({"detail": "لم يتم طلب رمز تحقق لهذا الرقم."}, status=status.HTTP_400_BAD_REQUEST)
+
+        if otp_record.attempts >= 5:
+            return Response({"detail": "تجاوزت الحد الأقصى للمحاولات. اطلب رمز جديد."}, status=status.HTTP_400_BAD_REQUEST)
+
+        if timezone.now() > otp_record.expires_at:
+            return Response({"detail": "رمز التحقق منتهي الصلاحية."}, status=status.HTTP_400_BAD_REQUEST)
+
+        otp_record.attempts += 1
+        otp_record.save()
+
+        if otp_record.otp != otp:
+            return Response({"detail": f"رمز التحقق غير صحيح! المتبقي {5 - otp_record.attempts} محاولات."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Success - change password
+        try:
+            user = User.objects.get(phone=phone)
+            user.set_password(new_password)
+            user.save()
+            
+            # Clear OTP to prevent reuse
+            otp_record.delete()
+            
+            return Response({"detail": "تم تغيير كلمة المرور بنجاح."}, status=status.HTTP_200_OK)
+        except User.DoesNotExist:
+            return Response({"detail": "المستخدم غير موجود."}, status=status.HTTP_404_NOT_FOUND)
+

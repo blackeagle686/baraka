@@ -41,3 +41,18 @@ class AdminReportDetailView(generics.RetrieveUpdateAPIView):
     serializer_class = ReportSerializer
     permission_classes = [IsAdminUserRole]
     queryset = Report.objects.all()
+
+    def perform_update(self, serializer):
+        report = serializer.save()
+        if report.is_resolved and report.subject.startswith("نزاع على الطلب #"):
+            try:
+                parts = report.subject.split('#')
+                if len(parts) > 1:
+                    order_id = int(parts[1].strip())
+                    from orders.models import Order
+                    order = Order.objects.get(id=order_id)
+                    order.dispute_status = 'RESOLVED'
+                    order.save()
+            except Exception as e:
+                pass
+

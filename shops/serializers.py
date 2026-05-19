@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import Shop, Category, Product, ShopRating, Notification
+from users.validators import validate_secure_file
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
@@ -8,6 +9,13 @@ class CategorySerializer(serializers.ModelSerializer):
 
 class ProductSerializer(serializers.ModelSerializer):
     category_name = serializers.ReadOnlyField(source='category.name')
+
+    def validate_image(self, value):
+        from django.core.exceptions import ValidationError as DjangoValidationError
+        try:
+            return validate_secure_file(value)
+        except DjangoValidationError as e:
+            raise serializers.ValidationError(e.message)
 
     class Meta:
         model = Product
@@ -24,6 +32,13 @@ class ShopRatingSerializer(serializers.ModelSerializer):
         read_only_fields = ['customer']
 
 class ShopCreateSerializer(serializers.ModelSerializer):
+    def validate_image(self, value):
+        from django.core.exceptions import ValidationError as DjangoValidationError
+        try:
+            return validate_secure_file(value)
+        except DjangoValidationError as e:
+            raise serializers.ValidationError(e.message)
+
     class Meta:
         model = Shop
         fields = [

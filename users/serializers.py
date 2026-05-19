@@ -63,9 +63,9 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class AdminUserSerializer(serializers.ModelSerializer):
-    """Full serializer for admin to manage users (can write is_approved, is_active)."""
+    """Full serializer for admin to manage users (can write is_approved, is_active, is_phone_verified)."""
     class Meta:
         model = User
-        fields = ('id', 'phone', 'name', 'location', 'role', 'is_approved', 'is_active', 'date_joined', 'image')
+        fields = ('id', 'phone', 'name', 'location', 'role', 'is_approved', 'is_active', 'is_phone_verified', 'date_joined', 'image')
         read_only_fields = ('id', 'phone', 'date_joined')
 

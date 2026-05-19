@@ -246,7 +246,10 @@ def _build_db_context(message, user, cart_data):
             subtotal = qty * price
             total_cart += subtotal
             ctx.append(f"- {item.get('name')} | الكمية: {qty} | السعر: {price} | الإجمالي: {subtotal} ج.م")
-        ctx.append(f"إجمالي سلة المشتريات: {total_cart} ج.م")
+        ctx.append(f"إجمالي سلة المشتريات (بدون توصيل): {total_cart} ج.م")
+        ctx.append(f"سعر التوصيل الثابت: 10 ج.م")
+        ctx.append(f"الإجمالي النهائي مع التوصيل: {total_cart + 10} ج.م")
+        ctx.append(f"الوقت المتوقع للتوصيل: 15-30 دقيقة")
     else:
         ctx.append("\n--- سلة مشتريات المستخدم الحالية ---")
         ctx.append("السلة فارغة حالياً.")
@@ -293,9 +296,55 @@ class ChatbotView(APIView):
             ), "action": {"type": "HELP"}, "products": []}
 
         elif intent == "CHECKOUT":
-            response_data = {"response": (
-                "حاضر يا فندم! 🛒✨ يرجى مراجعة سلتك وتأكيد عنوان التوصيل."
-            ), "action": {"type": "CHECKOUT"}, "products": []}
+            if cart_data:
+                total_cart = sum(float(item.get('price', 0)) * int(item.get('quantity', 1)) for item in cart_data)
+                final_total = total_cart + 10.0
+                response_data = {
+                    "response": (
+                        f"حاضر يا فندم! 🛒✨\n\n"
+                        f"• إجمالي المنتجات: **{total_cart:.2f} ج.م**\n"
+                        f"• خدمة التوصيل: **10.00 ج.م**\n"
+                        f"• الإجمالي النهائي: **{final_total:.2f} ج.م**\n"
+                        f"• الوقت المقدر للتوصيل: **15-30 دقيقة** ⏱️\n\n"
+                        f"اضغط على زر **'تأكيد وإرسال الطلب'** بالأسفل لإتمام العملية! 👇"
+                    ),
+                    "action": {
+                        "type": "CHECKOUT",
+                        "total_price": total_cart,
+                        "delivery_price": 10.0,
+                        "final_total": final_total,
+                        "delivery_time": "15-30 دقيقة"
+                    },
+                    "products": []
+                }
+            else:
+                response_data = {
+                    "response": "سلة المشتريات فارغة حالياً يا فندم! 🛒 اطلب مني أي منتج وسأقوم بإضافته لك فوراً.",
+                    "action": {"type": "HELP"},
+                    "products": []
+                }
+
+        elif intent == "CART":
+            if cart_data:
+                total_cart = sum(float(item.get('price', 0)) * int(item.get('quantity', 1)) for item in cart_data)
+                items_desc = "\n".join([f"• **{item.get('name')}** (الكمية: {item.get('quantity')}) — {float(item.get('price', 0)) * int(item.get('quantity', 1))} ج.م" for item in cart_data])
+                response_data = {
+                    "response": (
+                        f"سلة مشترياتك الحالية تحتوي على: 🛍️\n\n{items_desc}\n\n"
+                        f"• إجمالي المنتجات: **{total_cart:.2f} ج.م**\n"
+                        f"• خدمة التوصيل: **10.00 ج.م**\n"
+                        f"• الإجمالي النهائي: **{total_cart + 10.0:.2f} ج.م**\n"
+                        f"• الوقت المقدر للتوصيل: **15-30 دقيقة** ⏱️"
+                    ),
+                    "action": {"type": "SHOW_CART"},
+                    "products": []
+                }
+            else:
+                response_data = {
+                    "response": "سلتك فارغة حالياً يا فندم! 🛒",
+                    "action": {"type": "SHOW_CART"},
+                    "products": []
+                }
 
         elif intent == "ADD_TO_CART":
             text, action, prods = _handle_add_to_cart(message)

@@ -1,4 +1,4 @@
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 from users.validators import (
@@ -120,6 +120,16 @@ from orders.models import Order
 
 User = get_user_model()
 
+@override_settings(REST_FRAMEWORK={
+    'DEFAULT_THROTTLE_CLASSES': [],
+    'DEFAULT_THROTTLE_RATES': {},
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+})
 class SMSOTPVerificationTestCase(APITestCase):
     """
     Integration tests for secure SMS OTP phone verification endpoints.
@@ -221,6 +231,16 @@ class SMSOTPVerificationTestCase(APITestCase):
         self.assertIn("منتهي الصلاحية", response.data["detail"])
 
 
+@override_settings(REST_FRAMEWORK={
+    'DEFAULT_THROTTLE_CLASSES': [],
+    'DEFAULT_THROTTLE_RATES': {},
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+})
 class CheckoutGateTestCase(APITestCase):
     """
     Verifies that unverified accounts cannot place orders (403 Forbidden),
@@ -272,6 +292,16 @@ class CheckoutGateTestCase(APITestCase):
         self.assertEqual(float(response.data["total_price"]), 200.0)
 
 
+@override_settings(REST_FRAMEWORK={
+    'DEFAULT_THROTTLE_CLASSES': [],
+    'DEFAULT_THROTTLE_RATES': {},
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+})
 class DriverApprovalTestCase(APITestCase):
     """
     Verifies driver is_approved behavior: unapproved drivers cannot accept
@@ -341,7 +371,7 @@ class DriverApprovalTestCase(APITestCase):
         self.driver.save()
         self.client.force_authenticate(user=self.driver)
 
-        response = self.client.post(self.accept_url, {"delivery_price": 20.0})
+        response = self.client.post(self.accept_url, {"delivery_price": 15.00})
         self.assertEqual(response.status_code, 200)
         
         # Reload order

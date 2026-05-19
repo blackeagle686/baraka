@@ -107,3 +107,122 @@ class AdminStatsView(generics.GenericAPIView):
             'total_reports': total_reports,
             'unresolved_reports': unresolved_reports,
         })
+
+
+import random
+from django.utils import timezone
+from datetime import timedelta
+from rest_framework.views import APIView
+from .validators import validate_egyptian_phone
+from django.core.exceptions import ValidationError as DjangoValidationError
+from .models import PhoneOTP
+from .tasks import async_send_sms_otp
+
+class SendOTPView(APIView):
+    """
+    Generates and sends a 6-digit OTP verification code to an Egyptian subscriber.
+    Optimized to run as a background task.
+    """
+    permission_classes = [permissions.AllowAny]
+    throttle_classes = [AuthAnonRateThrottle]
+
+    def post(self, request):
+        phone = request.data.get('phone')
+        if not phone:
+            return Response({"detail": "Phone number is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Normalize and validate Egyptian format
+        try:
+            phone = validate_egyptian_phone(phone)
+        except DjangoValidationError as e:
+            return Response({"detail": e.message}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Generate random 6-digit code
+        otp = f"{random.randint(100000, 999999)}"
+        expires_at = timezone.now() + timedelta(minutes=5)
+
+        # Update or create OTP record in DB
+        PhoneOTP.objects.update_or_create(
+            phone=phone,
+            defaults={
+                'otp': otp,
+                'expires_at': expires_at,
+                'attempts': 0,
+                'is_verified': False
+            }
+        )
+
+        # Offload delivery to Celery asynchronously!
+        async_send_sms_otp.delay(phone, otp)
+
+        return Response({
+            "detail": "تم إرسال رمز التحقق لهاتفك بنجاح في الخلفية.",
+            "phone": phone
+        }, status=status.HTTP_200_OK)
+
+class VerifyOTPView(APIView):
+    """
+    Verifies a 6-digit OTP with expiry checks and brute-force attempt limits.
+    """
+    permission_classes = [permissions.AllowAny]
+    throttle_classes = [AuthAnonRateThrottle]
+
+    def post(self, request):
+        phone = request.data.get('phone')
+        otp = request.data.get('otp')
+
+        if not phone or not otp:
+            return Response({"detail": "Both phone and otp are required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Normalize phone
+        try:
+            phone = validate_egyptian_phone(phone)
+        except DjangoValidationError as e:
+            return Response({"detail": e.message}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Find matching PhoneOTP
+        try:
+            otp_record = PhoneOTP.objects.get(phone=phone)
+        except PhoneOTP.DoesNotExist:
+            return Response({"detail": "لم يتم طلب رمز تحقق لهذا الرقم."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Brute-force protection: check attempts
+        if otp_record.attempts >= 5:
+            return Response({
+                "detail": "عذراً، لقد تجاوزت الحد الأقصى للمحاولات (5 محاولات). يرجى طلب رمز جديد."
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # Check expiry
+        if timezone.now() > otp_record.expires_at:
+            return Response({
+                "detail": "رمز التحقق منتهي الصلاحية (صالح لمدة 5 دقائق فقط). يرجى طلب رمز جديد."
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # Increment attempts
+        otp_record.attempts += 1
+        otp_record.save()
+
+        # Check code match
+        if otp_record.otp != otp:
+            remaining = 5 - otp_record.attempts
+            return Response({
+                "detail": f"رمز التحقق غير صحيح! المحاولات المتبقية: {remaining} محاولات."
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # Success: Mark verified
+        otp_record.is_verified = True
+        otp_record.save()
+
+        # Update User verification status
+        try:
+            user = User.objects.get(phone=phone)
+            user.is_phone_verified = True
+            user.save()
+        except User.DoesNotExist:
+            # Standard flow: register first, then verify.
+            pass
+
+        return Response({
+            "detail": "تم تفعيل وتأكيد رقم الهاتف بنجاح! حسابك نشط الآن.",
+            "is_verified": True
+        }, status=status.HTTP_200_OK)

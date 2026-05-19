@@ -569,6 +569,15 @@ h1, h2, h3, h4, h5, h6 {
     display: none;
 }
 
+/* Chatbot Inline Map Button styling */
+.chatbot-map-inline-btn {
+    transition: transform 0.2s ease, opacity 0.2s ease;
+}
+.chatbot-map-inline-btn:hover {
+    transform: scale(1.2) !important;
+    opacity: 0.85;
+}
+
 /* Background animated glow */
 .ai-chat-bg-glow {
     position: absolute;

@@ -273,6 +273,11 @@ window.sendBarakaChatMessage = async function(event) {
                 const shopName = prod.shop_name || 'محل بركة';
                 const maxQty = prod.quantity || 999;
                 
+                const matchingShop = chatbotShopsList.find(s => s.id === shopId);
+                const mapBtn = matchingShop && matchingShop.latitude && matchingShop.longitude
+                    ? `<button class="btn btn-link text-marigold p-0 border-0 ms-1 align-middle" onclick="window.showShopMapInChat(${matchingShop.id}, '${escapeHtml(matchingShop.name)}', ${matchingShop.latitude}, ${matchingShop.longitude}, '${matchingShop.image || ''}', '${escapeHtml(matchingShop.description || '')}', '${escapeHtml(matchingShop.address || '')}', ${matchingShop.is_open})" title="عرض على الخريطة" style="font-size: 0.85rem; line-height: 1;"><i class="bi bi-geo-alt-fill"></i></button>`
+                    : '';
+
                 tableHTML += `
                     <tr>
                         <td>
@@ -282,7 +287,10 @@ window.sendBarakaChatMessage = async function(event) {
                             </div>
                         </td>
                         <td>
-                            <span class="badge bg-mesa-soft text-mesa micro">${escapeHtml(shopName)}</span>
+                            <div class="d-flex align-items-center gap-1">
+                                <span class="badge bg-mesa-soft text-mesa micro">${escapeHtml(shopName)}</span>
+                                ${mapBtn}
+                            </div>
                         </td>
                         <td class="text-nowrap">
                             <span class="text-marigold fw-bold small">${prod.price} ج</span>

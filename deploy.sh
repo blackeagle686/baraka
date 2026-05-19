@@ -29,9 +29,9 @@ sudo systemctl start postgresql
 
 # 4. PostgreSQL Database Creation
 echo "🗄️ [4/9] Setting up PostgreSQL production database 'baraka'..."
-# Create db and user if not already present
+# Create db if not present and alter default postgres password
 sudo -u postgres psql -c "CREATE DATABASE baraka;" || echo "Database already exists"
-sudo -u postgres psql -c "CREATE USER postgres WITH PASSWORD 'barakasecurepass';" || echo "User already exists"
+sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'barakasecurepass';"
 sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE baraka TO postgres;"
 
 # 5. Virtual Environment & Dependencies
@@ -60,6 +60,10 @@ echo "🚀 [7/9] Running schema migrations and building production tables..."
 
 # 8. Setup Nginx Reverse Proxy
 echo "🌐 [8/9] Configuring Nginx web server for Reverse Proxy..."
+# Grant execute permissions to parent directories so Nginx can traverse and serve frontend files
+chmod o+x $(pwd) || true
+chmod o+x $(dirname $(pwd)) || true
+
 NGINX_CONF="/etc/nginx/sites-available/baraka"
 sudo tee $NGINX_CONF > /dev/null <<EOF
 server {
@@ -98,6 +102,9 @@ sudo systemctl restart nginx
 # 9. Systemd Daemon Services Configuration
 echo "⚙️ [9/9] Creating Systemd services for Gunicorn and Celery..."
 
+# Identify actual non-root user running the deployment
+RUN_USER=${SUDO_USER:-$USER}
+
 # Create Gunicorn Systemd Service
 sudo tee /etc/systemd/system/baraka-backend.service > /dev/null <<EOF
 [Unit]
@@ -105,7 +112,7 @@ Description=Gunicorn daemon for Baraka Backend API
 After=network.target
 
 [Service]
-User=$USER
+User=$RUN_USER
 WorkingDirectory=$(pwd)
 ExecStart=$(pwd)/venv/bin/gunicorn backend.wsgi:application --bind 127.0.0.1:8000 --workers 4 --threads 2 --timeout 120
 Restart=always
@@ -121,7 +128,7 @@ Description=Celery Worker for Baraka Background Tasks
 After=network.target redis-server.service
 
 [Service]
-User=$USER
+User=$RUN_USER
 WorkingDirectory=$(pwd)
 ExecStart=$(pwd)/venv/bin/celery -A backend worker --loglevel=info
 Restart=always
@@ -145,4 +152,3 @@ echo "   🔗 API Backend is running under reverse proxy at /api/"
 echo "   📦 Celery Background worker is active and listening for tasks!"
 echo "========================================================================="
 echo ""
-EOF

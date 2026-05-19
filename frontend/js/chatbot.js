@@ -683,3 +683,117 @@ window.toggleChatbotMic = function() {
         }
     }
 };
+
+window.submitChatbotOrder = async function(btn) {
+    const token = localStorage.getItem('access_token');
+    if (!token) {
+        if (window.showBarakaToast) {
+            window.showBarakaToast('يرجى تسجيل الدخول أولاً لإرسال الطلب.', 'warning', 'bi-shield-lock');
+        } else {
+            alert('يرجى تسجيل الدخول أولاً لإرسال الطلب.');
+        }
+        return;
+    }
+
+    const addressInput = document.getElementById('chatbotAddressInput');
+    const address = addressInput ? addressInput.value.trim() : '';
+    if (!address) {
+        if (window.showBarakaToast) {
+            window.showBarakaToast('يرجى تحديد عنوان التوصيل أولاً.', 'error', 'bi-geo-alt');
+        } else {
+            alert('يرجى تحديد عنوان التوصيل أولاً.');
+        }
+        return;
+    }
+
+    let cart = JSON.parse(localStorage.getItem('baraka_cart')) || [];
+    if (cart.length === 0) {
+        if (window.showBarakaToast) {
+            window.showBarakaToast('سلة المشتريات فارغة!', 'error', 'bi-cart-x');
+        } else {
+            alert('سلة المشتريات فارغة!');
+        }
+        return;
+    }
+
+    // Since the API requires order per shop, group cart items by shop
+    const shopsMap = {};
+    cart.forEach(item => {
+        const sId = item.shop;
+        if (!shopsMap[sId]) {
+            shopsMap[sId] = [];
+        }
+        shopsMap[sId].push({ product: item.product, quantity: item.quantity });
+    });
+
+    btn.disabled = true;
+    const origHtml = btn.innerHTML;
+    btn.innerHTML = `<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> جاري إرسال الطلب...`;
+
+    try {
+        const shopIds = Object.keys(shopsMap);
+        for (const shopId of shopIds) {
+            const orderData = {
+                shop: parseInt(shopId),
+                address: address,
+                items: shopsMap[shopId]
+            };
+            await api.orders.create(token, orderData);
+        }
+
+        if (window.showBarakaToast) {
+            window.showBarakaToast('تم إرسال طلبك بنجاح! سيصلك الدليفري فوراً.', 'success', 'bi-check-all');
+        } else {
+            alert('تم إرسال طلبك بنجاح! سيقوم المحل بمراجعته فوراً.');
+        }
+
+        // Clear local storage cart
+        localStorage.removeItem('baraka_cart');
+        if (window.updateCartUI) {
+            window.updateCartUI();
+        }
+
+        // Add success message to chat
+        const messagesContainer = document.getElementById('aiChatMessages');
+        if (messagesContainer) {
+            const successMsg = document.createElement('div');
+            successMsg.className = 'chat-message bot-message align-self-flex-start animate-up mt-3';
+            successMsg.innerHTML = `
+                <div class="d-flex align-items-center gap-2 text-success fw-bold mb-1">
+                    <i class="bi bi-patch-check-fill fs-5"></i>
+                    <span>تم تأكيد الطلب بنجاح! 🎉</span>
+                </div>
+                <p class="mb-0">تم إرسال طلبك إلى المحلات بنجاح وجاري تحضيره الآن. يمكنك متابعة حالة التوصيل مباشرة.</p>
+                <div class="mt-2">
+                    <a href="/html/cart.html" class="btn btn-sm btn-marigold text-white rounded-pill px-3 fw-bold">📍 تتبع الطلب الآن</a>
+                </div>
+            `;
+            messagesContainer.appendChild(successMsg);
+            
+            // Scroll to bottom
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        // Hide checkout card buttons/inputs to prevent double submissions
+        if (addressInput) addressInput.disabled = true;
+        btn.remove();
+
+    } catch (error) {
+        console.error("Chatbot checkout failed:", error);
+        btn.disabled = false;
+        btn.innerHTML = origHtml;
+
+        let errMsg = 'حدث خطأ أثناء إرسال الطلب.';
+        if (error && error.detail) {
+            errMsg = error.detail;
+        } else if (typeof error === 'string') {
+            errMsg = error;
+        }
+
+        if (window.showBarakaToast) {
+            window.showBarakaToast(errMsg, 'error', 'bi-exclamation-triangle');
+        } else {
+            alert(errMsg);
+        }
+    }
+};

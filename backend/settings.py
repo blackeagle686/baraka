@@ -201,10 +201,10 @@ REST_FRAMEWORK = {
         'rest_framework.throttling.UserRateThrottle',
     ],
     'DEFAULT_THROTTLE_RATES': {
-        'anon': '100/day',
-        'user': '1000/day',
-        'auth': '10/minute',
-        'chatbot': '20/minute',
+        'anon': '60/minute',
+        'user': '180/minute',
+        'auth': '20/minute',
+        'chatbot': '30/minute',
     },
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',

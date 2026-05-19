@@ -271,3 +271,82 @@ class CheckoutGateTestCase(APITestCase):
         self.assertEqual(response.status_code, 201)
         self.assertEqual(float(response.data["total_price"]), 200.0)
 
+
+class DriverApprovalTestCase(APITestCase):
+    """
+    Verifies driver is_approved behavior: unapproved drivers cannot accept
+    deliveries, while approved drivers can successfully perform driver actions.
+    """
+
+    def setUp(self):
+        # Create users
+        self.customer = User.objects.create_user(
+            phone="01011111111", password="CustomerPassword2026!", role="CUSTOMER", is_phone_verified=True
+        )
+        self.shop_owner = User.objects.create_user(
+            phone="01022222222", password="ShopOwnerPassword2026!", role="SHOP_OWNER", is_phone_verified=True
+        )
+        self.driver = User.objects.create_user(
+            phone="01033333333", password="DriverPassword2026!", role="DRIVER", is_phone_verified=True
+        )
+
+        from shops.models import Shop, Product
+        self.shop = Shop.objects.create(name="Approval Test Shop", owner=self.shop_owner, is_open=True)
+        self.product = Product.objects.create(
+            name="Approval Item", price=50.0, quantity=5, available=True, shop=self.shop
+        )
+
+        # Place order
+        self.order = Order.objects.create(
+            customer=self.customer,
+            shop=self.shop,
+            status="PENDING",
+            delivery_address="Test Address",
+            total_price=50.0
+        )
+        # Create OrderItem
+        from orders.models import OrderItem
+        OrderItem.objects.create(order=self.order, product=self.product, quantity=1, price=50.0)
+
+        # URLs
+        self.accept_url = reverse("order-accept-delivery", kwargs={"pk": self.order.id})
+
+    def test_new_driver_unapproved_by_default(self):
+        # Newly registered driver serializer sets Needs Approval
+        response = self.client.post(reverse("register"), {
+            "phone": "01044444444",
+            "password": "NewDriverPassword2026!",
+            "name": "New Driver",
+            "role": "DRIVER"
+        })
+        self.assertEqual(response.status_code, 201)
+        
+        # Verify approval is False
+        new_driver = User.objects.get(phone="01044444444")
+        self.assertFalse(new_driver.is_approved)
+
+    def test_unapproved_driver_accept_delivery_blocked(self):
+        # Force authentication of unapproved driver
+        self.driver.is_approved = False
+        self.driver.save()
+        self.client.force_authenticate(user=self.driver)
+
+        response = self.client.post(self.accept_url, {"delivery_price": 20.0})
+        self.assertEqual(response.status_code, 403)
+        self.assertIn("حسابك قيد المراجعة", response.data["detail"])
+
+    def test_approved_driver_accept_delivery_allowed(self):
+        # Approve driver
+        self.driver.is_approved = True
+        self.driver.save()
+        self.client.force_authenticate(user=self.driver)
+
+        response = self.client.post(self.accept_url, {"delivery_price": 20.0})
+        self.assertEqual(response.status_code, 200)
+        
+        # Reload order
+        self.order.refresh_from_db()
+        self.assertEqual(self.order.driver, self.driver)
+        self.assertEqual(self.order.status, "ON_DELIVERY")
+
+

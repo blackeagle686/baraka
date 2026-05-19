@@ -3,28 +3,61 @@ import sys
 import time
 import os
 import signal
+import shutil
 
 IS_WINDOWS = os.name == 'nt'
 
 # Define commands depending on OS platform
 if IS_WINDOWS:
-    commands = [
-        ("Redis", "redis-server"),
-        ("PostgreSQL", "net start postgresql-x64-16"),
-        ("Django Backend", "venv\\Scripts\\python.exe manage.py runserver 0.0.0.0:8000"),
-        ("Celery Worker", "venv\\Scripts\\celery.exe -A backend worker --loglevel=info"),
-        ("Frontend Static", "python -m http.server 8080 --directory frontend")
-    ]
+    # Verify the commands are available or warning will be printed
+    commands_to_run = []
+    
+    # 1. Redis
+    if shutil.which("redis-server"):
+        commands_to_run.append(("Redis", "redis-server"))
+    else:
+        print("⚠️  [Warning] 'redis-server' was not found in your PATH.")
+        print("    Redis won't be started. The system will fall back to local in-memory cache.\n")
+
+    # 2. PostgreSQL
+    commands_to_run.append(("PostgreSQL", "net start postgresql-x64-18"))
+
+    # 3. Django
+    commands_to_run.append(("Django Backend", "venv\\Scripts\\python.exe manage.py runserver 0.0.0.0:8000"))
+
+    # 4. Celery
+    if shutil.which("venv\\Scripts\\celery.exe") or shutil.which("celery"):
+        commands_to_run.append(("Celery Worker", "venv\\Scripts\\celery.exe -A backend worker --loglevel=info"))
+    else:
+        print("⚠️  [Warning] Celery executable was not found. Background worker task offloading won't be active.\n")
+
+    # 5. Frontend
+    commands_to_run.append(("Frontend Static", "python -m http.server 8080 --directory frontend"))
+
 else:
-    # Check if systemctl exists for system services startup
     has_systemctl = os.path.exists("/bin/systemctl") or os.path.exists("/usr/bin/systemctl")
-    commands = [
-        ("Redis", "redis-server"),
-        ("PostgreSQL", "sudo systemctl start postgresql" if has_systemctl else "echo PostgreSQL assumed running"),
-        ("Django Backend", "./venv/bin/python manage.py runserver 0.0.0.0:8000"),
-        ("Celery Worker", "./venv/bin/celery -A backend worker --loglevel=info"),
-        ("Frontend Static", "python3 -m http.server 8080 --directory frontend")
-    ]
+    commands_to_run = []
+
+    # 1. Redis
+    if shutil.which("redis-server"):
+        commands_to_run.append(("Redis", "redis-server"))
+    else:
+        print("⚠️  [Warning] 'redis-server' was not found in your PATH. Skipping Redis server.\n")
+
+    # 2. PostgreSQL
+    commands_to_run.append(("PostgreSQL", "sudo systemctl start postgresql" if has_systemctl else "echo PostgreSQL assumed running"))
+
+    # 3. Django
+    commands_to_run.append(("Django Backend", "./venv/bin/python manage.py runserver 0.0.0.0:8000"))
+
+    # 4. Celery
+    if os.path.exists("./venv/bin/celery") or shutil.which("celery"):
+        commands_to_run.append(("Celery Worker", "./venv/bin/celery -A backend worker --loglevel=info"))
+    else:
+        print("⚠️  [Warning] Celery was not found. Skipping Celery background worker.\n")
+
+    # 5. Frontend
+    commands_to_run.append(("Frontend Static", "python3 -m http.server 8080 --directory frontend"))
 
 processes = []
 
@@ -56,7 +89,7 @@ print("  📦 Baraka SaaS Platform Local Workspace Runner")
 print("  Running all services in a single console tab...")
 print("===================================================\n")
 
-for name, cmd in commands:
+for name, cmd in commands_to_run:
     print(f"🚀 Starting {name}...")
     try:
         # Start each command in the background with output printing to the current terminal

@@ -27,6 +27,11 @@ start "Baraka Frontend Static Server" cmd /k "echo Starting HTTP Server... && py
 echo.
 echo ===================================================
 echo   🚀 All local services launched in distinct windows!
+echo   ⚠️  PRESS ANY KEY OR [CTRL+C] TO STOP ALL SERVICES
 echo ===================================================
 echo.
-pause
+pause >nul
+
+echo 🛑 Shutting down all Baraka services...
+taskkill /FI "WINDOWTITLE eq Baraka*" /T /F >nul 2>&1
+echo ✅ Shutdown complete!

@@ -49,6 +49,9 @@
                                     <i class="bi bi-eye"></i>
                                 </button>
                             </div>
+                            <div class="text-start mt-2">
+                                <button type="button" class="btn btn-link text-mesa text-decoration-none small fw-bold" onclick="setAuthMode('forgot')" style="padding: 0; font-size: 0.85rem;">نسيت كلمة المرور؟</button>
+                            </div>
                         </div>
                         <button type="submit" id="loginBtn" class="btn btn-primary rounded-pill w-100 py-2.5 fw-bold mb-3 fs-5 position-relative overflow-hidden btn-gradient">
                             <span class="btn-text"><i class="bi bi-box-arrow-in-left me-1"></i>دخول</span>
@@ -133,6 +136,69 @@
                     </form>
                 </div>
 
+                <!-- FORGOT PASSWORD FORM -->
+                <div class="auth-form-wrapper" id="forgotFormWrapper" style="display: none;">
+                    <form id="forgotForm">
+                        <div class="text-center mb-4">
+                            <div class="auth-logo-icon mb-2 bg-light-subtle d-inline-flex align-items-center justify-content-center" style="width: 60px; height: 60px; border-radius: 50%;">
+                                <i class="bi bi-shield-lock text-marigold fs-2"></i>
+                            </div>
+                            <h4 class="mt-2 text-espresso fw-bold">استعادة كلمة المرور</h4>
+                            <p class="text-muted small">أدخل رقم الهاتف المسجل وسنرسل لك رمز تحقق OTP لإعادة تعيين كلمة المرور.</p>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label text-espresso fw-bold"><i class="bi bi-phone me-1 text-marigold"></i>رقم الهاتف</label>
+                            <input type="text" class="form-control rounded-pill px-4 py-2.5 text-center fs-6" id="forgotPhone" placeholder="01xxxxxxxxx" required>
+                        </div>
+                        <button type="submit" id="forgotBtn" class="btn btn-primary rounded-pill w-100 py-2.5 fw-bold mb-3 fs-5 position-relative overflow-hidden btn-gradient">
+                            <span class="btn-text"><i class="bi bi-send me-1"></i>إرسال رمز التحقق</span>
+                            <span class="spinner-border spinner-border-sm position-absolute top-50 start-50 translate-middle d-none" role="status" aria-hidden="true"></span>
+                        </button>
+                        <div class="text-center">
+                            <button type="button" class="btn btn-link text-secondary text-decoration-none small fw-bold" onclick="setAuthMode('login')">العودة لتسجيل الدخول</button>
+                        </div>
+                        <div id="forgotErrorMsg" class="alert alert-danger text-center py-2 rounded-pill d-none small mt-3">
+                            <i class="bi bi-exclamation-triangle me-1"></i>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- RESET PASSWORD FORM -->
+                <div class="auth-form-wrapper" id="resetFormWrapper" style="display: none;">
+                    <form id="resetForm">
+                        <div class="text-center mb-4">
+                            <div class="auth-logo-icon mb-2 bg-light-subtle d-inline-flex align-items-center justify-content-center" style="width: 60px; height: 60px; border-radius: 50%;">
+                                <i class="bi bi-key-fill text-marigold fs-2"></i>
+                            </div>
+                            <h4 class="mt-2 text-espresso fw-bold">تعيين كلمة المرور الجديدة</h4>
+                            <p class="text-muted small">أدخل رمز التحقق المرسل إلى الهاتف وكلمة المرور الجديدة لإكمال العملية.</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-espresso fw-bold"><i class="bi bi-shield-check me-1 text-marigold"></i>رمز التحقق (OTP)</label>
+                            <input type="text" class="form-control rounded-pill px-4 py-2 text-center fs-5" id="resetOtpCode" placeholder="••••••" maxlength="6" required>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label text-espresso fw-bold"><i class="bi bi-lock me-1 text-marigold"></i>كلمة المرور الجديدة</label>
+                            <div class="position-relative">
+                                <input type="password" class="form-control rounded-pill px-4 py-2 text-center fs-6" id="resetNewPassword" placeholder="••••••••" required>
+                                <button type="button" class="btn btn-link position-absolute top-50 start-0 translate-middle-y text-mesa text-decoration-none password-toggle" onclick="togglePassword('resetNewPassword', this)" style="padding-left: 1.2rem;">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <button type="submit" id="resetBtn" class="btn btn-primary rounded-pill w-100 py-2.5 fw-bold mb-3 fs-5 position-relative overflow-hidden btn-gradient">
+                            <span class="btn-text"><i class="bi bi-check-circle me-1"></i>حفظ كلمة المرور والدخول</span>
+                            <span class="spinner-border spinner-border-sm position-absolute top-50 start-50 translate-middle d-none" role="status" aria-hidden="true"></span>
+                        </button>
+                        <div class="text-center">
+                            <button type="button" class="btn btn-link text-secondary text-decoration-none small fw-bold" onclick="setAuthMode('forgot')">العودة وإعادة الإرسال</button>
+                        </div>
+                        <div id="resetErrorMsg" class="alert alert-danger text-center py-2 rounded-pill d-none small mt-3">
+                            <i class="bi bi-exclamation-triangle me-1"></i>
+                        </div>
+                    </form>
+                </div>
+
             </div>
 
         </div>
@@ -147,28 +213,44 @@
             const btnRegister = document.getElementById('switchToRegister');
 
             // Hide and clear all form error warnings when switching tabs
-            const loginError = document.getElementById('loginErrorMsg');
-            const regError = document.getElementById('regErrorMsg');
-            const otpError = document.getElementById('otpErrorMsg');
-            if (loginError) {
-                loginError.classList.add('d-none');
-                loginError.classList.remove('d-block');
-                loginError.style.display = 'none';
-            }
-            if (regError) {
-                regError.classList.add('d-none');
-                regError.classList.remove('d-block');
-                regError.style.display = 'none';
-            }
-            if (otpError) {
-                otpError.classList.add('d-none');
-                otpError.classList.remove('d-block');
-                otpError.style.display = 'none';
-            }
+            const errorIds = ['loginErrorMsg', 'regErrorMsg', 'otpErrorMsg', 'forgotErrorMsg', 'resetErrorMsg'];
+            errorIds.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.classList.add('d-none');
+                    el.classList.remove('d-block');
+                    el.style.display = 'none';
+                }
+            });
+
+            // Handle displays of forms to prevent HTML5 required validation issues
+            const forms = {
+                'loginFormWrapper': 'login',
+                'registerFormWrapper': 'register',
+                'otpFormWrapper': 'otp',
+                'forgotFormWrapper': 'forgot',
+                'resetFormWrapper': 'reset'
+            };
+            
+            Object.keys(forms).forEach(wrapperId => {
+                const wrapper = document.getElementById(wrapperId);
+                if (wrapper) {
+                    if (forms[wrapperId] === mode) {
+                        wrapper.style.display = 'block';
+                        // Enable inputs
+                        wrapper.querySelectorAll('input, select, button').forEach(el => el.removeAttribute('disabled'));
+                    } else {
+                        wrapper.style.display = 'none';
+                        // Disable inputs in hidden forms to bypass HTML5 validation
+                        wrapper.querySelectorAll('input, select, button').forEach(el => el.setAttribute('disabled', 'true'));
+                    }
+                }
+            });
+
+            card.classList.remove('mode-login', 'mode-register', 'mode-otp', 'mode-forgot', 'mode-reset');
+            card.classList.add(`mode-${mode}`);
 
             if (mode === 'login') {
-                card.classList.remove('mode-register');
-                card.classList.add('mode-login');
                 btnLogin.classList.add('active');
                 btnRegister.classList.remove('active');
                 subtitle.innerText = 'سجل دخولك للمتابعة والتسوق';
@@ -176,9 +258,7 @@
                 // Update URL parameter silently
                 const newurl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?mode=login';
                 window.history.pushState({path:newurl},'',newurl);
-            } else {
-                card.classList.remove('mode-login');
-                card.classList.add('mode-register');
+            } else if (mode === 'register') {
                 btnRegister.classList.add('active');
                 btnLogin.classList.remove('active');
                 subtitle.innerText = 'انضم إلينا واطلب كل اللي تحتاجه طازة';
@@ -186,6 +266,12 @@
                 // Update URL parameter silently
                 const newurl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?mode=register';
                 window.history.pushState({path:newurl},'',newurl);
+            } else if (mode === 'otp') {
+                subtitle.innerText = 'أدخل رمز التحقق لتفعيل حسابك الجديد';
+            } else if (mode === 'forgot') {
+                subtitle.innerText = 'أدخل رقم هاتفك لاستعادة حسابك';
+            } else if (mode === 'reset') {
+                subtitle.innerText = 'أدخل رمز OTP وكلمة المرور الجديدة';
             }
         }
 

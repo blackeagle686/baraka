@@ -380,3 +380,88 @@ class DriverApprovalTestCase(APITestCase):
         self.assertEqual(self.order.status, "ON_DELIVERY")
 
 
+@override_settings(REST_FRAMEWORK={
+    'DEFAULT_THROTTLE_CLASSES': [],
+    'DEFAULT_THROTTLE_RATES': {},
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+})
+class PasswordResetTestCase(APITestCase):
+    """
+    Test suite for request OTP forgot password and confirming reset password flow.
+    """
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            phone="01012345678",
+            password="OldPassword2026!",
+            role="CUSTOMER",
+            is_phone_verified=True
+        )
+        self.request_url = reverse("password_reset_request")
+        self.confirm_url = reverse("password_reset_confirm")
+
+    def test_request_reset_nonexistent_phone(self):
+        response = self.client.post(self.request_url, {"phone": "01099999999"})
+        self.assertEqual(response.status_code, 404)
+        self.assertIn("هذا الرقم غير مسجل لدينا", response.data["detail"])
+
+    def test_request_reset_invalid_phone(self):
+        response = self.client.post(self.request_url, {"phone": "123456"})
+        self.assertEqual(response.status_code, 400)
+
+    def test_request_reset_success_creates_otp(self):
+        response = self.client.post(self.request_url, {"phone": "01012345678"})
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(PhoneOTP.objects.filter(phone="01012345678").exists())
+
+    def test_confirm_reset_invalid_otp(self):
+        # Create OTP
+        PhoneOTP.objects.create(
+            phone="01012345678",
+            otp="123456",
+            expires_at=timezone.now() + timedelta(minutes=5)
+        )
+        response = self.client.post(self.confirm_url, {
+            "phone": "01012345678",
+            "otp": "654321",
+            "new_password": "NewSecurePassword2026!"
+        })
+        self.assertEqual(response.status_code, 400)
+
+    def test_confirm_reset_weak_password(self):
+        PhoneOTP.objects.create(
+            phone="01012345678",
+            otp="123456",
+            expires_at=timezone.now() + timedelta(minutes=5)
+        )
+        response = self.client.post(self.confirm_url, {
+            "phone": "01012345678",
+            "otp": "123456",
+            "new_password": "weak"
+        })
+        self.assertEqual(response.status_code, 400)
+
+    def test_confirm_reset_success(self):
+        PhoneOTP.objects.create(
+            phone="01012345678",
+            otp="123456",
+            expires_at=timezone.now() + timedelta(minutes=5)
+        )
+        response = self.client.post(self.confirm_url, {
+            "phone": "01012345678",
+            "otp": "123456",
+            "new_password": "NewSecurePassword2026!"
+        })
+        self.assertEqual(response.status_code, 200)
+        
+        # Verify password is changed
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.check_password("NewSecurePassword2026!"))
+
+
+

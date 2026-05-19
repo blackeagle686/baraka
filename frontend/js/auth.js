@@ -331,6 +331,161 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
+    // Forgot Password Form Submit Listener
+    const forgotForm = document.getElementById('forgotForm');
+    if (forgotForm) {
+        forgotForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const phone = document.getElementById('forgotPhone').value.trim();
+            const btn = document.getElementById('forgotBtn');
+            const btnText = btn.querySelector('.btn-text');
+            const spinner = btn.querySelector('.spinner-border');
+            const errorMsg = document.getElementById('forgotErrorMsg');
+
+            // Egyptian Phone validator
+            const phoneRegex = /^(01[0125]\d{8}|201[0125]\d{8}|\+201[0125]\d{8})$/;
+            if (!phoneRegex.test(phone)) {
+                errorMsg.innerHTML = `<i class="bi bi-exclamation-triangle me-1"></i>رقم الهاتف غير صالح. يرجى إدخال رقم مصري صحيح (مثال: 01012345678).`;
+                errorMsg.classList.remove('d-none');
+                errorMsg.classList.add('d-block');
+                errorMsg.style.setProperty('display', 'block', 'important');
+                errorMsg.style.opacity = '1';
+                
+                const card = document.getElementById('authCard');
+                card.classList.remove('shake');
+                void card.offsetWidth;
+                card.classList.add('shake');
+                return;
+            }
+
+            btn.disabled = true;
+            btnText.classList.add('invisible');
+            spinner.classList.remove('d-none');
+            errorMsg.classList.add('d-none');
+            errorMsg.classList.remove('d-block');
+            errorMsg.style.display = 'none';
+
+            try {
+                await api.auth.requestPasswordReset(phone);
+                sessionStorage.setItem('reset_phone', phone);
+                
+                if (typeof setAuthMode === 'function') {
+                    setAuthMode('reset');
+                }
+            } catch (error) {
+                let displayError = 'حدث خطأ أثناء إرسال الرمز. يرجى المحاولة لاحقاً.';
+                if (error && error.detail) {
+                    displayError = error.detail;
+                }
+                errorMsg.innerHTML = `<i class="bi bi-exclamation-triangle me-1"></i>${displayError}`;
+                errorMsg.classList.remove('d-none');
+                errorMsg.classList.add('d-block');
+                errorMsg.style.setProperty('display', 'block', 'important');
+                errorMsg.style.opacity = '1';
+                
+                const card = document.getElementById('authCard');
+                card.classList.remove('shake');
+                void card.offsetWidth;
+                card.classList.add('shake');
+            } finally {
+                btn.disabled = false;
+                btnText.classList.remove('invisible');
+                spinner.classList.add('d-none');
+            }
+        });
+    }
+
+    // Reset Password Form Submit Listener
+    const resetForm = document.getElementById('resetForm');
+    if (resetForm) {
+        resetForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const otpCode = document.getElementById('resetOtpCode').value.trim();
+            const newPassword = document.getElementById('resetNewPassword').value;
+            const phone = sessionStorage.getItem('reset_phone');
+            
+            const btn = document.getElementById('resetBtn');
+            const btnText = btn.querySelector('.btn-text');
+            const spinner = btn.querySelector('.spinner-border');
+            const errorMsg = document.getElementById('resetErrorMsg');
+
+            if (!phone) {
+                errorMsg.innerText = "خطأ في الجلسة. يرجى إعادة المحاولة من البداية.";
+                errorMsg.classList.remove('d-none');
+                errorMsg.classList.add('d-block');
+                errorMsg.style.setProperty('display', 'block', 'important');
+                errorMsg.style.opacity = '1';
+                return;
+            }
+
+            // Password complexity check
+            const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#\$%\^&\*\(\)_\+\-=\[\]\{\}\|;\'\:",\./<>\?]).{8,}$/;
+            if (!passwordRegex.test(newPassword)) {
+                errorMsg.innerHTML = `<i class="bi bi-exclamation-triangle me-1"></i>كلمة المرور ضعيفة. يجب أن تحتوي على 8 أحرف على الأقل، تشمل حرفاً كبيراً، وحرفاً صغيراً، ورقماً، ورمزاً خاصاً.`;
+                errorMsg.classList.remove('d-none');
+                errorMsg.classList.add('d-block');
+                errorMsg.style.setProperty('display', 'block', 'important');
+                errorMsg.style.opacity = '1';
+                
+                const card = document.getElementById('authCard');
+                card.classList.remove('shake');
+                void card.offsetWidth;
+                card.classList.add('shake');
+                return;
+            }
+
+            btn.disabled = true;
+            btnText.classList.add('invisible');
+            spinner.classList.remove('d-none');
+            errorMsg.classList.add('d-none');
+            errorMsg.classList.remove('d-block');
+            errorMsg.style.display = 'none';
+
+            try {
+                await api.auth.resetPassword(phone, otpCode, newPassword);
+                sessionStorage.removeItem('reset_phone');
+                
+                // Auto-login with the new password
+                const data = await api.auth.login(phone, newPassword);
+                localStorage.setItem('access_token', data.access);
+                localStorage.setItem('refresh_token', data.refresh);
+                
+                const profile = await api.auth.getProfile(data.access);
+                localStorage.setItem('user_role', profile.role);
+                localStorage.setItem('user_name', profile.name || 'مستخدم بركة');
+                
+                if (profile.role === 'ADMIN') {
+                    window.location.href = '/html/admin/dashboard.html';
+                } else if (profile.role === 'DRIVER') {
+                    window.location.href = '/html/profile/driver.html';
+                } else if (profile.role === 'SHOP_OWNER') {
+                    window.location.href = '/html/profile/shop.html';
+                } else {
+                    window.location.href = '/html/index.html';
+                }
+            } catch (error) {
+                let displayError = 'رمز التحقق غير صحيح أو منتهي الصلاحية.';
+                if (error && error.detail) {
+                    displayError = error.detail;
+                }
+                errorMsg.innerHTML = `<i class="bi bi-exclamation-triangle me-1"></i>${displayError}`;
+                errorMsg.classList.remove('d-none');
+                errorMsg.classList.add('d-block');
+                errorMsg.style.setProperty('display', 'block', 'important');
+                errorMsg.style.opacity = '1';
+                
+                const card = document.getElementById('authCard');
+                card.classList.remove('shake');
+                void card.offsetWidth;
+                card.classList.add('shake');
+            } finally {
+                btn.disabled = false;
+                btnText.classList.remove('invisible');
+                spinner.classList.add('d-none');
+            }
+        });
+    }
 });
 
 // Password visibility toggle

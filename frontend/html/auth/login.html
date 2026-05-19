@@ -101,6 +101,32 @@
                         <div id="regErrorMsg" class="alert alert-danger text-center py-2 rounded-pill d-none small">
                             <i class="bi bi-exclamation-triangle me-1"></i>حدث خطأ أثناء التسجيل.
                         </div>
+                </div>
+                
+                <!-- OTP VERIFICATION FORM -->
+                <div class="auth-form-wrapper" id="otpFormWrapper" style="display: none;">
+                    <form id="otpForm">
+                        <div class="text-center mb-4">
+                            <div class="auth-logo-icon mb-2 bg-light-subtle d-inline-flex align-items-center justify-content-center" style="width: 60px; height: 60px; border-radius: 50%;">
+                                <i class="bi bi-shield-check text-marigold fs-2"></i>
+                            </div>
+                            <h4 class="mt-2 text-espresso fw-bold">تأكيد رقم الهاتف</h4>
+                            <p class="text-muted small">تم إرسال رمز تحقق مكون من 6 أرقام إلى الهاتف <strong id="otpTargetPhone">010xxxxxxxx</strong>. يرجى إدخاله للمتابعة.</p>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label text-espresso fw-bold"><i class="bi bi-key-fill me-1 text-marigold"></i>رمز التحقق (OTP)</label>
+                            <input type="text" class="form-control rounded-pill px-4 py-2 text-center fs-5" id="otpCode" placeholder="••••••" maxlength="6" required>
+                        </div>
+                        <button type="submit" id="verifyOtpBtn" class="btn btn-primary rounded-pill w-100 py-2.5 fw-bold mb-3 fs-5 position-relative overflow-hidden btn-gradient">
+                            <span class="btn-text"><i class="bi bi-check-circle me-1"></i>تأكيد الرمز وتفعيل الحساب</span>
+                            <span class="spinner-border spinner-border-sm position-absolute top-50 start-50 translate-middle d-none" role="status" aria-hidden="true"></span>
+                        </button>
+                        <div class="text-center">
+                            <button type="button" class="btn btn-link text-mesa text-decoration-none small fw-bold" id="resendOtpBtn">إعادة إرسال رمز التحقق</button>
+                        </div>
+                        <div id="otpErrorMsg" class="alert alert-danger text-center py-2 rounded-pill d-none small mt-3">
+                            <i class="bi bi-exclamation-triangle me-1"></i>الرمز غير صحيح.
+                        </div>
                     </form>
                 </div>
 

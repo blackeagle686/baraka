@@ -194,6 +194,50 @@ html[dir="ltr"] .auth-card.mode-register .switcher-slider {
     visibility: hidden;
 }
 
+.auth-card.mode-register #otpFormWrapper {
+    position: absolute;
+    top: 0;
+    right: 0;
+    opacity: 0;
+    transform: translateX(-30px);
+    pointer-events: none;
+    visibility: hidden;
+}
+
+/* OTP Form state */
+.auth-card.mode-otp #otpFormWrapper {
+    position: relative;
+    opacity: 1;
+    transform: translateX(0);
+    pointer-events: auto;
+    visibility: visible;
+}
+
+.auth-card.mode-otp #loginFormWrapper,
+.auth-card.mode-otp #registerFormWrapper {
+    position: absolute;
+    top: 0;
+    right: 0;
+    opacity: 0;
+    transform: translateX(30px);
+    pointer-events: none;
+    visibility: hidden;
+}
+
+.auth-card.mode-otp .auth-switcher-wrapper {
+    display: none !important;
+}
+
+.auth-card.mode-login #otpFormWrapper {
+    position: absolute;
+    top: 0;
+    right: 0;
+    opacity: 0;
+    transform: translateX(30px);
+    pointer-events: none;
+    visibility: hidden;
+}
+
 /* Custom premium input decorations */
 .form-control, .form-select {
     background: rgba(255, 255, 255, 0.7) !important;

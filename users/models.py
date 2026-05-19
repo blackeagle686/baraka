@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.base_user import BaseUserManager
 
 class UserRole(models.TextChoices):
     CUSTOMER = 'CUSTOMER', 'Customer'
@@ -7,7 +8,6 @@ class UserRole(models.TextChoices):
     DRIVER = 'DRIVER', 'Driver'
     ADMIN = 'ADMIN', 'Admin'
 
-from django.contrib.auth.base_user import BaseUserManager
 
 class CustomUserManager(BaseUserManager):
     def create_user(self, phone, password=None, **extra_fields):

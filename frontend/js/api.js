@@ -202,7 +202,7 @@ const api = {
     },
     shops: {
         getAll: async (page = 1, search = '') => {
-            const url = new URL(`${API_BASE}/shops/`);
+            const url = new URL(`${API_BASE}/shops/`, window.location.origin);
             if (page) url.searchParams.append('page', page);
             if (search) url.searchParams.append('search', search);
             
@@ -455,7 +455,7 @@ const api = {
             return await res.json();
         },
         getUsers: async (token, page = 1, search = '', role = '', approved = '', active = '') => {
-            const url = new URL(`${API_BASE}/auth/admin/users/`);
+            const url = new URL(`${API_BASE}/auth/admin/users/`, window.location.origin);
             url.searchParams.append('page', page);
             if (search) url.searchParams.append('search', search);
             if (role) url.searchParams.append('role', role);
@@ -480,7 +480,7 @@ const api = {
             return await res.json();
         },
         getOrders: async (token, page = 1, search = '', status = '') => {
-            const url = new URL(`${API_BASE}/admin/orders/`);
+            const url = new URL(`${API_BASE}/admin/orders/`, window.location.origin);
             url.searchParams.append('page', page);
             if (search) url.searchParams.append('search', search);
             if (status) url.searchParams.append('status', status);
@@ -491,7 +491,7 @@ const api = {
             return await res.json();
         },
         getReports: async (token, page = 1, search = '', resolved = '') => {
-            const url = new URL(`${API_BASE}/admin/reports/`);
+            const url = new URL(`${API_BASE}/admin/reports/`, window.location.origin);
             url.searchParams.append('page', page);
             if (search) url.searchParams.append('search', search);
             if (resolved) url.searchParams.append('resolved', resolved);

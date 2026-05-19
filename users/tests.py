@@ -108,3 +108,166 @@ class SecurityValidatorsTestCase(TestCase):
         bad_mime_file = SimpleUploadedFile("normal.png", b"dummy_content", content_type="text/html")
         with self.assertRaises(ValidationError):
             validate_secure_file(bad_mime_file)
+
+
+from rest_framework.test import APITestCase
+from django.urls import reverse
+from django.contrib.auth import get_user_model
+from django.utils import timezone
+from datetime import timedelta
+from .models import PhoneOTP
+from orders.models import Order
+
+User = get_user_model()
+
+class SMSOTPVerificationTestCase(APITestCase):
+    """
+    Integration tests for secure SMS OTP phone verification endpoints.
+    Verifies generation, expiration limits, brute-force security blocks, and user activation.
+    """
+
+    def setUp(self):
+        self.phone_number = "01012345678"
+        self.user = User.objects.create_user(
+            phone=self.phone_number,
+            password="StrongPassword2026!",
+            role="CUSTOMER"
+        )
+        self.send_url = reverse("send_otp")
+        self.verify_url = reverse("verify_otp")
+
+    def test_send_otp_success(self):
+        response = self.client.post(self.send_url, {"phone": self.phone_number})
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("تم إرسال رمز التحقق لهاتفك بنجاح في الخلفية.", response.data["detail"])
+        
+        # Verify PhoneOTP record exists in database
+        otp_record = PhoneOTP.objects.get(phone=self.phone_number)
+        self.assertEqual(len(otp_record.otp), 6)
+        self.assertFalse(otp_record.is_verified)
+        self.assertTrue(otp_record.otp.isdigit())
+
+    def test_verify_otp_success(self):
+        # Generate an active verification code
+        otp_code = "123456"
+        PhoneOTP.objects.create(
+            phone=self.phone_number,
+            otp=otp_code,
+            expires_at=timezone.now() + timedelta(minutes=5),
+            attempts=0
+        )
+
+        response = self.client.post(self.verify_url, {
+            "phone": self.phone_number,
+            "otp": otp_code
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.data["is_verified"])
+
+        # Reload user and check activation state
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.is_phone_verified)
+
+    def test_verify_otp_invalid_code(self):
+        otp_code = "123456"
+        PhoneOTP.objects.create(
+            phone=self.phone_number,
+            otp=otp_code,
+            expires_at=timezone.now() + timedelta(minutes=5),
+            attempts=0
+        )
+
+        response = self.client.post(self.verify_url, {
+            "phone": self.phone_number,
+            "otp": "999999" # Wrong code
+        })
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("رمز التحقق غير صحيح", response.data["detail"])
+
+        # Verify attempt increment
+        otp_record = PhoneOTP.objects.get(phone=self.phone_number)
+        self.assertEqual(otp_record.attempts, 1)
+
+    def test_verify_otp_brute_force_block(self):
+        otp_code = "123456"
+        PhoneOTP.objects.create(
+            phone=self.phone_number,
+            otp=otp_code,
+            expires_at=timezone.now() + timedelta(minutes=5),
+            attempts=5 # Maxed out attempts
+        )
+
+        response = self.client.post(self.verify_url, {
+            "phone": self.phone_number,
+            "otp": otp_code
+        })
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("تجاوزت الحد الأقصى للمحاولات", response.data["detail"])
+
+    def test_verify_otp_expired(self):
+        otp_code = "123456"
+        PhoneOTP.objects.create(
+            phone=self.phone_number,
+            otp=otp_code,
+            expires_at=timezone.now() - timedelta(seconds=1), # Expired 1 second ago
+            attempts=0
+        )
+
+        response = self.client.post(self.verify_url, {
+            "phone": self.phone_number,
+            "otp": otp_code
+        })
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("منتهي الصلاحية", response.data["detail"])
+
+
+class CheckoutGateTestCase(APITestCase):
+    """
+    Verifies that unverified accounts cannot place orders (403 Forbidden),
+    and verified accounts can place orders successfully.
+    """
+
+    def setUp(self):
+        self.phone_number = "01012345678"
+        self.user = User.objects.create_user(
+            phone=self.phone_number,
+            password="StrongPassword2026!",
+            role="CUSTOMER",
+            is_phone_verified=False # Start unverified
+        )
+        # Auth client
+        self.client.force_authenticate(user=self.user)
+        self.checkout_url = reverse("order-list")
+
+    def test_checkout_unverified_user_blocked(self):
+        payload = {
+            "address": "Cairo, Egypt",
+            "items": [{"product": 1, "quantity": 1}]
+        }
+        response = self.client.post(self.checkout_url, payload, format="json")
+        self.assertEqual(response.status_code, 403)
+        self.assertIn("يرجى تفعيل حسابك", response.data["detail"])
+
+    def test_checkout_verified_user_allowed(self):
+        # Promote user to verified
+        self.user.is_phone_verified = True
+        self.user.save()
+
+        # Create a mock product and shop
+        from shops.models import Shop, Product
+        shop_owner = User.objects.create_user(
+            phone="01112345678", password="ShopOwnerPassword2026!", role="SHOP_OWNER"
+        )
+        shop = Shop.objects.create(name="Test Shop", owner=shop_owner, is_open=True)
+        product = Product.objects.create(
+            name="Mock Item", price=100.0, quantity=10, available=True, shop=shop
+        )
+
+        payload = {
+            "address": "Cairo, Egypt",
+            "items": [{"product": product.id, "quantity": 2}]
+        }
+        response = self.client.post(self.checkout_url, payload, format="json")
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(float(response.data["total_price"]), 200.0)
+

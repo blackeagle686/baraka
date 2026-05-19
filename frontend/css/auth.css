@@ -184,6 +184,26 @@ html[dir="ltr"] .auth-card.mode-register .switcher-slider {
     pointer-events: auto;
 }
 
+.auth-card.mode-login #otpFormWrapper,
+.auth-card.mode-login #forgotFormWrapper,
+.auth-card.mode-login #resetFormWrapper {
+    position: absolute;
+    top: 0;
+    right: 0;
+    opacity: 0;
+    transform: translateX(30px);
+    pointer-events: none;
+    visibility: hidden;
+}
+
+/* Register Form state */
+.auth-card.mode-register #registerFormWrapper {
+    position: relative;
+    opacity: 1;
+    transform: translateX(0);
+    pointer-events: auto;
+}
+
 .auth-card.mode-register #loginFormWrapper {
     position: absolute;
     top: 0;
@@ -194,7 +214,9 @@ html[dir="ltr"] .auth-card.mode-register .switcher-slider {
     visibility: hidden;
 }
 
-.auth-card.mode-register #otpFormWrapper {
+.auth-card.mode-register #otpFormWrapper,
+.auth-card.mode-register #forgotFormWrapper,
+.auth-card.mode-register #resetFormWrapper {
     position: absolute;
     top: 0;
     right: 0;
@@ -214,7 +236,9 @@ html[dir="ltr"] .auth-card.mode-register .switcher-slider {
 }
 
 .auth-card.mode-otp #loginFormWrapper,
-.auth-card.mode-otp #registerFormWrapper {
+.auth-card.mode-otp #registerFormWrapper,
+.auth-card.mode-otp #forgotFormWrapper,
+.auth-card.mode-otp #resetFormWrapper {
     position: absolute;
     top: 0;
     right: 0;
@@ -224,11 +248,47 @@ html[dir="ltr"] .auth-card.mode-register .switcher-slider {
     visibility: hidden;
 }
 
-.auth-card.mode-otp .auth-switcher-wrapper {
+.auth-card.mode-otp .auth-switcher-wrapper,
+.auth-card.mode-forgot .auth-switcher-wrapper,
+.auth-card.mode-reset .auth-switcher-wrapper {
     display: none !important;
 }
 
-.auth-card.mode-login #otpFormWrapper {
+/* Forgot Form state */
+.auth-card.mode-forgot #forgotFormWrapper {
+    position: relative;
+    opacity: 1;
+    transform: translateX(0);
+    pointer-events: auto;
+    visibility: visible;
+}
+
+.auth-card.mode-forgot #loginFormWrapper,
+.auth-card.mode-forgot #registerFormWrapper,
+.auth-card.mode-forgot #otpFormWrapper,
+.auth-card.mode-forgot #resetFormWrapper {
+    position: absolute;
+    top: 0;
+    right: 0;
+    opacity: 0;
+    transform: translateX(30px);
+    pointer-events: none;
+    visibility: hidden;
+}
+
+/* Reset Form state */
+.auth-card.mode-reset #resetFormWrapper {
+    position: relative;
+    opacity: 1;
+    transform: translateX(0);
+    pointer-events: auto;
+    visibility: visible;
+}
+
+.auth-card.mode-reset #loginFormWrapper,
+.auth-card.mode-reset #registerFormWrapper,
+.auth-card.mode-reset #otpFormWrapper,
+.auth-card.mode-reset #forgotFormWrapper {
     position: absolute;
     top: 0;
     right: 0;

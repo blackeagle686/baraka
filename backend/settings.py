@@ -203,6 +203,16 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'users.User'
 
 REST_FRAMEWORK = {
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '100/day',
+        'user': '1000/day',
+        'auth': '10/minute',
+        'chatbot': '20/minute',
+    },
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
@@ -211,7 +221,20 @@ REST_FRAMEWORK = {
     ),
 }
 
-CORS_ALLOW_ALL_ORIGINS = True # For development only
+cors_origins_env = os.environ.get('CORS_ALLOWED_ORIGINS')
+if cors_origins_env:
+    CORS_ALLOW_ALL_ORIGINS = False
+    CORS_ALLOWED_ORIGINS = [o.strip() for o in cors_origins_env.split(',') if o.strip()]
+else:
+    CORS_ALLOW_ALL_ORIGINS = True  # Fallback for local development
+    CORS_ALLOWED_ORIGINS = [
+        'http://localhost:8080',
+        'http://127.0.0.1:8080',
+        'http://localhost:8000',
+        'http://127.0.0.1:8000',
+    ]
+
+CORS_ALLOW_CREDENTIALS = True
 
 # Session Lifetimes (for standard Django session management)
 SESSION_COOKIE_AGE = 432000  # 5 days (in seconds: 5 * 24 * 60 * 60)

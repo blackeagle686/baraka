@@ -13,52 +13,88 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function injectChatbotHTML() {
-    // Check if widget already exists to prevent duplicate injections
-    if (document.getElementById('barakaAIChatWidgetWrapper')) return;
-
-    const container = document.createElement('div');
-    container.id = 'barakaAIChatWidgetWrapper';
-    container.className = 'baraka-ai-assistant-widget';
-    container.innerHTML = `
-        <!-- Chat Toggle Button -->
-        <button class="ai-chat-toggle-btn shadow" onclick="toggleBarakaAIChat()" id="aiChatToggleBtn">
-            <span class="ai-badge-pulse"></span>
-            <i class="bi bi-stars fs-4"></i>
-        </button>
-        
-        <!-- Chat Window -->
-        <div class="ai-chat-window glass-panel" id="barakaAIChatWindow">
-            <div class="ai-chat-bg-glow"></div>
-            <div class="ai-chat-inner">
-                <div class="ai-chat-header d-flex justify-content-between align-items-center">
-                    <div class="d-flex align-items-center gap-3">
-                        <div class="ai-avatar-circle ai-float-anim">
-                            <i class="bi bi-stars fs-4 text-white"></i>
-                        </div>
-                        <div>
-                            <span class="d-block fw-bold text-espresso fs-5">مساعد بركة الذكي ✨</span>
-                            <span class="d-block micro text-success fw-bold mt-1"><span class="pulse-dot"></span>متصل الآن - جاهز للتسوق</span>
+    const inlineContainer = document.getElementById('barakaInlineChatContainer');
+    
+    if (inlineContainer) {
+        inlineContainer.innerHTML = `
+            <div class="ai-chat-window inline" id="barakaAIChatWindow">
+                <div class="ai-chat-bg-glow"></div>
+                <div class="ai-chat-inner">
+                    <div class="ai-chat-header d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="ai-avatar-circle ai-float-anim">
+                                <i class="bi bi-stars fs-4 text-white"></i>
+                            </div>
+                            <div>
+                                <span class="d-block fw-bold text-espresso fs-5">مساعد بركة الذكي ✨</span>
+                                <span class="d-block micro text-success fw-bold mt-1"><span class="pulse-dot"></span>متصل الآن - جاهز للتسوق</span>
+                            </div>
                         </div>
                     </div>
-                    <button class="btn btn-close-chat" onclick="toggleBarakaAIChat()"><i class="bi bi-x-lg text-espresso fs-4"></i></button>
-                </div>
-                <div class="ai-chat-messages" id="aiChatMessages">
-                    <div class="chat-message bot-message animate-up">
-                        <p class="mb-0">أهلاً بك يا غالي! 🌾 أنا مساعد بركة الذكي لمساعدتك في تسوق كل ما تحتاجه من محلات قريتك.</p>
-                        <p class="mb-0 mt-2">اكتب لي مثلاً: <strong>"عايز أشتري طماطم تفاح"</strong> أو <strong>"أشرح لي فوائد العسل"</strong>، وأنا هدورلك على أفضل الأسعار والمحلات المتوفرة!</p>
+                    <div class="ai-chat-messages" id="aiChatMessages">
+                        <div class="chat-message bot-message animate-up">
+                            <p class="mb-0">أهلاً بك يا غالي! 🌾 أنا مساعد بركة الذكي لمساعدتك في تسوق كل ما تحتاجه من محلات قريتك.</p>
+                            <p class="mb-0 mt-2">اكتب لي مثلاً: <strong>"عايز أشتري طماطم تفاح"</strong> أو <strong>"أشرح لي فوائد العسل"</strong>، وأنا هدورلك على أفضل الأسعار والمحلات المتوفرة!</p>
+                        </div>
                     </div>
-                </div>
-                <div class="ai-chat-input-wrapper">
-                    <form id="aiChatForm" class="d-flex gap-3 align-items-center" onsubmit="sendBarakaChatMessage(event)">
-                        <input type="text" id="aiChatInput" class="form-control ai-chat-input" placeholder="اكتب رسالتك هنا..." required autocomplete="off">
-                        <button type="button" class="btn btn-mic-chat" id="aiChatMicBtn" onclick="toggleChatbotMic()" title="تحدث بالصوت"><i class="bi bi-mic-fill fs-5"></i></button>
-                        <button type="submit" class="btn btn-send-chat" id="aiChatSendBtn" title="إرسال"><i class="bi bi-send-fill text-white fs-5"></i></button>
-                    </form>
+                    <div class="ai-chat-input-wrapper">
+                        <form id="aiChatForm" class="d-flex gap-3 align-items-center" onsubmit="sendBarakaChatMessage(event)">
+                            <input type="text" id="aiChatInput" class="form-control ai-chat-input" placeholder="اكتب رسالتك هنا..." required autocomplete="off">
+                            <button type="button" class="btn btn-mic-chat" id="aiChatMicBtn" onclick="toggleChatbotMic()" title="تحدث بالصوت"><i class="bi bi-mic-fill fs-5"></i></button>
+                            <button type="submit" class="btn btn-send-chat" id="aiChatSendBtn" title="إرسال"><i class="bi bi-send-fill text-white fs-5"></i></button>
+                        </form>
+                    </div>
                 </div>
             </div>
-        </div>
-    `;
-    document.body.appendChild(container);
+        `;
+    } else {
+        // Check if widget already exists to prevent duplicate injections
+        if (document.getElementById('barakaAIChatWidgetWrapper')) return;
+
+        const container = document.createElement('div');
+        container.id = 'barakaAIChatWidgetWrapper';
+        container.className = 'baraka-ai-assistant-widget';
+        container.innerHTML = `
+            <!-- Chat Toggle Button -->
+            <button class="ai-chat-toggle-btn shadow" onclick="toggleBarakaAIChat()" id="aiChatToggleBtn">
+                <span class="ai-badge-pulse"></span>
+                <i class="bi bi-stars fs-4"></i>
+            </button>
+            
+            <!-- Chat Window -->
+            <div class="ai-chat-window glass-panel" id="barakaAIChatWindow">
+                <div class="ai-chat-bg-glow"></div>
+                <div class="ai-chat-inner">
+                    <div class="ai-chat-header d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="ai-avatar-circle ai-float-anim">
+                                <i class="bi bi-stars fs-4 text-white"></i>
+                            </div>
+                            <div>
+                                <span class="d-block fw-bold text-espresso fs-5">مساعد بركة الذكي ✨</span>
+                                <span class="d-block micro text-success fw-bold mt-1"><span class="pulse-dot"></span>متصل الآن - جاهز للتسوق</span>
+                            </div>
+                        </div>
+                        <button class="btn btn-close-chat" onclick="toggleBarakaAIChat()"><i class="bi bi-x-lg text-espresso fs-4"></i></button>
+                    </div>
+                    <div class="ai-chat-messages" id="aiChatMessages">
+                        <div class="chat-message bot-message animate-up">
+                            <p class="mb-0">أهلاً بك يا غالي! 🌾 أنا مساعد بركة الذكي لمساعدتك في تسوق كل ما تحتاجه من محلات قريتك.</p>
+                            <p class="mb-0 mt-2">اكتب لي مثلاً: <strong>"عايز أشتري طماطم تفاح"</strong> أو <strong>"أشرح لي فوائد العسل"</strong>، وأنا هدورلك على أفضل الأسعار والمحلات المتوفرة!</p>
+                        </div>
+                    </div>
+                    <div class="ai-chat-input-wrapper">
+                        <form id="aiChatForm" class="d-flex gap-3 align-items-center" onsubmit="sendBarakaChatMessage(event)">
+                            <input type="text" id="aiChatInput" class="form-control ai-chat-input" placeholder="اكتب رسالتك هنا..." required autocomplete="off">
+                            <button type="button" class="btn btn-mic-chat" id="aiChatMicBtn" onclick="toggleChatbotMic()" title="تحدث بالصوت"><i class="bi bi-mic-fill fs-5"></i></button>
+                            <button type="submit" class="btn btn-send-chat" id="aiChatSendBtn" title="إرسال"><i class="bi bi-send-fill text-white fs-5"></i></button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(container);
+    }
 }
 
 window.toggleBarakaAIChat = function() {

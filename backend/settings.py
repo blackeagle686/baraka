@@ -35,9 +35,9 @@ if env_path.exists():
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-ru)8&79*#fw%rlh1(0d4a13gi)l11_*-!^6_$2du5do&!ryw*&')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', 'True').lower() == 'true'
 
-ALLOWED_HOSTS = ['*', '.vercel.app', '127.0.0.1', 'localhost']
+ALLOWED_HOSTS = [h.strip() for h in os.environ.get('ALLOWED_HOSTS', '*,127.0.0.1,localhost,.vercel.app').split(',') if h.strip()]
 
 
 # Application definition

@@ -451,13 +451,16 @@ function groupOrdersByCustomer(orders) {
     // Since the user already combined products from different shops into a single order at checkout,
     // this avoids any "double combining" and perfectly aligns each order record as one delivery.
     return orders.map((order) => {
-        const shopsMap = new Map();
+        const stopsMap = new Map();
         
+        // Process shops
         if (order.shops_details && order.shops_details.length > 0) {
             order.shops_details.forEach(s => {
-                const shopKey = s.id;
-                if (!shopsMap.has(shopKey)) {
-                    shopsMap.set(shopKey, {
+                const key = `s_${s.id}`;
+                if (!stopsMap.has(key)) {
+                    stopsMap.set(key, {
+                        type: 'shop',
+                        id: s.id,
                         name: s.name,
                         address: s.address || '',
                         total: 0,
@@ -465,30 +468,52 @@ function groupOrdersByCustomer(orders) {
                         allItemsReady: true
                     });
                 }
-                const shop = shopsMap.get(shopKey);
-                const shopItems = order.items.filter(it => it.product_details && it.product_details.shop_id === s.id);
-                const shopTotal = shopItems.reduce((sum, it) => sum + (parseFloat(it.price) * it.quantity), 0);
-                shop.total += shopTotal;
-                
-                const hasUnready = shopItems.some(it => !it.is_ready);
-                if (hasUnready) {
-                    shop.allItemsReady = false;
-                }
+                const stop = stopsMap.get(key);
+                const stopItems = order.items.filter(it => it.product_details && it.product_details.shop_id === s.id);
+                const stopTotal = stopItems.reduce((sum, it) => sum + (parseFloat(it.price) * it.quantity), 0);
+                stop.total += stopTotal;
+                if (stopItems.some(it => !it.is_ready)) stop.allItemsReady = false;
             });
-        } else {
-            const shopKey = order.shop || order.shop_details?.id || `shop-${order.id}`;
-            if (!shopsMap.has(shopKey)) {
-                shopsMap.set(shopKey, {
-                    name: order.shop_details?.name || 'محل بركة',
-                    address: order.shop_details?.address || '',
-                    total: parseFloat(order.total_price) || 0,
-                    orders: [order],
-                    allItemsReady: !order.items ? true : !order.items.some(it => !it.is_ready)
-                });
-            }
+        }
+        
+        // Process restaurants
+        if (order.restaurants_details && order.restaurants_details.length > 0) {
+            order.restaurants_details.forEach(r => {
+                const key = `r_${r.id}`;
+                if (!stopsMap.has(key)) {
+                    stopsMap.set(key, {
+                        type: 'restaurant',
+                        id: `r_${r.id}`,
+                        name: r.name,
+                        address: r.address || '',
+                        total: 0,
+                        orders: [order],
+                        allItemsReady: true
+                    });
+                }
+                const stop = stopsMap.get(key);
+                const stopItems = order.items.filter(it => it.menu_item_details && it.menu_item_details.restaurant_id === r.id);
+                const stopTotal = stopItems.reduce((sum, it) => sum + (parseFloat(it.price) * it.quantity), 0);
+                stop.total += stopTotal;
+                if (stopItems.some(it => !it.is_ready)) stop.allItemsReady = false;
+            });
         }
 
-        const shopsList = Array.from(shopsMap.values());
+        // Fallback for legacy orders with only shop FK (no shops_details)
+        if (stopsMap.size === 0 && (order.shop || order.shop_details)) {
+            const key = `s_${order.shop || order.shop_details?.id}`;
+            stopsMap.set(key, {
+                type: 'shop',
+                id: order.shop || order.shop_details?.id,
+                name: order.shop_details?.name || 'محل بركة',
+                address: order.shop_details?.address || '',
+                total: parseFloat(order.total_price) || 0,
+                orders: [order],
+                allItemsReady: !order.items ? true : !order.items.some(it => !it.is_ready)
+            });
+        }
+
+        const stopsList = Array.from(stopsMap.values());
         
         return {
             key: `${order.id}`,

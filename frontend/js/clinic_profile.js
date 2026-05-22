@@ -661,7 +661,7 @@ async function handleManualSlotSubmit() {
     if (serviceId) formData.append('service', serviceId);
 
     try {
-        const res = await fetch('/api/time-slots/', {
+        const res = await fetch(API_BASE + '/time-slots/', {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${token}` },
             body: formData

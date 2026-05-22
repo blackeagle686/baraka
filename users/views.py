@@ -274,8 +274,6 @@ class ResetPasswordWithOTPView(APIView):
     throttle_classes = [AuthAnonRateThrottle]
 
     def post(self, request):
-        
-        
         phone = request.data.get('phone')
         otp = request.data.get('otp')
         new_password = request.data.get('new_password')

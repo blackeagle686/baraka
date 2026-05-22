@@ -521,7 +521,7 @@ function groupOrdersByCustomer(orders) {
             customerPhone: getCustomerPhone(order),
             address: order.address || 'العنوان الافتراضي',
             orders: [order],
-            shops: shopsList,
+            shops: stopsList,
             totalProducts: parseFloat(order.total_price) || 0,
             totalDelivery: parseFloat(order.delivery_price) || 0,
             latestCreatedAt: new Date(order.created_at).getTime() || Date.now()
@@ -536,7 +536,7 @@ function renderOrderItems(order) {
             : `<span class="badge bg-warning-subtle text-warning rounded-pill px-2 py-0.5 fw-bold" style="font-size: 0.68rem;">يُحضّر ⏳</span>`;
         return `
             <div class="d-flex justify-content-between align-items-center text-muted small py-1.5 border-bottom border-light">
-                <span>- ${it.product_details ? it.product_details.name : 'منتج'} (x${it.quantity})</span>
+                <span>- ${it.product_details ? it.product_details.name : (it.menu_item_details ? it.menu_item_details.name : 'منتج')} (x${it.quantity})</span>
                 ${itemReadyBadge}
             </div>
         `;
@@ -546,7 +546,10 @@ function renderOrderItems(order) {
 function renderShopStops(group) {
     return group.shops.map((shop, index) => {
         const order = group.orders[0];
-        const isShopPaid = order && order.paid_shops && order.paid_shops.split(',').includes(String(shop.id));
+        const paidIds = order && order.paid_shops ? order.paid_shops.split(',') : [];
+        const shopIdentifier = shop.type === 'restaurant' ? shop.id.replace(/^r_/, 'r_') : String(shop.id);
+        // shop.id for restaurants is already r_{id}, for shops it's numeric
+        const isShopPaid = paidIds.includes(shopIdentifier);
         
         const readyBadge = isShopPaid
             ? `<span class="badge bg-success text-white border border-success rounded-pill px-2 py-1 fw-bold" style="font-size: 0.76rem;"><i class="bi bi-check-circle-fill me-1"></i>تم سداد مستحقات المحل ✅</span>`

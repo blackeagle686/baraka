@@ -3,149 +3,306 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة تحكم المطعم - BARAKA</title>
-    <link rel="icon" href="/images/baraka_logo_low_nobg.png">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="stylesheet" href="/css/main.css">
+    <title>مطعمي - منصة بركة</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/main_style.css">
     <link rel="stylesheet" href="/css/profile.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
     <style>
-        :root { --restaurant-primary: #f97316; --restaurant-dark: #c2410c; --restaurant-light: #fff7ed; }
-        .rest-dash-stat { background: linear-gradient(135deg, var(--restaurant-primary), var(--restaurant-dark)); color: white; border-radius: 20px; padding: 1.2rem; }
-        .rest-dash-stat-light { background: white; border: 1px solid rgba(249,115,22,0.1); border-radius: 20px; padding: 1.2rem; }
-        .btn-restaurant { background: var(--restaurant-primary); color: white; border-radius: 100px; font-weight: 700; padding: 0.5rem 1.5rem; border: none; }
-        .btn-restaurant:hover { background: var(--restaurant-dark); color: white; }
-        .btn-outline-restaurant { border: 1px solid var(--restaurant-primary); color: var(--restaurant-primary); border-radius: 100px; font-weight: 600; }
-        .btn-outline-restaurant:hover { background: var(--restaurant-primary); color: white; }
-        .rest-sidebar { background: linear-gradient(180deg, var(--color-espresso), #3a0f0f); }
-        .rest-sidebar .dash-nav-link.active { background: rgba(249,115,22,0.2); border-right: 3px solid var(--restaurant-primary); }
+        :root {
+            --restaurant-primary: #f97316;
+            --restaurant-dark: #c2410c;
+            --restaurant-light: #fff7ed;
+        }
+        .nav-badge.restaurant-badge {
+            background: var(--restaurant-primary);
+        }
+        .rest-sidebar .dash-nav-link.active {
+            background: rgba(249,115,22,0.12);
+            border-right: 3px solid var(--restaurant-primary);
+        }
+        .rest-sidebar .dash-nav-link.active i {
+            color: var(--restaurant-primary) !important;
+        }
+        .stat-card .stat-icon.stat-restaurant {
+            background: linear-gradient(135deg, #f97316, #c2410c);
+        }
+        .stat-card .stat-icon.stat-restaurant-light {
+            background: rgba(249,115,22,0.12);
+            color: var(--restaurant-primary);
+        }
     </style>
 </head>
-<body>
+<body class="bg-dune">
+    <div id="header-placeholder"></div>
+
     <div class="dash-layout">
+        <!-- Sidebar -->
         <aside class="dash-sidebar rest-sidebar">
-            <div class="dash-sidebar-header">
-                <a href="/html/index.html" class="text-decoration-none text-white d-flex align-items-center gap-2">
-                    <img src="/images/baraka_logo_low_nobg.png" style="width: 32px; height: 32px; border-radius: 50%;">
-                    <span class="fw-bold" style="font-size: 1.1rem;">مطعمي</span>
-                </a>
-            </div>
-            <nav class="dash-nav mt-3">
-                <a class="dash-nav-link active" onclick="switchTab('overview')"><i class="bi bi-grid-1x2"></i>نظرة عامة</a>
-                <a class="dash-nav-link" onclick="switchTab('orders')"><i class="bi bi-truck"></i>الطلبات <span class="badge bg-danger rounded-pill small d-none" id="sidebarOrderBadge">0</span></a>
-                <a class="dash-nav-link" onclick="switchTab('menu')"><i class="bi bi-menu-button-wide"></i>قائمة الطعام</a>
-                <a class="dash-nav-link" onclick="switchTab('revenue')"><i class="bi bi-cash-stack"></i>الأرباح</a>
-                <a class="dash-nav-link" onclick="switchTab('settings')"><i class="bi bi-gear"></i>الإعدادات</a>
-            </nav>
-            <div class="mt-auto p-3 text-center">
-                <small class="text-white-50" id="sidebarRestName">مطعمي</small>
-            </div>
-        </aside>
-        <main class="dash-main">
-            <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-                <div>
-                    <h4 class="fw-extrabold text-espresso mb-0"><i class="bi bi-shop me-2" style="color: var(--restaurant-primary);"></i>لوحة تحكم المطعم</h4>
+            <div class="dash-sidebar-brand">
+                <div class="dash-sidebar-brand-icon" style="background: linear-gradient(135deg, var(--restaurant-primary), var(--restaurant-dark));">
+                    <i class="bi bi-shop-window"></i>
                 </div>
-                <div class="d-flex align-items-center gap-2">
-                    <span class="badge bg-warning text-dark rounded-pill px-3 py-1 animate-pulse" id="restAutoRefreshIndicator" style="display: none;">
-                        <i class="bi bi-arrow-repeat me-1"></i>تحديث بعد <span id="restRefreshCountdown">15</span>ث
-                    </span>
-                    <button class="btn btn-outline-mesa btn-sm rounded-pill px-3" onclick="window.location.href='/html/index.html'"><i class="bi bi-house me-1"></i>الرئيسية</button>
+                <div class="dash-sidebar-brand-text">
+                    <span id="sidebarRestName">جاري التحميل...</span>
+                    <small>صاحب مطعم</small>
                 </div>
             </div>
 
+            <ul class="dash-nav">
+                <li class="dash-nav-label">لوحة التحكم</li>
+                <li class="dash-nav-item">
+                    <button class="dash-nav-link active" onclick="switchTab('overview')">
+                        <i class="bi bi-grid-1x2"></i>
+                        <span>نظرة عامة</span>
+                    </button>
+                </li>
+                <li class="dash-nav-item">
+                    <button class="dash-nav-link" onclick="switchTab('orders')">
+                        <i class="bi bi-truck"></i>
+                        <span>الطلبات</span>
+                        <span class="nav-badge bg-danger" id="sidebarOrderBadge">0</span>
+                    </button>
+                </li>
+                <li class="dash-nav-item">
+                    <button class="dash-nav-link" onclick="switchTab('menu')">
+                        <i class="bi bi-menu-button-wide"></i>
+                        <span>قائمة الطعام</span>
+                    </button>
+                </li>
+                <li class="dash-nav-item">
+                    <button class="dash-nav-link" onclick="switchTab('settings')">
+                        <i class="bi bi-gear-fill"></i>
+                        <span>إعدادات المطعم</span>
+                    </button>
+                </li>
+                <li class="dash-nav-item">
+                    <button class="dash-nav-link" onclick="switchTab('revenue')">
+                        <i class="bi bi-wallet2 text-success"></i>
+                        <span>أرباح المطعم 💰</span>
+                    </button>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- Main Workspace -->
+        <main class="dash-main">
             <!-- Overview Panel -->
             <div class="dash-panel active" id="overviewPanel">
-                <div class="row g-3 mb-3">
-                    <div class="col-md-4"><div class="rest-dash-stat text-center"><div class="fs-1 fw-extrabold" id="statTotalOrders">0</div><div class="small opacity-85">إجمالي الطلبات</div></div></div>
-                    <div class="col-md-4"><div class="rest-dash-stat-light text-center"><div class="fs-1 fw-extrabold" style="color: var(--restaurant-primary);" id="statActiveOrders">0</div><div class="small text-muted">طلبات نشطة</div></div></div>
-                    <div class="col-md-4"><div class="rest-dash-stat-light text-center"><div class="fs-1 fw-extrabold" style="color: var(--color-marigold);" id="statMenuItems">0</div><div class="small text-muted">أصناف في القائمة</div></div></div>
+                <div class="dash-page-title">مرحباً بك في لوحة تحكم مطعمك</div>
+                <div class="dash-page-subtitle">نظرة سريعة على أداء مطعمك اليوم</div>
+
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4">
+                        <div class="stat-card">
+                            <div class="stat-icon stat-restaurant">
+                                <i class="bi bi-receipt"></i>
+                            </div>
+                            <div>
+                                <div class="stat-value" id="statTotalOrders">0</div>
+                                <div class="stat-label">إجمالي الطلبات</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stat-card">
+                            <div class="stat-icon stat-green">
+                                <i class="bi bi-door-open"></i>
+                            </div>
+                            <div>
+                                <div class="stat-value" id="statActiveOrders">0</div>
+                                <div class="stat-label">طلبات نشطة</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stat-card">
+                            <div class="stat-icon stat-marigold">
+                                <i class="bi bi-list-ul"></i>
+                            </div>
+                            <div>
+                                <div class="stat-value" id="statMenuItems">0</div>
+                                <div class="stat-label">أصناف في القائمة</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-card mb-4 animate-up">
+                    <div class="dashboard-section-title">
+                        <span><i class="bi bi-lightning-charge-fill text-marigold me-2"></i>إجراءات سريعة</span>
+                    </div>
+                    <div class="d-flex flex-wrap gap-3">
+                        <button class="btn btn-primary rounded-pill px-4 py-2 fw-bold" onclick="switchTab('menu')">
+                            <i class="bi bi-pencil-square me-2"></i>تعديل قائمة الطعام
+                        </button>
+                        <button class="btn btn-outline-mesa rounded-pill px-4 py-2 fw-bold" onclick="switchTab('settings')">
+                            <i class="bi bi-gear-wide-connected me-2"></i>تحديث بيانات المطعم
+                        </button>
+                        <a href="/html/restaurants/list.html" class="btn btn-outline-secondary rounded-pill px-4 py-2 fw-bold">
+                            <i class="bi bi-eye me-2"></i>عرض المنصة العامة
+                        </a>
+                    </div>
                 </div>
             </div>
 
             <!-- Orders Panel -->
             <div class="dash-panel" id="ordersPanel">
-                <div class="dash-page-title">الطلبات الواردة</div>
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <div class="d-flex gap-2" id="orderFilterTabs">
-                        <span class="badge rounded-pill px-3 py-2" style="cursor: pointer; background: var(--restaurant-primary); color: white;" onclick="filterRestOrders('all', this)" data-filter="all">الكل</span>
-                        <span class="badge rounded-pill px-3 py-2" style="cursor: pointer; background: white; color: #666; border: 1px solid #ddd;" onclick="filterRestOrders('active', this)" data-filter="active">نشط</span>
-                        <span class="badge rounded-pill px-3 py-2" style="cursor: pointer; background: white; color: #666; border: 1px solid #ddd;" onclick="filterRestOrders('completed', this)" data-filter="completed">مكتمل</span>
+                <div class="dash-page-title">إدارة الطلبات</div>
+                <div class="dash-page-subtitle">تابع طلبات العملاء وحدث حالتها أولاً بأول</div>
+
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="fw-bold text-espresso m-0"><i class="bi bi-truck me-2"></i>الطلبات الواردة</h4>
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="d-flex align-items-center text-mesa small fw-bold" id="restAutoRefreshIndicator" style="display: none;">
+                            <span class="spinner-grow spinner-grow-sm text-marigold me-2" role="status"></span>
+                            تحديث تلقائي خلال <span id="restRefreshCountdown" class="mx-1 text-marigold">15</span>ث
+                        </div>
+                        <button class="btn btn-outline-mesa rounded-pill btn-sm fw-bold px-3" onclick="manualRefreshRestOrders()">
+                            <i class="bi bi-arrow-clockwise me-1" id="restRefreshIcon"></i>تحديث الطلبات
+                        </button>
                     </div>
-                    <button class="btn btn-sm btn-outline-mesa rounded-pill" onclick="manualRefreshRestOrders()"><i class="bi bi-arrow-clockwise me-1" id="restRefreshIcon"></i>تحديث</button>
                 </div>
-                <div class="row g-3" id="restOrdersList"></div>
-                <div id="restOrdersPagination" class="d-flex justify-content-center mt-3"></div>
+
+                <div class="d-flex gap-2 mb-3" id="orderFilterTabs">
+                    <span class="badge rounded-pill px-3 py-2" style="cursor: pointer; background: var(--restaurant-primary); color: white;" onclick="filterRestOrders('all', this)" data-filter="all">الكل</span>
+                    <span class="badge rounded-pill px-3 py-2" style="cursor: pointer; background: white; color: #666; border: 1px solid #ddd;" onclick="filterRestOrders('active', this)" data-filter="active">نشط</span>
+                    <span class="badge rounded-pill px-3 py-2" style="cursor: pointer; background: white; color: #666; border: 1px solid #ddd;" onclick="filterRestOrders('completed', this)" data-filter="completed">مكتمل</span>
+                </div>
+
+                <div class="row g-3" id="restOrdersList">
+                    <div class="text-center text-mesa py-4">
+                        <div class="spinner-border text-marigold mb-3" role="status"></div>
+                        <p>جاري تحميل الطلبات...</p>
+                    </div>
+                </div>
+                <div id="restOrdersPagination" class="d-flex justify-content-center mt-4"></div>
             </div>
 
             <!-- Menu Panel -->
             <div class="dash-panel" id="menuPanel">
-                <div class="dash-page-title">قائمة الطعام</div>
-                <button class="btn btn-restaurant mb-3" onclick="openAddMenuItemModal()"><i class="bi bi-plus-lg me-1"></i>إضافة صنف جديد</button>
-                <div class="row g-3" id="menuItemsList"></div>
-                <div id="menuItemsPagination" class="d-flex justify-content-center mt-3"></div>
-            </div>
+                <div class="dash-page-title">إدارة قائمة الطعام</div>
+                <div class="dash-page-subtitle">أضف أصناف جديدة أو عدّل الأسعار والتوافر بسهولة</div>
 
-            <!-- Revenue Panel -->
-            <div class="dash-panel" id="revenuePanel">
-                <div class="dash-page-title">سجل أرباح المطعم</div>
-                <div class="dash-page-subtitle">تابع إجمالي الطلبات المكتملة والأرباح</div>
-                <div id="noRestaurantRevenueState" class="empty-state animate-up" style="display: block;">
-                    <div class="empty-state-icon"><i class="bi bi-shop" style="color: var(--restaurant-primary);"></i></div>
-                    <p class="fw-bold fs-5 text-espresso">يا صاحب المطعم، لازم تعمل مطعمك الأول!</p>
-                    <p class="small text-mesa mb-4">قم بتحديد بيانات مطعمك من صفحة "الإعدادات" لتتمكن من تتبع أرباحك.</p>
-                    <button class="btn btn-restaurant rounded-pill px-4 fw-bold" onclick="switchTab('settings')"><i class="bi bi-gear-fill me-2"></i>الذهاب للإعدادات</button>
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="fw-bold text-espresso m-0"><i class="bi bi-menu-button-wide me-2"></i>قائمة الطعام</h4>
+                    <button class="btn btn-marigold rounded-pill fw-bold shadow-sm px-4" onclick="openAddMenuItemModal()">
+                        <i class="bi bi-plus-lg me-1"></i>إضافة صنف جديد
+                    </button>
                 </div>
-                <div id="restaurantRevenueSection" style="display: none;">
-                    <div id="restaurantRevenueDashboardContainer">
-                        <div class="text-center text-mesa py-5"><div class="spinner-border" style="color: var(--restaurant-primary);" role="status"></div><p>جاري تحميل سجل الأرباح...</p></div>
-                    </div>
-                </div>
+
+                <div class="row g-3" id="menuItemsList"></div>
+                <div id="menuItemsPagination" class="d-flex justify-content-center mt-4"></div>
             </div>
 
             <!-- Settings Panel -->
             <div class="dash-panel" id="settingsPanel">
                 <div class="dash-page-title" id="restSettingsTitle">إعدادات المطعم</div>
-                <div class="row g-4">
-                    <div class="col-md-8">
-                        <div class="dashboard-card p-4 border" style="background: rgba(255,255,255,0.85); border-radius: 24px; border-color: rgba(201,153,151,0.12) !important;">
-                            <form id="restaurantForm">
-                                <div class="mb-3">
-                                    <label class="form-label fw-bold text-espresso">اسم المطعم</label>
-                                    <input type="text" class="form-control rounded-pill px-4 py-2" id="restName" placeholder="مثال: مطعم أبو كريم" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label fw-bold text-espresso">الوصف</label>
-                                    <textarea class="form-control rounded-4 px-4 py-2" id="restDesc" rows="3" placeholder="وصف المطعم..."></textarea>
-                                </div>
-                                <div class="row g-3 mb-3">
-                                    <div class="col-md-6"><label class="form-label fw-bold text-espresso">العنوان</label><input type="text" class="form-control rounded-pill px-4 py-2" id="restAddress" required></div>
-                                    <div class="col-md-3"><label class="form-label fw-bold text-espresso">موعد الفتح</label><input type="time" class="form-control rounded-pill px-4 py-2" id="restOpeningTime"></div>
-                                    <div class="col-md-3"><label class="form-label fw-bold text-espresso">موعد الإغلاق</label><input type="time" class="form-control rounded-pill px-4 py-2" id="restClosingTime"></div>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label fw-bold text-espresso">صورة المطعم</label>
-                                    <div class="d-flex align-items-center gap-3">
-                                        <div id="restImagePreview" style="width: 80px; height: 80px; border-radius: 16px; overflow: hidden; background: var(--color-dune-light); display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 700; color: var(--color-mesa);">🍽️</div>
-                                        <input type="file" class="form-control rounded-pill px-4 py-2" id="restImage" accept="image/*">
-                                    </div>
-                                </div>
-                                <div class="mb-3 form-check form-switch">
-                                    <input class="form-check-input" type="checkbox" role="switch" id="restIsOpen" checked>
-                                    <label class="form-check-label text-espresso fw-bold ms-2" for="restIsOpen">المطعم مفتوح حالياً</label>
-                                </div>
-                                <input type="hidden" id="restLatitude"><input type="hidden" id="restLongitude">
-                                <button type="submit" class="btn btn-restaurant w-100 py-2" id="saveRestBtn">حفظ بيانات المطعم</button>
-                                <div id="restStatusMsg" class="text-center fw-bold mt-2 d-none"></div>
-                            </form>
-                        </div>
+                <div class="dash-page-subtitle">تحكم في اسم المطعم، الصورة، مواعيد العمل، والحالة الحالية</div>
+
+                <div class="dashboard-card animate-up">
+                    <div class="dashboard-section-title d-flex justify-content-between align-items-center">
+                        <span><i class="bi bi-gear me-2"></i>إعدادات المطعم</span>
+                        <span class="badge status-closed rounded-pill px-3 py-2 d-none" id="restStatusBadge">
+                            <i class="bi bi-pause-circle me-1"></i>مغلق
+                        </span>
                     </div>
-                    <div class="col-md-4">
-                        <div class="dashboard-card p-3 border" style="background: rgba(255,255,255,0.85); border-radius: 24px; border-color: rgba(201,153,151,0.12) !important;">
-                            <label class="form-label fw-bold text-espresso mb-2"><i class="bi bi-geo-alt me-1" style="color: var(--restaurant-primary);"></i>الموقع على الخريطة</label>
-                            <div id="restMap" style="width: 100%; height: 250px; border-radius: 16px;"></div>
-                            <div class="small text-muted mt-2">اسحب العلامة أو انقر على الخريطة لتحديد موقع مطعمك</div>
+
+                    <form id="restaurantForm" enctype="multipart/form-data">
+                        <div class="text-center mb-4">
+                            <div class="d-inline-block position-relative">
+                                <div id="restImagePreview" class="shop-image-preview d-flex align-items-center justify-content-center">
+                                    <span class="text-white fs-4" id="restInitials">صورة المطعم</span>
+                                </div>
+                                <label for="restImage" class="upload-btn position-absolute bottom-0 start-0 translate-middle-y ms-2">
+                                    <i class="bi bi-camera-fill" style="font-size: 0.85rem;"></i>
+                                </label>
+                                <input type="file" id="restImage" accept="image/*" class="d-none">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-espresso fw-bold"><i class="bi bi-shop me-1"></i>اسم المطعم</label>
+                                <input type="text" class="form-control rounded-pill px-4 py-2" id="restName" placeholder="مثال: مطعم أبو كريم" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-espresso fw-bold"><i class="bi bi-geo-alt me-1"></i>العنوان</label>
+                                <input type="text" class="form-control rounded-pill px-4 py-2" id="restAddress" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-4 animate-up">
+                            <label class="form-label text-espresso fw-bold"><i class="bi bi-map me-1 text-marigold"></i>حدد موقع المطعم على الخريطة</label>
+                            <div id="restMap" style="height: 280px; border-radius: var(--radius-md); border: 2px solid rgba(201, 153, 151, 0.15); box-shadow: var(--shadow-sm); z-index: 10;"></div>
+                            <div class="form-text text-mesa mt-1"><i class="bi bi-info-circle me-1"></i>اضغط في أي مكان على الخريطة لتغيير مكان دبوس المطعم تلقائياً!</div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-espresso fw-bold"><i class="bi bi-compass me-1"></i>خط العرض (Latitude)</label>
+                                <input type="number" step="0.000001" class="form-control rounded-pill px-4 py-2" id="restLatitude" placeholder="30.0444">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-espresso fw-bold"><i class="bi bi-compass-fill me-1"></i>خط الطول (Longitude)</label>
+                                <input type="number" step="0.000001" class="form-control rounded-pill px-4 py-2" id="restLongitude" placeholder="31.2357">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label text-espresso fw-bold"><i class="bi bi-text-paragraph me-1"></i>الوصف</label>
+                            <textarea class="form-control rounded-4 px-4 py-2" id="restDesc" rows="3" placeholder="وصف المطعم..."></textarea>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6 mb-3 mb-md-0">
+                                <label class="form-label text-espresso fw-bold"><i class="bi bi-clock me-1 text-marigold"></i>ميعاد الفتح</label>
+                                <input type="time" class="form-control rounded-pill px-4 py-2" id="restOpeningTime">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-espresso fw-bold"><i class="bi bi-clock-fill me-1 text-marigold"></i>ميعاد الإغلاق</label>
+                                <input type="time" class="form-control rounded-pill px-4 py-2" id="restClosingTime">
+                            </div>
+                        </div>
+
+                        <div class="form-check form-switch mb-4">
+                            <input class="form-check-input" type="checkbox" role="switch" id="restIsOpen" checked>
+                            <label class="form-check-label text-espresso fw-bold ms-2" for="restIsOpen">
+                                <i class="bi bi-door-open me-1"></i>المطعم مفتوح لاستقبال الطلبات
+                            </label>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary rounded-pill w-100 py-2 fw-bold mb-3" id="saveRestBtn">
+                            <i class="bi bi-check2-circle me-1"></i>حفظ بيانات المطعم
+                        </button>
+                        <div id="restStatusMsg" class="text-center fw-bold d-none"></div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Revenue Panel -->
+            <div class="dash-panel" id="revenuePanel">
+                <div class="dash-page-title">💰 سجل أرباح المطعم</div>
+                <div class="dash-page-subtitle">تابع إجمالي الطلبات المكتملة والأرباح</div>
+
+                <div id="noRestaurantRevenueState" class="empty-state animate-up" style="display: block;">
+                    <div class="empty-state-icon"><i class="bi bi-shop-window text-marigold"></i></div>
+                    <p class="fw-bold fs-5 text-espresso">يا صاحب المطعم، لازم تعمل مطعمك الأول!</p>
+                    <p class="small text-mesa mb-4" style="max-width: 400px; margin: 0 auto;">قم بتحديد بيانات مطعمك من صفحة **"إعدادات المطعم"** ليظهر للناس وتتمكن من تتبع أرباحك بسهولة.</p>
+                    <button class="btn btn-primary rounded-pill px-4 fw-bold" onclick="switchTab('settings')">
+                        <i class="bi bi-gear-fill me-2"></i>الذهاب لإعدادات المطعم
+                    </button>
+                </div>
+
+                <div id="restaurantRevenueSection" style="display: none;">
+                    <div id="restaurantRevenueDashboardContainer">
+                        <div class="text-center text-mesa py-5">
+                            <div class="spinner-border text-marigold mb-3" role="status"></div>
+                            <p>جاري تحميل سجل الأرباح...</p>
                         </div>
                     </div>
                 </div>
@@ -156,20 +313,42 @@
     <!-- Add Menu Item Modal -->
     <div class="modal fade" id="addMenuItemModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0 rounded-4" style="background: var(--color-dune-light);">
+            <div class="modal-content border-0 rounded-4" style="background-color: var(--color-dune-light);">
                 <div class="modal-header border-0 pb-0">
-                    <h5 class="modal-title fw-bold text-espresso"><i class="bi bi-plus-circle me-2" style="color: var(--restaurant-primary);"></i>إضافة صنف جديد</h5>
+                    <h5 class="modal-title fw-bold text-espresso">
+                        <i class="bi bi-plus-circle me-2" style="color: var(--restaurant-primary);"></i>إضافة صنف جديد
+                    </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body p-4">
                     <form id="menuItemForm">
-                        <div class="mb-3"><label class="form-label text-espresso fw-bold">اسم الصنف</label><input type="text" class="form-control rounded-pill px-4 py-2" id="itemName" required></div>
-                        <div class="mb-3"><label class="form-label text-espresso fw-bold">السعر (ج.م)</label><input type="number" step="0.01" class="form-control rounded-pill px-4 py-2" id="itemPrice" required></div>
-                        <div class="mb-3"><label class="form-label text-espresso fw-bold">القسم</label><select class="form-select rounded-pill px-4 py-2" id="itemCategory"></select></div>
-                        <div class="mb-3"><label class="form-label text-espresso fw-bold">الوصف</label><textarea class="form-control rounded-4 px-4 py-2" id="itemDesc" rows="2"></textarea></div>
-                        <div class="mb-3"><label class="form-label text-espresso fw-bold">الصورة</label><input type="file" class="form-control rounded-pill px-4 py-2" id="itemImage" accept="image/*"></div>
-                        <div class="mb-3 form-check form-switch"><input class="form-check-input" type="checkbox" role="switch" id="itemAvailable" checked><label class="form-check-label fw-bold ms-2" for="itemAvailable">متاح</label></div>
-                        <button type="submit" class="btn btn-restaurant w-100 py-2" id="saveItemBtn">حفظ الصنف</button>
+                        <div class="mb-3">
+                            <label class="form-label text-espresso fw-bold">اسم الصنف</label>
+                            <input type="text" class="form-control rounded-pill px-4 py-2" id="itemName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-espresso fw-bold">السعر (ج.م)</label>
+                            <input type="number" step="0.01" class="form-control rounded-pill px-4 py-2" id="itemPrice" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-espresso fw-bold">القسم</label>
+                            <select class="form-select rounded-pill px-4 py-2" id="itemCategory"></select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-espresso fw-bold">الوصف</label>
+                            <textarea class="form-control rounded-4 px-4 py-2" id="itemDesc" rows="2"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-espresso fw-bold">الصورة</label>
+                            <input type="file" class="form-control rounded-pill px-4 py-2" id="itemImage" accept="image/*">
+                        </div>
+                        <div class="mb-3 form-check form-switch">
+                            <input class="form-check-input" type="checkbox" role="switch" id="itemAvailable" checked>
+                            <label class="form-check-label fw-bold ms-2" for="itemAvailable">متاح</label>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 rounded-pill py-2 fw-bold" id="saveItemBtn">
+                            <i class="bi bi-check2 me-1"></i>حفظ الصنف
+                        </button>
                     </form>
                 </div>
             </div>
@@ -179,22 +358,43 @@
     <!-- Edit Menu Item Modal -->
     <div class="modal fade" id="editMenuItemModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0 rounded-4" style="background: var(--color-dune-light);">
+            <div class="modal-content border-0 rounded-4" style="background-color: var(--color-dune-light);">
                 <div class="modal-header border-0 pb-0">
-                    <h5 class="modal-title fw-bold text-espresso"><i class="bi bi-pencil-square me-2" style="color: var(--restaurant-primary);"></i>تعديل الصنف</h5>
+                    <h5 class="modal-title fw-bold text-espresso">
+                        <i class="bi bi-pencil-square me-2" style="color: var(--restaurant-primary);"></i>تعديل الصنف
+                    </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body p-4">
                     <form id="editMenuItemForm">
                         <input type="hidden" id="editItemId">
-                        <div class="mb-3"><label class="form-label text-espresso fw-bold">اسم الصنف</label><input type="text" class="form-control rounded-pill px-4 py-2" id="editItemName" required></div>
-                        <div class="mb-3"><label class="form-label text-espresso fw-bold">السعر (ج.م)</label><input type="number" step="0.01" class="form-control rounded-pill px-4 py-2" id="editItemPrice" required></div>
-                        <div class="mb-3"><label class="form-label text-espresso fw-bold">القسم</label><select class="form-select rounded-pill px-4 py-2" id="editItemCategory"></select></div>
-                        <div class="mb-3"><label class="form-label text-espresso fw-bold">الوصف</label><textarea class="form-control rounded-4 px-4 py-2" id="editItemDesc" rows="2"></textarea></div>
-                        <div class="mb-3 form-check form-switch"><input class="form-check-input" type="checkbox" role="switch" id="editItemAvailable" checked><label class="form-check-label fw-bold ms-2" for="editItemAvailable">متاح</label></div>
+                        <div class="mb-3">
+                            <label class="form-label text-espresso fw-bold">اسم الصنف</label>
+                            <input type="text" class="form-control rounded-pill px-4 py-2" id="editItemName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-espresso fw-bold">السعر (ج.م)</label>
+                            <input type="number" step="0.01" class="form-control rounded-pill px-4 py-2" id="editItemPrice" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-espresso fw-bold">القسم</label>
+                            <select class="form-select rounded-pill px-4 py-2" id="editItemCategory"></select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-espresso fw-bold">الوصف</label>
+                            <textarea class="form-control rounded-4 px-4 py-2" id="editItemDesc" rows="2"></textarea>
+                        </div>
+                        <div class="mb-3 form-check form-switch">
+                            <input class="form-check-input" type="checkbox" role="switch" id="editItemAvailable" checked>
+                            <label class="form-check-label fw-bold ms-2" for="editItemAvailable">متاح</label>
+                        </div>
                         <div class="d-flex gap-2">
-                            <button type="submit" class="btn btn-restaurant flex-grow-1 py-2">حفظ التغييرات</button>
-                            <button type="button" class="btn btn-danger rounded-pill px-4 py-2 fw-bold" id="deleteItemBtn">حذف</button>
+                            <button type="submit" class="btn btn-primary flex-grow-1 rounded-pill py-2 fw-bold" id="saveEditItemBtn">
+                                <i class="bi bi-check2 me-1"></i>حفظ التغييرات
+                            </button>
+                            <button type="button" class="btn btn-danger rounded-pill px-4 py-2 fw-bold" id="deleteItemBtn">
+                                <i class="bi bi-trash3 me-1"></i>حذف
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -208,16 +408,29 @@
     <script src="/js/main.js"></script>
     <script src="/js/restaurant_profile.js"></script>
     <script src="/js/restaurant_revenue.js"></script>
+
     <script>
         window.switchTab = function(tabId) {
-            document.querySelectorAll('.dash-panel').forEach(p => p.classList.remove('active'));
-            document.getElementById(tabId + 'Panel')?.classList.add('active');
-            document.querySelectorAll('.dash-nav-link').forEach(l => l.classList.remove('active'));
-            const link = document.querySelector(`[onclick="switchTab('${tabId}')"]`);
-            if (link) link.classList.add('active');
+            document.querySelectorAll('.dash-panel').forEach(panel => {
+                panel.classList.remove('active');
+            });
+            const targetPanel = document.getElementById(tabId + 'Panel');
+            if (targetPanel) {
+                targetPanel.classList.add('active');
+            }
+
+            document.querySelectorAll('.dash-nav-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            const clickedLink = document.querySelector(`[onclick="switchTab('${tabId}')"]`);
+            if (clickedLink) {
+                clickedLink.classList.add('active');
+            }
 
             if (tabId === 'settings' && typeof restMapInstance !== 'undefined' && restMapInstance) {
-                setTimeout(() => restMapInstance.invalidateSize(), 250);
+                setTimeout(() => {
+                    restMapInstance.invalidateSize();
+                }, 250);
             }
 
             if (tabId === 'revenue') {
@@ -227,7 +440,9 @@
                 } else {
                     document.getElementById('noRestaurantRevenueState').style.display = 'none';
                     document.getElementById('restaurantRevenueSection').style.display = 'block';
-                    if (window.loadRestaurantRevenue) window.loadRestaurantRevenue();
+                    if (window.loadRestaurantRevenue) {
+                        window.loadRestaurantRevenue();
+                    }
                 }
             }
         };

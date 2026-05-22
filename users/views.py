@@ -7,6 +7,7 @@ from .serializers import UserSerializer, AdminUserSerializer
 from .throttles import AuthAnonRateThrottle
 from .services import send_sms_otp
 from .validators import validate_egyptian_phone, validate_strong_password
+from rest_framework_simplejwt.views import TokenObtainPairView
 
 from shops.models import Shop
 from restaurants.models import Restaurant

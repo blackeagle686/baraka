@@ -10,8 +10,8 @@ from orders.tasks import recalculate_shop_rating_stats
 from .models import Shop, Category, Product, Notification
 from orders.models import Order, OrderStatus
 
-from .serializers import ShopRating, ShopSerializer, ShopCreateSerializer, CategorySerializer, ProductSerializer, NotificationSerializer
-from .permissions import IsOwnerOrReadOnly, ShopRatingSerializer
+from .serializers import ShopRating, ShopSerializer, ShopRatingSerializer, ShopCreateSerializer, CategorySerializer, ProductSerializer, NotificationSerializer
+from .permissions import IsOwnerOrReadOnly
 
 from users.permissions import IsApprovedOrReadOnly
 

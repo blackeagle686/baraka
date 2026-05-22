@@ -408,17 +408,18 @@ show_logs() {
 
 setup_postgres() {
     sudo systemctl start postgresql 2>/dev/null || true
+    psql_su() { (cd /tmp && sudo -u postgres psql "$@"); }
     echo "  Creating role tlk@tlk..."
-    sudo -u postgres psql -tc "SELECT 1 FROM pg_roles WHERE rolname='tlk@tlk'" | grep -q 1 \
+    psql_su -tc "SELECT 1 FROM pg_roles WHERE rolname='tlk@tlk'" | grep -q 1 \
         && echo "  Role already exists" \
-        || sudo -u postgres psql -c "CREATE ROLE \"tlk@tlk\" LOGIN PASSWORD 'tlk_vesta_1680';"
+        || psql_su -c "CREATE ROLE \"tlk@tlk\" LOGIN PASSWORD 'tlk_vesta_1680';"
     echo "  Creating database baraka_db..."
-    sudo -u postgres psql -tc "SELECT 1 FROM pg_database WHERE datname='baraka_db'" | grep -q 1 \
+    psql_su -tc "SELECT 1 FROM pg_database WHERE datname='baraka_db'" | grep -q 1 \
         && echo "  Database already exists" \
-        || sudo -u postgres psql -c "CREATE DATABASE baraka_db OWNER \"tlk@tlk\";"
+        || psql_su -c "CREATE DATABASE baraka_db OWNER \"tlk@tlk\";"
     echo "  Granting privileges..."
-    sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE baraka_db TO \"tlk@tlk\";"
-    sudo -u postgres psql -d baraka_db -c "ALTER SCHEMA public OWNER TO \"tlk@tlk\";"
+    psql_su -c "GRANT ALL PRIVILEGES ON DATABASE baraka_db TO \"tlk@tlk\";"
+    psql_su -d baraka_db -c "ALTER SCHEMA public OWNER TO \"tlk@tlk\";"
     echo -e "  ${GREEN}✅${NC} PostgreSQL setup complete (user: tlk@tlk, db: baraka_db)"
 }
 

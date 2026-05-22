@@ -85,7 +85,7 @@ async function initRestProfile() {
             startRestAutoRefresh();
         } else {
             document.getElementById('restSettingsTitle').innerText = 'إنشاء مطعم جديد';
-            document.getElementById('noRestaurantRevenueState').style.display = 'block';
+            document.getElementById('noRestaurantRevenueState').classList.remove('d-none');
             initRestMap(null, null);
         }
     } catch (error) {

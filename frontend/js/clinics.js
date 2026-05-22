@@ -498,7 +498,7 @@ async function loadAvailableDates() {
         loadAvailableSlots();
     } catch (error) {
         console.error('Error loading available dates:', error);
-        section.style.display = 'none';
+        section.classList.add('clinic-booking-hidden');
     }
 }
 

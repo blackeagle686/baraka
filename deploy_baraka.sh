@@ -485,20 +485,13 @@ full_deploy() {
     ./venv/bin/pip install -r requirements.txt
 
     # 6. Environment Configurations
-    print_step "📝 [6/10] Assuring Production Environment Variables (.env)..."
+    print_step "📝 [6/10] Checking Environment Variables (.env)..."
     if [ ! -f ".env" ]; then
         cp .env.example .env
-        echo "  ✅ Generated standard production .env file."
+        echo "  ✅ Generated .env from .env.example."
+    else
+        echo "  ✅ .env already exists."
     fi
-    # Force-correct Celery/Redis URLs (replace any existing or duplicated values)
-    for var in REDIS_URL CELERY_BROKER_URL CELERY_RESULT_BACKEND; do
-        if grep -q "^${var}=" .env 2>/dev/null; then
-            sed -i "s|^${var}=.*$|${var}=redis://127.0.0.1:6380/1|" .env
-        else
-            echo "${var}=redis://127.0.0.1:6380/1" >> .env
-        fi
-    done
-    sed -i 's|^ALLOWED_HOSTS=.*$|ALLOWED_HOSTS=*,127.0.0.1,localhost|' .env
 
     # 7. Django DB Migrations & Static Files
     print_step "🚀 [7/10] Running schema migrations and building production tables..."
@@ -618,15 +611,6 @@ case "$COMMAND" in
         if [ ! -f ".env" ]; then
             cp .env.example .env
         fi
-        # Force-correct Celery/Redis URLs (replace any existing or duplicated values)
-        for var in REDIS_URL CELERY_BROKER_URL CELERY_RESULT_BACKEND; do
-            if grep -q "^${var}=" .env 2>/dev/null; then
-                sed -i "s|^${var}=.*$|${var}=redis://127.0.0.1:6380/1|" .env
-            else
-                echo "${var}=redis://127.0.0.1:6380/1" >> .env
-            fi
-        done
-        sed -i 's|^ALLOWED_HOSTS=.*$|ALLOWED_HOSTS=*,127.0.0.1,localhost|' .env
         print_step "📦 Running makemigrations..."
         ./venv/bin/python manage.py makemigrations
         print_step "🗄️  Running migrate..."

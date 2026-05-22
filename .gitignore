@@ -10,6 +10,6 @@ media/
 __pycache__/
 *.pyc
 *.log
-*.env
+.local.env
 *.sqlite
 chroma_db/

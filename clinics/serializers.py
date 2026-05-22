@@ -13,10 +13,24 @@ class MedicalServiceSerializer(serializers.ModelSerializer):
 
 
 class TimeSlotSerializer(serializers.ModelSerializer):
+    service_details = serializers.SerializerMethodField()
+
     class Meta:
         model = TimeSlot
         fields = '__all__'
         read_only_fields = ['clinic']
+
+    def get_service_details(self, obj):
+        if obj.service_id:
+            svc = obj.service
+            if svc:
+                return {
+                    'id': svc.id,
+                    'name': svc.name,
+                    'duration_minutes': svc.duration_minutes,
+                    'price': str(svc.price),
+                }
+        return None
 
 
 class AppointmentSerializer(serializers.ModelSerializer):

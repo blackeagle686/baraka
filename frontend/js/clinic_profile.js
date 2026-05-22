@@ -604,7 +604,7 @@ function populateManualSlotServiceSelect(services) {
     select.innerHTML = html;
 }
 
-async function generateSlots() {
+window.generateSlots = async function () {
     if (!currentClinicId) {
         if (window.showBarakaToast) {
             window.showBarakaToast('يجب إنشاء عيادة أولاً.', 'warning', 'bi-exclamation-triangle');
@@ -636,7 +636,7 @@ async function generateSlots() {
             alert('خطأ: ' + msg);
         }
     }
-}
+};
 
 async function handleManualSlotSubmit() {
     const token = localStorage.getItem('access_token');

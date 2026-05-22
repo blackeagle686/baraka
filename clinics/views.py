@@ -3,6 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
 from django.core.cache import cache
+from django.db import models
 from django.shortcuts import get_object_or_404
 
 import hashlib

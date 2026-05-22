@@ -740,7 +740,7 @@ function renderRatingsCard(clinic, canRate, existingRating) {
                 </div>
                 <input type="hidden" id="clinicRatingValue" value="0">
                 <input type="text" class="form-control form-control-sm rounded-pill text-center mb-2" id="clinicReviewText" placeholder="اكتب رأيك (اختياري)" style="font-size: 0.85rem;">
-                <button class="btn btn-marigold btn-sm rounded-pill text-white fw-bold px-4" onclick="submitClinicRating(${clinic.id})">إرسال التقييم</button>
+                <button class="btn btn-clinic btn-sm rounded-pill fw-bold px-4" onclick="submitClinicRating(${clinic.id})">إرسال التقييم</button>
             </div>`;
     } else if (existingRating) {
         rateFormHtml = `

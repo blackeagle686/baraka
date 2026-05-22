@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import Order, OrderItem, DriverRating
 from shops.models import Shop, Product
+from restaurants.models import Restaurant, MenuItem
 from users.serializers import UserSerializer
 
 class DriverRatingSerializer(serializers.ModelSerializer):

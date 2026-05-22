@@ -103,6 +103,7 @@ class DriverRating(models.Model):
     class RaterType(models.TextChoices):
         CUSTOMER = 'CUSTOMER', 'Customer'
         SHOP_OWNER = 'SHOP_OWNER', 'Shop Owner'
+        RESTAURANT_OWNER = 'RESTAURANT_OWNER', 'Restaurant Owner'
 
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='driver_ratings')
     driver = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='driver_received_ratings')

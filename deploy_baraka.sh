@@ -110,6 +110,10 @@ kill_pid() {
 
 start_django() {
     ensure_dirs
+    if [ ! -f "$SCRIPT_DIR/venv/bin/gunicorn" ]; then
+        print_error "Virtual environment not found! Run './deploy_baraka.sh deploy' first."
+        return 1
+    fi
     if is_running "$DJANGO_PID"; then
         print_warn "Django/Gunicorn is already running (PID $(cat "$DJANGO_PID"))"
         return
@@ -138,6 +142,10 @@ start_django() {
 
 start_celery() {
     ensure_dirs
+    if [ ! -f "$SCRIPT_DIR/venv/bin/celery" ]; then
+        print_error "Virtual environment not found! Run './deploy_baraka.sh deploy' first."
+        return 1
+    fi
     if is_running "$CELERY_PID"; then
         print_warn "Celery is already running (PID $(cat "$CELERY_PID"))"
         return

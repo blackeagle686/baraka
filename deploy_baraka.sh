@@ -355,7 +355,6 @@ full_deploy() {
     # 1. System Package Updates
     print_step "🔄 [1/10] Updating Ubuntu System Package Repository..."
     sudo apt-get update -y
-    sudo apt-get upgrade -y
 
     # 2. Dependency Installation
     print_step "📦 [2/10] Installing Core Dependencies (Python, PostgreSQL, Redis, Nginx, Git)..."

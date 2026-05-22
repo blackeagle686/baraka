@@ -4,12 +4,12 @@ from rest_framework.pagination import PageNumberPagination
 from django.contrib.auth import get_user_model
 from django.db.models import Q
 from .serializers import UserSerializer, AdminUserSerializer
-from .permissions import IsAdminUserRole
 from .throttles import AuthAnonRateThrottle
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from .services import send_sms_otp
+from .validators import validate_egyptian_phone, validate_strong_password
 
-from orders.models import Order
 from shops.models import Shop
+from restaurants.models import Restaurant
 from core.models import Report
 
 import random

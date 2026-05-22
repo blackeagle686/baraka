@@ -500,7 +500,7 @@ class AppointmentViewSet(viewsets.ModelViewSet):
 
 
 class ClinicNotificationViewSet(viewsets.ModelViewSet):
-    serializer_class = None
+    queryset = ClinicNotification.objects.none()
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):

@@ -439,6 +439,44 @@ function populateBookingServiceSelect(services) {
     }
 }
 
+async function loadAvailableDates() {
+    const section = document.getElementById('availableDatesSection');
+    const list = document.getElementById('availableDatesList');
+    if (!section || !list || !currentClinic) return;
+
+    try {
+        const dates = await api.clinics.getAvailableDates(currentClinic.id);
+        if (!dates || dates.length === 0) {
+            section.style.display = 'none';
+            return;
+        }
+
+        section.style.display = 'block';
+        list.innerHTML = '';
+        dates.forEach(d => {
+            const dateObj = new Date(d.date + 'T00:00:00');
+            const weekday = dateObj.toLocaleDateString('ar-EG', { weekday: 'short' });
+            const dayNum = dateObj.toLocaleDateString('ar-EG', { day: 'numeric' });
+            const month = dateObj.toLocaleDateString('ar-EG', { month: 'short' });
+            const btn = document.createElement('button');
+            btn.className = 'btn btn-sm rounded-pill px-3 fw-bold slot-date-chip';
+            btn.innerHTML = `${weekday} ${dayNum} ${month} <span class="badge bg-marigold text-white ms-1 rounded-pill" style="font-size:0.65rem;">${d.slot_count}</span>`;
+            btn.onclick = () => {
+                document.getElementById('bookingDate').value = d.date;
+                document.querySelectorAll('.slot-date-chip').forEach(b => b.classList.remove('btn-marigold', 'text-white'));
+                document.querySelectorAll('.slot-date-chip').forEach(b => b.classList.add('btn-outline-mesa'));
+                btn.classList.remove('btn-outline-mesa');
+                btn.classList.add('btn-marigold', 'text-white');
+                loadAvailableSlots();
+            };
+            list.appendChild(btn);
+        });
+    } catch (error) {
+        console.error('Error loading available dates:', error);
+        section.style.display = 'none';
+    }
+}
+
 async function loadAvailableSlots() {
     const serviceSelect = document.getElementById('bookingServiceSelect');
     const dateInput = document.getElementById('bookingDate');

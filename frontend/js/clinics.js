@@ -476,14 +476,14 @@ async function loadAvailableDates() {
             const btn = document.createElement('button');
             btn.className = 'btn btn-sm rounded-pill px-3 fw-bold slot-date-chip btn-outline-mesa';
             btn.innerHTML = `${weekday} ${dayNum} ${month} <span class="badge bg-marigold text-white ms-1 rounded-pill" style="font-size:0.65rem;">${d.slot_count}</span>`;
-            btn.onclick = () => {
+                    btn.onclick = () => {
                 document.getElementById('bookingDate').value = d.date;
                 document.querySelectorAll('.slot-date-chip').forEach(b => {
-                    b.classList.remove('btn-marigold', 'text-white');
+                    b.classList.remove('btn-clinic', 'text-white');
                     b.classList.add('btn-outline-mesa');
                 });
                 btn.classList.remove('btn-outline-mesa');
-                btn.classList.add('btn-marigold', 'text-white');
+                btn.classList.add('btn-clinic', 'text-white');
                 loadAvailableSlots();
             };
             list.appendChild(btn);
@@ -491,7 +491,7 @@ async function loadAvailableDates() {
             if (idx === 0) {
                 document.getElementById('bookingDate').value = d.date;
                 btn.classList.remove('btn-outline-mesa');
-                btn.classList.add('btn-marigold', 'text-white');
+                btn.classList.add('btn-clinic', 'text-white');
             }
         });
         // Load slots for the first date

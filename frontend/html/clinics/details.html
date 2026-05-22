@@ -8,110 +8,102 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/main_style.css">
-    <link rel="stylesheet" href="/css/shops.css">
     <link rel="stylesheet" href="/css/clinics.css">
 </head>
 <body class="bg-dune">
 
     <div id="header-placeholder"></div>
 
-    <!-- Cover Banner -->
     <div id="clinicCoverBanner"></div>
 
     <div class="container py-4">
         <div class="row g-4">
-            <!-- Main Content -->
             <div class="col-lg-8">
 
-                <!-- Services Card -->
-                <div class="dashboard-card mb-4 animate-up" id="clinicServicesCard">
-                    <div class="dashboard-section-title">
-                        <span><i class="bi bi-prescription2 text-marigold me-2"></i>الخدمات المتاحة</span>
+                <div class="clinic-card mb-4 animate-up" id="clinicServicesCard">
+                    <div class="clinic-card-title">
+                        <span><i class="bi bi-prescription2" style="color: var(--clinic-primary); me-2"></i> الخدمات المتاحة</span>
                     </div>
                     <div id="servicesList" class="row g-3">
-                        <div class="text-center py-4 text-mesa">
-                            <div class="spinner-border text-marigold mb-3" role="status"></div>
-                            <p>جاري تحميل الخدمات...</p>
+                        <div class="col-12">
+                            <div class="text-center py-4 text-mesa">
+                                <div class="spinner-border mb-3" style="color: var(--clinic-primary);" role="status"></div>
+                                <p>جاري تحميل الخدمات...</p>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Booking Card -->
-                <div class="dashboard-card mb-4 animate-up" id="bookingCard">
-                    <div class="dashboard-section-title">
-                        <span><i class="bi bi-calendar-check text-marigold me-2"></i>احجز موعد</span>
+                <div class="clinic-card mb-4 animate-up" id="bookingCard">
+                    <div class="clinic-card-title">
+                        <span><i class="bi bi-calendar-check" style="color: var(--clinic-primary); me-2"></i> احجز موعد</span>
                     </div>
 
                     <div id="bookingFormSection">
                         <div class="mb-3">
-                            <label class="form-label text-espresso fw-bold"><i class="bi bi-prescription me-1"></i>اختر الخدمة</label>
+                            <label class="form-label fw-bold text-espresso"><i class="bi bi-prescription me-1"></i> اختر الخدمة</label>
                             <select class="form-select rounded-pill px-4 py-2" id="bookingServiceSelect">
                                 <option value="" disabled selected>اختر الخدمة أولاً...</option>
                             </select>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label text-espresso fw-bold"><i class="bi bi-calendar me-1"></i>اختر التاريخ</label>
+                            <label class="form-label fw-bold text-espresso"><i class="bi bi-calendar me-1"></i> اختر التاريخ</label>
                             <input type="date" class="form-control rounded-pill px-4 py-2" id="bookingDate">
                         </div>
 
-                        <!-- Available Dates Quick Pick -->
-                        <div id="availableDatesSection" style="display: none;" class="mb-3">
-                            <label class="form-label text-espresso fw-bold mb-2"><i class="bi bi-calendar-check me-1"></i>الأيام المتاحة للحجز</label>
+                        <div id="availableDatesSection" class="clinic-booking-hidden mb-3">
+                            <label class="form-label fw-bold text-espresso mb-2"><i class="bi bi-calendar-check me-1"></i> الأيام المتاحة للحجز</label>
                             <div class="d-flex flex-wrap gap-2" id="availableDatesList"></div>
                         </div>
 
-                        <div id="timeSlotsSection" style="display: none;">
-                            <label class="form-label text-espresso fw-bold mb-3"><i class="bi bi-clock me-1"></i>اختر الموعد المناسب</label>
-                            <div class="row g-2" id="timeSlotsGrid">
-                                <!-- Loaded dynamically -->
-                            </div>
+                        <div id="timeSlotsSection" class="clinic-booking-hidden">
+                            <label class="form-label fw-bold text-espresso mb-3"><i class="bi bi-clock me-1"></i> اختر الموعد المناسب</label>
+                            <div class="row g-2" id="timeSlotsGrid"></div>
                         </div>
 
-                        <div class="mb-3" id="bookingNotesSection" style="display: none;">
-                            <label class="form-label text-espresso fw-bold"><i class="bi bi-chat-dots me-1"></i>ملاحظات (اختياري)</label>
+                        <div id="bookingNotesSection" class="clinic-booking-hidden mb-3">
+                            <label class="form-label fw-bold text-espresso"><i class="bi bi-chat-dots me-1"></i> ملاحظات (اختياري)</label>
                             <textarea class="form-control rounded-4 px-4 py-2" id="bookingNotes" rows="2" placeholder="أي ملاحظات للدكتور..."></textarea>
                         </div>
 
-                        <button class="btn btn-marigold w-100 rounded-pill py-2 fw-bold text-white shadow-sm" id="confirmBookingBtn" style="display: none;" onclick="submitBooking()">
-                            <i class="bi bi-check2-circle me-1"></i>تأكيد الحجز
+                        <button class="btn w-100 rounded-pill py-2 fw-bold text-white shadow-sm clinic-booking-hidden" id="confirmBookingBtn" onclick="submitBooking()" style="background: var(--clinic-primary);">
+                            <i class="bi bi-check2-circle me-1"></i> تأكيد الحجز
                         </button>
                     </div>
 
-                    <div id="bookingSuccessSection" style="display: none;" class="text-center py-4">
+                    <div id="bookingSuccessSection" class="clinic-booking-hidden text-center py-4">
                         <div class="mb-3" style="font-size: 4rem; color: #22c55e;">
                             <i class="bi bi-check-circle-fill"></i>
                         </div>
-                        <h4 class="fw-bold text-espresso">تم الحجز بنجاح! ✅</h4>
+                        <h4 class="fw-bold text-espresso">تم الحجز بنجاح!</h4>
                         <p class="text-mesa" id="bookingSuccessDetails">تم إرسال طلب الحجز إلى العيادة وسيتم تأكيده قريباً.</p>
                         <a href="/html/clinics/list.html" class="btn btn-outline-mesa rounded-pill px-4 fw-bold mt-2">
-                            <i class="bi bi-arrow-right-short me-1"></i>العودة للعيادات
+                            <i class="bi bi-arrow-right-short me-1"></i> العودة للعيادات
                         </a>
                     </div>
                 </div>
 
-                <!-- Ratings Card -->
-                <div class="dashboard-card animate-up" id="clinicRatingsCard">
-                    <div class="dashboard-section-title">
-                        <span><i class="bi bi-star-fill text-warning me-2"></i>التقييمات</span>
+                <div class="clinic-card animate-up" id="clinicRatingsCard">
+                    <div class="clinic-card-title">
+                        <span><i class="bi bi-star-fill text-warning me-2"></i> التقييمات</span>
                     </div>
                     <div id="ratingsContent">
                         <div class="text-center py-4 text-mesa">
-                            <div class="spinner-border text-marigold mb-3" role="status"></div>
+                            <div class="spinner-border mb-3" style="color: var(--clinic-primary);" role="status"></div>
                             <p>جاري تحميل التقييمات...</p>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Sidebar -->
             <div class="col-lg-4">
-                <div class="dashboard-card sticky-top animate-up" style="top: 90px;">
-                    <div class="dashboard-section-title">
-                        <span><i class="bi bi-info-circle text-marigold me-2"></i>معلومات العيادة</span>
+                <div class="clinic-card sticky-top animate-up" style="top: 90px;">
+                    <div class="clinic-card-title">
+                        <span><i class="bi bi-info-circle" style="color: var(--clinic-primary); me-2"></i> معلومات العيادة</span>
                     </div>
                     <div id="clinicInfoSidebar">
                         <div class="text-center py-4 text-mesa">
-                            <div class="spinner-border text-marigold mb-3" role="status"></div>
+                            <div class="spinner-border mb-3" style="color: var(--clinic-primary);" role="status"></div>
                             <p>جاري التحميل...</p>
                         </div>
                     </div>
@@ -119,6 +111,13 @@
             </div>
         </div>
     </div>
+
+    <div id="footer-placeholder"></div>
+
+    <button class="clinic-floating-btn" id="clinicFloatingBtn" onclick="document.getElementById('bookingCard').scrollIntoView({ behavior: 'smooth' })">
+        <i class="bi bi-calendar-check fs-5"></i>
+        <span>احجز موعد</span>
+    </button>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/js/api.js"></script>

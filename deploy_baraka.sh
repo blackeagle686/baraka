@@ -504,8 +504,13 @@ full_deploy() {
 
     # 8. Setup Nginx Reverse Proxy
     print_step "🌐 [8/10] Configuring Nginx web server for Reverse Proxy..."
-    chmod o+x "$SCRIPT_DIR" || true
-    chmod o+x "$(dirname "$SCRIPT_DIR")" || true
+    # Make entire path to frontend traversable by nginx (www-data)
+    local dir="$SCRIPT_DIR"
+    while [ "$dir" != "/" ]; do
+        chmod o+x "$dir" 2>/dev/null || true
+        dir="$(dirname "$dir")"
+    done
+    chmod -R o+rX "$SCRIPT_DIR/frontend" 2>/dev/null || true
 
     NGINX_CONF="/etc/nginx/sites-available/baraka"
     sudo tee $NGINX_CONF > /dev/null <<EOF

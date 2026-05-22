@@ -69,6 +69,8 @@ function renderHeader() {
             `;
         } else if (userRole === 'DRIVER') {
             roleBadge = `<a href="/html/profile/driver.html" class="btn btn-success btn-sm rounded-pill fw-bold text-white px-3 py-1 me-2" style="font-size: 0.8rem;"><i class="bi bi-bicycle me-1"></i>لوحة الطيار</a>`;
+        } else if (userRole === 'DOCTOR') {
+            roleBadge = `<a href="/html/profile/clinic.html" class="btn btn-info btn-sm rounded-pill fw-bold text-white px-3 py-1 me-2" style="font-size: 0.8rem;"><i class="bi bi-heart-pulse me-1"></i>عيادتي</a>`;
         } else if (userRole === 'ADMIN') {
             roleBadge = `<a href="/html/admin/dashboard.html" class="btn btn-danger btn-sm rounded-pill fw-bold text-white px-3 py-1 me-2" style="font-size: 0.8rem;"><i class="bi bi-shield-lock me-1"></i>لوحة التحكم</a>`;
             profileLink = '/html/admin/dashboard.html';

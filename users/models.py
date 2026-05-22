@@ -5,6 +5,7 @@ from django.contrib.auth.base_user import BaseUserManager
 class UserRole(models.TextChoices):
     CUSTOMER = 'CUSTOMER', 'Customer'
     SHOP_OWNER = 'SHOP_OWNER', 'Shop Owner'
+    RESTAURANT_OWNER = 'RESTAURANT_OWNER', 'Restaurant Owner'
     DRIVER = 'DRIVER', 'Driver'
     DOCTOR = 'DOCTOR', 'Doctor'
     ADMIN = 'ADMIN', 'Admin'

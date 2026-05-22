@@ -208,6 +208,35 @@ class ClinicViewSet(viewsets.ModelViewSet):
         serializer = TimeSlotSerializer(slots, many=True)
         return Response(serializer.data)
 
+    @action(detail=True, methods=['get'])
+    def available_dates(self, request, pk=None):
+        clinic = self.get_object()
+        service_id = request.query_params.get('service_id')
+        from datetime import date as date_type
+
+        qs = TimeSlot.objects.filter(
+            clinic=clinic,
+            date__gte=date_type.today(),
+            is_available=True
+        ).values('date').annotate(
+            slot_count=models.Count('id')
+        ).order_by('date')[:31]
+
+        if service_id:
+            qs = TimeSlot.objects.filter(
+                clinic=clinic,
+                service_id=service_id,
+                date__gte=date_type.today(),
+                is_available=True
+            ).values('date').annotate(
+                slot_count=models.Count('id')
+            ).order_by('date')[:31]
+
+        return Response([
+            {'date': d['date'].isoformat(), 'slot_count': d['slot_count']}
+            for d in qs
+        ])
+
     @action(detail=True, methods=['post'],
             permission_classes=[permissions.IsAuthenticated])
     def rate(self, request, pk=None):

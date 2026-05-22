@@ -378,39 +378,57 @@ class OrderViewSet(viewsets.ModelViewSet):
         
         # Identify the shops owned by this user that are involved in this order
         shops_owned_by_user = Shop.objects.filter(owner=request.user)
-        order_items_belonging_to_user_shops = order.items.filter(product__shop__in=shops_owned_by_user)
+        from restaurants.models import Restaurant
         
-        if not order_items_belonging_to_user_shops.exists() and not request.user.is_staff:
+        shops_owned_by_user = Shop.objects.filter(owner=request.user)
+        order_items_belonging_to_user_shops = order.items.filter(product__shop__in=shops_owned_by_user)
+        restaurants_owned_by_user = Restaurant.objects.filter(owner=request.user)
+        order_menu_items_belonging_to_user = order.items.filter(menu_item__restaurant__in=restaurants_owned_by_user)
+        
+        if not order_items_belonging_to_user_shops.exists() and not order_menu_items_belonging_to_user.exists() and not request.user.is_staff:
             return Response({"detail": "Not authorized to settle this order's cash."},
                             status=status.HTTP_403_FORBIDDEN)
-            
-        # Enforce Driver OTP code verification for shop owners confirming receipt of money
+
         driver_otp = request.data.get('driver_otp')
         
-        # Verify the shop-specific OTP for each shop owned by this user
         for item in order_items_belonging_to_user_shops:
             if item.product and item.product.shop:
                 shop_otp = order.get_or_create_shop_otp(item.product.shop.id)
                 if not driver_otp or driver_otp != shop_otp:
                     return Response({"detail": "رمز تصفية الحساب غير صحيح! يرجى إدخال الرمز المكون من 4 أرقام الموضح على شاشة الطيار لتأكيد التصفية."},
                                     status=status.HTTP_400_BAD_REQUEST)
+        
+        for item in order_menu_items_belonging_to_user:
+            if item.menu_item and item.menu_item.restaurant:
+                rest_otp = order.get_or_create_shop_otp(f"r_{item.menu_item.restaurant.id}")
+                if not driver_otp or driver_otp != rest_otp:
+                    return Response({"detail": "رمز تصفية الحساب غير صحيح! يرجى إدخال الرمز المكون من 4 أرقام الموضح على شاشة الطيار لتأكيد التصفية."},
+                                    status=status.HTTP_400_BAD_REQUEST)
 
-        # Parse current paid shops list
         paid_shops_list = [id_str for id_str in order.paid_shops.split(',') if id_str]
         
-        # Add the shops belonging to the current user to the paid shops list
         for item in order_items_belonging_to_user_shops:
             if item.product and item.product.shop:
                 shop_id_str = str(item.product.shop.id)
                 if shop_id_str not in paid_shops_list:
                     paid_shops_list.append(shop_id_str)
+        
+        for item in order_menu_items_belonging_to_user:
+            if item.menu_item and item.menu_item.restaurant:
+                rest_id_str = f"r_{item.menu_item.restaurant.id}"
+                if rest_id_str not in paid_shops_list:
+                    paid_shops_list.append(rest_id_str)
                     
         order.paid_shops = ','.join(paid_shops_list)
         
-        # Check if all shops involved in this order have been paid
-        all_involved_shop_ids = set(str(item.product.shop.id) for item in order.items.all() if item.product and item.product.shop)
+        all_involved_ids = set()
+        for item in order.items.all():
+            if item.product and item.product.shop:
+                all_involved_ids.add(str(item.product.shop.id))
+            if item.menu_item and item.menu_item.restaurant:
+                all_involved_ids.add(f"r_{item.menu_item.restaurant.id}")
         
-        if all_involved_shop_ids.issubset(set(paid_shops_list)):
+        if all_involved_ids.issubset(set(paid_shops_list)):
             order.is_paid_to_shop = True
             
         order.save()
@@ -446,14 +464,14 @@ class OrderViewSet(viewsets.ModelViewSet):
             Notification.objects.create(
                 user=shop.owner,
                 shop=shop,
-                title="🚪 تأجيل تصفية الحساب لإغلاق المحل",
+                title="\U0001f6aa تأجيل تصفية الحساب لإغلاق المحل",
                 message=(
                     f"أبلغ الطيار {request.user.phone} عن إغلاق المحل أو عدم توفر المالك للطلب #{order.id}. "
                     f"تم تأجيل تصفية حسابه مؤقتاً حتى تقوم بالفتح وإعادة التسوية."
                 ),
                 notification_type='shop_settlement_postponed'
             )
-            
+
         return Response(self.get_serializer(order).data)
 
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated, IsApprovedUser])

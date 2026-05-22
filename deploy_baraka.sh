@@ -461,10 +461,15 @@ full_deploy() {
     print_step "📝 [6/10] Assuring Production Environment Variables (.env)..."
     if [ ! -f ".env" ]; then
         cp .env.example .env
-        # Override for production
-        sed -i 's|^ALLOWED_HOSTS=.*$|ALLOWED_HOSTS=*,127.0.0.1,localhost|' .env
         echo "  ✅ Generated standard production .env file."
     fi
+    # Ensure Celery/Redis URLs are set (avoid kombu parsing bugs)
+    for var in REDIS_URL CELERY_BROKER_URL CELERY_RESULT_BACKEND; do
+        if ! grep -q "^${var}=" .env 2>/dev/null; then
+            echo "${var}=redis://127.0.0.1:6380/1" >> .env
+        fi
+    done
+    sed -i 's|^ALLOWED_HOSTS=.*$|ALLOWED_HOSTS=*,127.0.0.1,localhost|' .env
 
     # 7. Django DB Migrations & Static Files
     print_step "🚀 [7/10] Running schema migrations and building production tables..."
@@ -583,8 +588,14 @@ case "$COMMAND" in
         ./venv/bin/pip install -r requirements.txt
         if [ ! -f ".env" ]; then
             cp .env.example .env
-            sed -i 's|^ALLOWED_HOSTS=.*$|ALLOWED_HOSTS=*,127.0.0.1,localhost|' .env
         fi
+        # Ensure Celery/Redis URLs are explicitly set (avoid kombu parsing issues)
+        for var in REDIS_URL CELERY_BROKER_URL CELERY_RESULT_BACKEND; do
+            if ! grep -q "^${var}=" .env 2>/dev/null; then
+                echo "${var}=redis://127.0.0.1:6380/1" >> .env
+            fi
+        done
+        sed -i 's|^ALLOWED_HOSTS=.*$|ALLOWED_HOSTS=*,127.0.0.1,localhost|' .env
         print_step "📦 Running makemigrations..."
         ./venv/bin/python manage.py makemigrations
         print_step "🗄️  Running migrate..."

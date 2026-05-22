@@ -326,12 +326,10 @@ const REST_ORDERS_PAGE_SIZE = 4;
 
 window.filterRestOrders = function(filter, el) {
     restOrderFilter = filter;
-    document.querySelectorAll('#orderFilterTabs .badge').forEach(b => {
-        b.style.background = 'white';
-        b.style.color = '#666';
-        b.style.border = '1px solid #ddd';
+    document.querySelectorAll('#orderFilterTabs .rest-filter-badge').forEach(b => {
+        b.classList.remove('active');
     });
-    if (el) { el.style.background = 'var(--restaurant-primary)'; el.style.color = 'white'; el.style.border = 'none'; }
+    if (el) el.classList.add('active');
     currentRestOrdersPage = 1;
     renderRestOrders(currentRestOrders);
 };

@@ -1,63 +1,287 @@
-Goal
-Transform the existing platform into a comprehensive clinic booking system.
-Constraints & Preferences
-Doctor registration must use the existing auth system and user roles.
-Clinic dashboard must mirror the shop owner dashboard flow.
-Revenue dashboard must reuse the shop_revenue.js / delivery_revenue.js pattern.
-Notifications must reuse the existing notification engine.
-All UI must follow the existing Egyptian-themed design system (CSS variables, glassmorphism, Bootstrap RTL).
-Timeslot selection must be specific date‑time (not just a date).
-Progress
-Done
-Auto-refresh (every 15 sec) added to driver dashboard orders list (driver_profile.js, driver.html).
-Auto-refresh (every 15 sec) added to shop owner orders list (shop_profile.js, shop.html).
-CSS .bi-arrow-clockwise-spin animation added for refresh button spinner.
-In Progress
-(none)
-Blocked
-(none)
-Key Decisions
-Clinic feature will follow the exact same architectural pattern as Shops → Products → Orders.
-Doctor role should be a new user role (e.g. DOCTOR) distinct from SHOP_OWNER.
-Clinic timeslots will be a new model (Timeslot) tied to a Clinic, each with start/end time and is_booked boolean.
-Booking will replace the existing Order flow but with date‑time selection instead of cart/checkout.
-A new dedicated clinics Django app will mirror the shops app structure.
-Next Steps
-Create the clinics Django app with models: Clinic, Timeslot, Booking, ClinicRating, ClinicNotification.
-Add DOCTOR role to the User model (or use a separate profile).
-Implement backend APIs: CRUD clinics, timeslot management, booking creation, revenue aggregation.
-Build frontend pages: doctor dashboard, clinic setup form, clinic public detail page, user booking flow, revenue dashboard.
-Wire notifications into the booking lifecycle (new booking → doctor, status change → user).
-Critical Context
-Backend is Django DRF with JWT auth (the existing auth system). A new clinics app will reuse the same patterns as shops and orders.
-Frontend is vanilla HTML/CSS/JS — no JS framework. All pages are static HTML served by nginx, communicating via the shared api.js client.
-The platform is in active development – careful to keep existing apps unchanged (sessions 8–13 for shops/orders are already in production).
-Relevant Files
-backend/baraka/urls.py: Root URL router – new clinics/ routes must be registered here.
-backend/shops/models.py, views.py, serializers.py, urls.py: Reference template for the new clinics app.
-backend/shops/permissions.py: IsOwnerOrReadOnly pattern to reuse.
-backend/users/models.py: User model – needs DOCTOR role added.
-frontend/js/api.js: API client – new api.clinics section must be added here.
-frontend/js/shop_profile.js, html/profile/shop.html: Exact blueprint for the doctor dashboard.
-frontend/js/shop_revenue.js: Blueprint for clinic revenue dashboard.
-frontend/js/shops.js, html/shops/list.html, html/shops/details.html: Blueprint for clinic search/list/detail pages.
-frontend/css/profile.css, main_style.css: All styling patterns to reuse.
-The plan is ready. Here's a summary of what we'll build:
+Here's the complete plan for the Clinic Booking System feature:
 
-Backend (Django):
+1. Backend: New Django App clinics
+1.1 New Role: DOCTOR
+users/models.py — Add to UserRole:
 
-New DOCTOR role in users/models.py
-New clinics app with 4 models: Clinic, MedicalService, TimeSlot, Appointment
-Slot auto-generation logic based on opening_time → closing_time + service duration
-ViewSets + serializers following the exact same patterns as shops/products/orders
-Notifications integrated for booking lifecycle
-Revenue aggregation from completed appointments
-Frontend:
+class UserRole(models.TextChoices):
+    CUSTOMER = 'CUSTOMER'
+    SHOP_OWNER = 'SHOP_OWNER'
+    DRIVER = 'DRIVER'
+    DOCTOR = 'DOCTOR'    # ← NEW
+    ADMIN = 'ADMIN'
+Doctors register with role=DOCTOR and require admin approval (is_approved=False), same as SHOP_OWNER/DRIVER.
 
-html/clinics/list.html — directory with search, specialization filter, map
-html/clinics/details.html — clinic detail + service selection + date picker + slot grid + booking
-html/profile/clinic.html — doctor dashboard: appointments, services, slots calendar, revenue, settings
-js/clinics.js, js/clinic_profile.js, js/clinic_revenue.js, css/clinics.css
-Modified api.js, auth.js, main.js for DOCTOR role
-Implementation order: Role → models → serializers → permissions → views → URLs → slot logic → signals → API client → list page → detail page → dashboard → revenue → CSS → auth updates
+1.2 New Models (clinics/models.py)
+Clinic — mirrors Shop:
 
+Field	Type	Notes
+doctor	FK → User (DOCTOR)	related_name='clinics'
+name	CharField(255)	
+description	TextField	nullable
+specialization	CharField(100)	e.g., "قلب", "أطفال", "جلدية"
+phone	CharField(20)	clinic contact
+image	ImageField	upload_to='clinics/'
+address	CharField(255)	
+latitude	Decimal(9,6)	nullable
+longitude	Decimal(9,6)	nullable
+is_open	BooleanField	default=True
+opening_time	TimeField	nullable
+closing_time	TimeField	nullable
+created_at	DateTimeField	auto_now_add
+MedicalService — mirrors Product (doctor's offerings):
+
+Field	Type	Notes
+clinic	FK → Clinic	related_name='services'
+name	CharField(255)	e.g., "كشف عام", "متابعة ضغط"
+description	TextField	nullable
+price	Decimal(10,2)	
+duration_minutes	PositiveIntegerField	e.g., 30, 45, 60
+is_active	BooleanField	default=True
+created_at	DateTimeField	auto_now_add
+TimeSlot — available appointment windows:
+
+Field	Type	Notes
+clinic	FK → Clinic	related_name='time_slots'
+date	DateField	
+start_time	TimeField	
+end_time	TimeField	
+is_available	BooleanField	default=True (set False when booked or manually blocked)
+is_auto_generated	BooleanField	default=True (False if doctor manually added)
+service	FK → MedicalService	nullable, which service this slot is for
+created_at	DateTimeField	auto_now_add
+Meta		unique_together = ('clinic', 'date', 'start_time')
+Appointment — mirrors Order:
+
+Field	Type	Notes
+clinic	FK → Clinic	
+patient	FK → User (CUSTOMER)	
+service	FK → MedicalService	nullable
+time_slot	FK → TimeSlot	nullable, set null on cancel
+date	DateField	
+start_time	TimeField	
+end_time	TimeField	
+status	CharField(20)	PENDING → CONFIRMED → COMPLETED / CANCELLED
+notes	TextField	patient notes, nullable
+price	Decimal(10,2)	snapshot of service price at booking time
+created_at	DateTimeField	auto_now_add
+updated_at	DateTimeField	auto_now
+Appointment statuses:
+
+class AppointmentStatus(models.TextChoices):
+    PENDING = 'PENDING'
+    CONFIRMED = 'CONFIRMED'
+    COMPLETED = 'COMPLETED'
+    CANCELLED = 'CANCELLED'
+1.3 Slot Auto-Generation Logic
+In Clinic model or a service function:
+
+def generate_slots_for_date(clinic, date):
+    """Auto-generate time slots for a given date based on clinic hours and services."""
+    if not clinic.opening_time or not clinic.closing_time:
+        return
+    
+    services = clinic.services.filter(is_active=True)
+    if not services:
+        return  # no services → no slots
+    
+    # For each service, create slots from opening_time to closing_time
+    for service in services:
+        current = datetime.combine(date, clinic.opening_time)
+        end = datetime.combine(date, clinic.closing_time)
+        
+        while current + timedelta(minutes=service.duration_minutes) <= end:
+            slot_end = current + timedelta(minutes=service.duration_minutes)
+            
+            # Don't duplicate if manually created slot exists
+            existing = TimeSlot.objects.filter(
+                clinic=clinic, date=date,
+                start_time=current.time()
+            ).first()
+            if not existing:
+                TimeSlot.objects.create(
+                    clinic=clinic, date=date,
+                    start_time=current.time(),
+                    end_time=slot_end.time(),
+                    is_available=True,
+                    is_auto_generated=True,
+                    service=service
+                )
+            
+            current = slot_end
+When to generate:
+
+On clinic save (update closing_time or opening_time)
+On service save (add/update duration)
+Daily Celery task or on-demand via API
+Doctor can manually trigger generation for a date range
+When a slot is booked → is_available = False. When doctor toggles is_open = False → new bookings blocked, existing ones remain.
+
+1.4 API Endpoints
+Following the same ViewSet + DefaultRouter pattern as shops:
+
+Method	URL	Purpose
+GET/POST	/api/clinics/	List clinics (searchable, filterable by specialization) / Create clinic (DOCTOR)
+GET/PUT/PATCH/DELETE	/api/clinics/{id}/	Clinic detail
+GET	/api/clinics/my_clinic/	Current doctor's clinic
+POST	/api/clinics/{id}/toggle_status/	Toggle is_open
+POST	/api/clinics/{id}/generate_slots/	Generate slots for date range (body: { start_date, end_date })
+GET	/api/clinics/{id}/available_slots/?date=YYYY-MM-DD&service_id=X	Get available time slots for a date+service
+| GET/POST | /api/services/ | List / Create service (DOCTOR) | | GET/PUT/PATCH/DELETE | /api/services/{id}/ | Service CRUD |
+
+| GET/POST | /api/appointments/ | List (role-scoped: patient sees own, doctor sees clinic's) / Create booking | | GET | /api/appointments/{id}/ | Detail | | POST | /api/appointments/{id}/update_status/ | Doctor: CONFIRMED, COMPLETED, CANCELLED |
+
+1.5 Notifications
+Add new notification_type values:
+
+new_appointment → notify doctor when patient books
+appointment_confirmed → notify patient when doctor confirms
+appointment_cancelled → notify patient when doctor cancels
+appointment_reminder → (optional, for future Celery task)
+1.6 Permissions
+IsDoctorOrReadOnly — only doctor can create/update their clinic
+IsPatientOrDoctor — appointment detail visible to patient and the clinic's doctor
+Doctor approval flow: is_approved check same as SHOP_OWNER
+1.7 Revenue (Doctor Dashboard)
+Same pattern as shop_revenue.js — calculate from completed appointments:
+
+total_appointments — count of COMPLETED
+total_revenue — sum of prices of COMPLETED
+pending_appointments — count of PENDING + CONFIRMED
+cancelled_appointments — count of CANCELLED
+avg_revenue_per_appointment
+2. Frontend
+2.1 New API Client (js/api.js)
+Add namespaces following existing pattern:
+
+const api = {
+    // ... existing auth, shops, orders, admin, notifications
+    clinics: {
+        getAll: async (page = 1, search = '', specialization = '') => { ... },
+        getById: async (id) => { ... },
+        getMyClinic: async (token) => { ... },
+        createClinic: async (token, formData) => { ... },
+        updateClinic: async (token, clinicId, formData) => { ... },
+        toggleStatus: async (token, clinicId) => { ... },
+        getAvailableSlots: async (clinicId, date, serviceId) => { ... },
+        generateSlots: async (token, clinicId, startDate, endDate) => { ... },
+    },
+    services: {
+        getAll: async (clinicId) => { ... },
+        create: async (token, formData) => { ... },
+        update: async (token, serviceId, formData) => { ... },
+        delete: async (token, serviceId) => { ... },
+    },
+    appointments: {
+        getAll: async (token) => { ... },
+        create: async (token, data) => { ... },
+        updateStatus: async (token, appointmentId, status) => { ... },
+    },
+};
+2.2 New Pages
+a) Clinic Directory — html/clinics/list.html + js/clinics.js
+Pattern: copy from shops/list.html + shops.js
+
+Split layout: left sidebar with search + specialization filter pills + clinic cards + pagination
+Right side: Leaflet map with clinic markers
+Clinic card: image, name, specialization, rating, address, open/closed badge
+Search by name/specialization
+Click → /html/clinics/details.html?id=X
+b) Clinic Detail — html/clinics/details.html + js/clinics.js
+Pattern: copy from shops/details.html
+
+Cover banner with clinic name, specialization, rating, open/closed badge
+Doctor info + contact
+Services list with prices and durations
+Date picker → loads available time slots
+Slot grid: click to select → confirm booking modal
+Booking confirmation with appointment details
+c) Doctor Dashboard — html/profile/clinic.html + js/clinic_profile.js
+Pattern: copy from html/profile/shop.html + shop_profile.js
+
+Tabs:
+
+Overview — Stats cards: today's appointments, total patients, total revenue
+Appointments — List of bookings with status, filter by date/status, confirm/complete/cancel actions, auto-refresh every 15s
+Services — CRUD medical services (name, price, duration in minutes)
+Slots — Calendar view, generate slots for date range, manually add/block slots
+Revenue — Revenue dashboard (same glass card pattern as shop_revenue)
+Settings — Edit clinic profile, hours, map location (Leaflet), toggle open/closed
+2.3 Modified Files
+js/auth.js — Add DOCTOR to role-based redirect:
+
+if (profile.role === 'DOCTOR') {
+    window.location.href = '/html/profile/clinic.html';
+}
+js/main.js — Add DOCTOR to header role handling:
+
+if (userRole === 'DOCTOR') {
+    roleBadge = `<a href="/html/profile/clinic.html" class="btn ...">عيادتي</a>`;
+    profileLink = '/html/profile/clinic.html';
+}
+And add clinic explore link for customers:
+
+<a class="nav-link" href="/html/clinics/list.html">
+    <i class="bi bi-heart-pulse"></i><span>عيادات القرية</span>
+</a>
+css/clinics.css — New file with clinic-specific styles (or merge into shops.css)
+
+3. Implementation Order
+Step	What	Files
+1	Add DOCTOR role + migration	users/models.py
+2	Create clinics app + models + migration	clinics/models.py
+3	Serializers	clinics/serializers.py
+4	Permissions	clinics/permissions.py
+5	Views + ViewSets	clinics/views.py
+6	URLs + root routing	clinics/urls.py, backend/urls.py
+7	Slot generation logic	clinics/services.py
+8	Notifications integration	clinics/signals.py
+9	Add api.clinics.* to frontend	frontend/js/api.js
+10	Clinic list page	frontend/html/clinics/list.html, frontend/js/clinics.js
+11	Clinic detail + booking	frontend/html/clinics/details.html
+12	Doctor dashboard	frontend/html/profile/clinic.html, frontend/js/clinic_profile.js
+13	Doctor revenue	frontend/js/clinic_revenue.js
+14	CSS	frontend/css/clinics.css
+15	Header/auth updates	frontend/js/main.js, frontend/js/auth.js
+4. Booking Flow (User Side)
+User visits /clinics/list.html
+         │
+         ├── Search by name / filter by specialization
+         │
+         ▼
+    Click clinic card
+         │
+         ▼
+    /clinics/details.html?id=X
+         │
+         ├── View clinic info, doctor, services
+         ├── Pick a service (e.g., "كشف عام" — 30 min, 100 ج.م)
+         │
+         ▼
+    Pick a date → system shows available slots for that date+service
+         │
+         ▼
+    Click a time slot → confirm modal
+         │
+         ▼
+    Confirm booking → POST /api/appointments/
+         │
+         ▼
+    Doctor gets notification
+    Appointment status: PENDING
+         │
+         ▼
+    Doctor confirms → status: CONFIRMED → patient notified
+         │
+         ▼
+    Patient arrives → appointment completed → status: COMPLETED
+5. Key Differences from Shop System
+Shop	Clinic
+SHOP_OWNER role	DOCTOR role
+Products with stock qty	Services with duration (no stock)
+Cart (multiple items, multiple shops)	Single appointment per booking
+Order with delivery tracking	Appointment with status tracking
+Delivery fee + product price	Service price only (cash at clinic)
+OTP-based payment confirmation	No payment confirmation (cash at clinic)
+Auto-cancel after 30 min unpaid	Auto-cancel if not confirmed by doctor (TBD)
+Shall I proceed with implementing this plan?

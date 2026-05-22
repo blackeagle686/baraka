@@ -495,8 +495,15 @@ function renderCartOrdersList() {
         
         // Product list breakdown HTML
         const itemsList = order.items.map(it => {
-            const prodName = it.product_details ? it.product_details.name : 'منتج فريش';
-            const shopSuffix = (it.product_details && it.product_details.shop_name) ? ` <small class="text-mesa fw-normal">(${it.product_details.shop_name})</small>` : '';
+            let prodName = 'منتج';
+            let shopSuffix = '';
+            if (it.product_details) {
+                prodName = it.product_details.name;
+                if (it.product_details.shop_name) shopSuffix = ` <small class="text-mesa fw-normal">(${it.product_details.shop_name})</small>`;
+            } else if (it.menu_item_details) {
+                prodName = it.menu_item_details.name;
+                if (it.menu_item_details.restaurant_name) shopSuffix = ` <small class="text-mesa fw-normal">(${it.menu_item_details.restaurant_name})</small>`;
+            }
             return `
                 <div class="d-flex justify-content-between align-items-center py-2 border-bottom" style="border-color: rgba(201,153,151,0.06) !important;">
                     <div class="d-flex align-items-center gap-2">

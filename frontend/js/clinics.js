@@ -539,8 +539,8 @@ async function loadAvailableSlots() {
             slotsGrid.appendChild(slotDiv);
         });
 
-        notesSection.style.display = 'block';
-        confirmBtn.style.display = 'none';
+        notesSection.classList.remove('clinic-booking-hidden');
+        confirmBtn.classList.add('clinic-booking-hidden');
     } catch (error) {
         console.error("Error loading slots:", error);
         slotsGrid.innerHTML = `
@@ -558,7 +558,7 @@ window.selectTimeSlot = function(el, startTime, endTime, slotId) {
 
     const confirmBtn = document.getElementById('confirmBookingBtn');
     if (confirmBtn) {
-        confirmBtn.style.display = 'block';
+        confirmBtn.classList.remove('clinic-booking-hidden');
         confirmBtn.innerHTML = `<i class="bi bi-check2-circle me-1"></i>تأكيد الحجز الساعة ${startTime.substring(0, 5)}`;
     }
 };

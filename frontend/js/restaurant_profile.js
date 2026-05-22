@@ -142,7 +142,6 @@ async function handleRestSubmit() {
             currentRestaurantId = saved.id;
             statusMsg.innerText = 'تم إنشاء المطعم بنجاح!';
             document.getElementById('restSettingsTitle').innerText = 'إعدادات المطعم';
-            document.getElementById('menuPanel').style.display = 'block';
             loadMenuItems();
             loadRestOrders();
         }

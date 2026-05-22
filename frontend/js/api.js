@@ -640,6 +640,154 @@ const api = {
         }
     },
 
+    // ------------------------------------------ Restaurant-related APIs ------------------------------------------
+
+    restaurants: {
+        getAll: async (page = 1, search = '') => {
+            const url = new URL(`${API_BASE}/restaurants/`, window.location.origin);
+            if (page) url.searchParams.append('page', page);
+            if (search) url.searchParams.append('search', search);
+            const res = await fetch(url.toString());
+            if (!res.ok) throw await res.json();
+            return await res.json();
+        },
+        getById: async (id) => {
+            const res = await fetch(`${API_BASE}/restaurants/${id}/`);
+            if (!res.ok) throw await res.json();
+            return await res.json();
+        },
+        getMyRestaurant: async (token) => {
+            const res = await fetch(`${API_BASE}/restaurants/my_restaurant/`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.status === 404) return null;
+            if (!res.ok) throw await res.json();
+            return await res.json();
+        },
+        createRestaurant: async (token, formData) => {
+            const res = await fetch(`${API_BASE}/restaurants/`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` },
+                body: formData
+            });
+            if (!res.ok) throw await res.json();
+            return await res.json();
+        },
+        updateRestaurant: async (token, restaurantId, formData) => {
+            const res = await fetch(`${API_BASE}/restaurants/${restaurantId}/`, {
+                method: 'PATCH',
+                headers: { 'Authorization': `Bearer ${token}` },
+                body: formData
+            });
+            if (!res.ok) throw await res.json();
+            return await res.json();
+        },
+        toggleStatus: async (token, restaurantId) => {
+            const res = await fetch(`${API_BASE}/restaurants/${restaurantId}/toggle_status/`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!res.ok) throw await res.json();
+            return await res.json();
+        },
+        getMenuItems: async (restaurantId) => {
+            const res = await fetch(`${API_BASE}/menu-items/?restaurant_id=${restaurantId}`);
+            if (!res.ok) throw await res.json();
+            return await res.json();
+        },
+        getRatingStatus: async (token, id) => {
+            const res = await fetch(`${API_BASE}/restaurants/${id}/rating_status/`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!res.ok) throw await res.json();
+            return await res.json();
+        },
+        rateRestaurant: async (token, id, rating, review = '') => {
+            const res = await fetch(`${API_BASE}/restaurants/${id}/rate/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ rating, review })
+            });
+            if (!res.ok) throw await res.json();
+            return await res.json();
+        }
+    },
+
+    menuItems: {
+        getAll: async (restaurantId) => {
+            const res = await fetch(`${API_BASE}/menu-items/?restaurant_id=${restaurantId}`);
+            if (!res.ok) throw await res.json();
+            return await res.json();
+        },
+        create: async (token, formData) => {
+            const res = await fetch(`${API_BASE}/menu-items/`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` },
+                body: formData
+            });
+            if (!res.ok) throw await res.json();
+            return await res.json();
+        },
+        update: async (token, itemId, formData) => {
+            const res = await fetch(`${API_BASE}/menu-items/${itemId}/`, {
+                method: 'PATCH',
+                headers: { 'Authorization': `Bearer ${token}` },
+                body: formData
+            });
+            if (!res.ok) throw await res.json();
+            return await res.json();
+        },
+        delete: async (token, itemId) => {
+            const res = await fetch(`${API_BASE}/menu-items/${itemId}/`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!res.ok) throw await res.json();
+            return true;
+        }
+    },
+
+    menuCategories: {
+        getAll: async () => {
+            const res = await fetch(`${API_BASE}/menu-categories/`);
+            if (!res.ok) throw await res.json();
+            return await res.json();
+        }
+    },
+
+    restaurantNotifications: {
+        getAll: async (token) => {
+            const res = await fetch(`${API_BASE}/restaurant-notifications/`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!res.ok) throw await res.json();
+            return await res.json();
+        },
+        getUnreadCount: async (token) => {
+            const notifications = await api.restaurantNotifications.getAll(token);
+            return notifications.filter(n => !n.is_read).length;
+        },
+        markRead: async (token, id) => {
+            const res = await fetch(`${API_BASE}/restaurant-notifications/${id}/mark_read/`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!res.ok) throw await res.json();
+            return await res.json();
+        },
+        markAllRead: async (token) => {
+            const res = await fetch(`${API_BASE}/restaurant-notifications/mark_all_read/`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!res.ok) throw await res.json();
+            return await res.json();
+        }
+    },
+
     // ------------------------------------------ Service-related APIs ------------------------------------------
 
     services: {

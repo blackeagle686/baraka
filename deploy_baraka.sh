@@ -174,10 +174,10 @@ start_ngrok() {
         print_warn "Ngrok is not installed — skipping. (Run: sudo apt-get install -y ngrok)"
         return
     fi
-    if is_running "$NGROK_PID"; then
-        print_warn "Ngrok is already running (PID $(cat "$NGROK_PID"))"
-        return
-    fi
+    # Kill any lingering ngrok instances (from other projects or stale PIDs)
+    pkill -x ngrok 2>/dev/null || true
+    rm -f "$NGROK_PID"
+    sleep 1
     print_step "🚇 Starting Ngrok tunnel in background..."
     nohup ngrok http 8003 --log=stdout >> "$NGROK_LOG" 2>&1 &
     local ngrok_pid=$!
@@ -249,6 +249,9 @@ stop_celery() {
 
 stop_ngrok() {
     kill_pid "$NGROK_PID" "Ngrok"
+    # Kill any other lingering ngrok processes
+    pkill -x ngrok 2>/dev/null || true
+    rm -f "$NGROK_PID"
 }
 
 stop_nginx() {

@@ -547,8 +547,7 @@ function renderShopStops(group) {
     return group.shops.map((shop, index) => {
         const order = group.orders[0];
         const paidIds = order && order.paid_shops ? order.paid_shops.split(',') : [];
-        const shopIdentifier = shop.type === 'restaurant' ? shop.id.replace(/^r_/, 'r_') : String(shop.id);
-        // shop.id for restaurants is already r_{id}, for shops it's numeric
+        const shopIdentifier = String(shop.id);
         const isShopPaid = paidIds.includes(shopIdentifier);
         
         const readyBadge = isShopPaid

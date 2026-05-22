@@ -464,6 +464,9 @@ const api = {
             return await res.json();
         }
     },
+
+    
+
     admin: {
         getStats: async (token) => {
             const res = await fetch(`${API_BASE}/auth/admin/stats/`, {
@@ -534,7 +537,7 @@ const api = {
     },
 
     // ----------------------------------------- Clinic-related APIs -----------------------------------------
-    
+
     clinics: {
         getAll: async (page = 1, search = '', specialization = '') => {
             const url = new URL(`${API_BASE}/clinics/`, window.location.origin);

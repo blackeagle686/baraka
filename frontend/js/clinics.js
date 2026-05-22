@@ -498,10 +498,10 @@ async function loadAvailableSlots() {
     if (!serviceSelect.value || !dateInput.value) return;
 
     selectedSlot = null;
-    slotsSection.style.display = 'block';
+    slotsSection.classList.remove('clinic-booking-hidden');
     slotsGrid.innerHTML = `
         <div class="col-12 text-center py-3">
-            <div class="spinner-border text-marigold" role="status"></div>
+            <div class="spinner-border" style="color: var(--clinic-primary);" role="status"></div>
             <p class="text-mesa mt-2 small">بنحمل المواعيد المتاحة...</p>
         </div>`;
 
@@ -518,8 +518,8 @@ async function loadAvailableSlots() {
                     <p class="fw-bold text-espresso">لا توجد مواعيد متاحة في هذا اليوم</p>
                     <p class="small text-mesa">جرب تختار يوم تاني أو خدمة مختلفة</p>
                 </div>`;
-            notesSection.style.display = 'none';
-            confirmBtn.style.display = 'none';
+            notesSection.classList.add('clinic-booking-hidden');
+            confirmBtn.classList.add('clinic-booking-hidden');
             return;
         }
 

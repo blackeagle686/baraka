@@ -288,7 +288,7 @@ async function initClinicDetails() {
             const banner = document.getElementById('clinicCoverBanner');
             if (banner) {
                 banner.innerHTML = `
-                    <div class="shop-cover-banner" style="background-color: var(--color-espresso);">
+                    <div class="clinic-cover-banner" style="background-color: var(--color-espresso);">
                         <div class="container py-5 text-center animate-up">
                             <i class="bi bi-exclamation-triangle text-danger fs-1"></i>
                             <h2 class="text-white mt-2">حدث خطأ أثناء تحميل بيانات العيادة</h2>

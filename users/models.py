@@ -6,6 +6,7 @@ class UserRole(models.TextChoices):
     CUSTOMER = 'CUSTOMER', 'Customer'
     SHOP_OWNER = 'SHOP_OWNER', 'Shop Owner'
     DRIVER = 'DRIVER', 'Driver'
+    DOCTOR = 'DOCTOR', 'Doctor'
     ADMIN = 'ADMIN', 'Admin'
 
 class CustomUserManager(BaseUserManager):

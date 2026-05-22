@@ -23,6 +23,7 @@ class OrderStatus(models.TextChoices):
 class Order(models.Model):
     customer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='customer_orders')
     shop = models.ForeignKey(Shop, on_delete=models.SET_NULL, null=True, blank=True, related_name='shop_orders')
+    restaurant = models.ForeignKey('restaurants.Restaurant', on_delete=models.SET_NULL, null=True, blank=True, related_name='restaurant_orders')
     driver = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='driver_orders')
     total_price = models.DecimalField(max_digits=10, decimal_places=2)
     delivery_price = models.DecimalField(max_digits=6, decimal_places=2, default=0.00)
@@ -49,7 +50,12 @@ class Order(models.Model):
     def has_unpaid_non_postponed_shops(self):
         if self.is_paid_to_shop:
             return False
-        involved_shop_ids = set(str(item.product.shop.id) for item in self.items.all() if item.product and item.product.shop)
+        involved_shop_ids = set()
+        for item in self.items.all():
+            if item.product and item.product.shop:
+                involved_shop_ids.add(str(item.product.shop.id))
+            if item.menu_item and item.menu_item.restaurant:
+                involved_shop_ids.add(f"r_{item.menu_item.restaurant.id}")
         paid_shop_ids = set(sid for sid in self.paid_shops.split(',') if sid)
         postponed_shop_ids = set(sid for sid in self.postponed_shops.split(',') if sid)
         unpaid_non_postponed = involved_shop_ids - paid_shop_ids - postponed_shop_ids
@@ -87,7 +93,8 @@ class Order(models.Model):
 
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')
-    product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True)
+    product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True, blank=True)
+    menu_item = models.ForeignKey('restaurants.MenuItem', on_delete=models.SET_NULL, null=True, blank=True)
     quantity = models.PositiveIntegerField(default=1)
     price = models.DecimalField(max_digits=10, decimal_places=2) # Snapshot of price at the time of order
     is_ready = models.BooleanField(default=False)

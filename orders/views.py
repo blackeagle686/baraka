@@ -705,14 +705,20 @@ class OrderViewSet(viewsets.ModelViewSet):
             
         is_customer = (order.customer == user)
         is_shop_owner = order.items.filter(product__shop__owner=user).exists()
+        is_restaurant_owner = order.items.filter(menu_item__restaurant__owner=user).exists()
         
-        if not (is_customer or is_shop_owner):
+        if not (is_customer or is_shop_owner or is_restaurant_owner):
             return Response(
                 {"detail": "غير مصرح لك بتقييم الطيار لهذا الطلب."},
                 status=status.HTTP_403_FORBIDDEN
             )
             
-        rater_type = 'CUSTOMER' if is_customer else 'SHOP_OWNER'
+        if is_customer:
+            rater_type = 'CUSTOMER'
+        elif is_shop_owner:
+            rater_type = 'SHOP_OWNER'
+        else:
+            rater_type = 'RESTAURANT_OWNER'
         rating_val = request.data.get('rating')
         review_val = request.data.get('review', '')
         
@@ -737,7 +743,12 @@ class OrderViewSet(viewsets.ModelViewSet):
         )
 
         if order.driver:
-            reviewer = 'العميل' if is_customer else 'صاحب المحل'
+            if is_customer:
+                reviewer = 'العميل'
+            elif is_shop_owner:
+                reviewer = 'صاحب المحل'
+            else:
+                reviewer = 'صاحب المطعم'
             Notification.objects.create(
                 user=order.driver,
                 shop=order.shop,
@@ -761,11 +772,12 @@ class OrderViewSet(viewsets.ModelViewSet):
         
         is_customer = (order.customer == user)
         is_shop_owner = order.items.filter(product__shop__owner=user).exists()
+        is_restaurant_owner = order.items.filter(menu_item__restaurant__owner=user).exists()
         
         can_rate = (
             order.status == OrderStatus.DELIVERED and 
             order.driver is not None and 
-            (is_customer or is_shop_owner)
+            (is_customer or is_shop_owner or is_restaurant_owner)
         )
         
         existing_rating = None

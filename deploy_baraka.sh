@@ -179,7 +179,7 @@ start_ngrok() {
         return
     fi
     print_step "🚇 Starting Ngrok tunnel in background..."
-    nohup ngrok http 80 --log=stdout >> "$NGROK_LOG" 2>&1 &
+    nohup ngrok http 8003 --log=stdout >> "$NGROK_LOG" 2>&1 &
     local ngrok_pid=$!
     echo "$ngrok_pid" > "$NGROK_PID"
     echo -e "  ${GREEN}●${NC} Ngrok tunnel started (PID $ngrok_pid)"

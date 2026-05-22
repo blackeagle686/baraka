@@ -560,19 +560,30 @@ class OrderViewSet(viewsets.ModelViewSet):
             order.status = 'PENDING_RETURN'
             order.save()
             
-            # Notify all unique shop owners involved that they must receive their returned items
-            unique_shops = set(item.product.shop for item in order.items.select_related('product__shop').all() if item.product and item.product.shop)
-            for s in unique_shops:
-                Notification.objects.create(
-                    user=s.owner,
-                    shop=s,
-                    title="🚨 مرتجع عهدة طوارئ معلق",
-                    message=(
-                        f"أبلغ الطيار {request.user.phone} عن حالة طارئة ({reason}) بعد استلام المنتجات. "
-                        f"المنتجات حالياً في حوزة المندوب وهو مطالب بإرجاعها إليك فوراً. يرجى تأكيد الاستلام فور استلامها لتسوية حسابه."
-                    ),
-                    notification_type='driver_emergency_returned_pending'
-                )
+            # Notify all unique shop and restaurant owners involved about the pending return
+            for item in order.items.select_related('product__shop', 'menu_item__restaurant').all():
+                if item.product and item.product.shop:
+                    Notification.objects.create(
+                        user=item.product.shop.owner,
+                        shop=item.product.shop,
+                        title="\U0001f6a8 مرتجع عهدة طوارئ معلق",
+                        message=(
+                            f"أبلغ الطيار {request.user.phone} عن حالة طارئة ({reason}) بعد استلام المنتجات. "
+                            f"المنتجات حالياً في حوزة المندوب وهو مطالب بإرجاعها إليك فوراً. يرجى تأكيد الاستلام فور استلامها لتسوية حسابه."
+                        ),
+                        notification_type='driver_emergency_returned_pending'
+                    )
+                if item.menu_item and item.menu_item.restaurant:
+                    RestaurantNotification.objects.create(
+                        user=item.menu_item.restaurant.owner,
+                        restaurant=item.menu_item.restaurant,
+                        title="\U0001f6a8 مرتجع عهدة طوارئ معلق",
+                        message=(
+                            f"أبلغ الطيار {request.user.phone} عن حالة طارئة ({reason}) بعد استلام المنتجات. "
+                            f"المنتجات حالياً في حوزة المندوب وهو مطالب بإرجاعها إليك فوراً. يرجى تأكيد الاستلام فور استلامها لتسوية حسابه."
+                        ),
+                        notification_type='driver_emergency_returned_pending'
+                    )
             
             return Response({
                 "status": "PENDING_RETURN",
@@ -587,19 +598,30 @@ class OrderViewSet(viewsets.ModelViewSet):
             order.status = OrderStatus.PENDING
             order.save()
             
-            # Notify all unique shop owners involved
-            unique_shops = set(item.product.shop for item in order.items.select_related('product__shop').all() if item.product and item.product.shop)
-            for s in unique_shops:
-                Notification.objects.create(
-                    user=s.owner,
-                    shop=s,
-                    title="🚨 إلغاء توصيل الطلب لحالة طارئة",
-                    message=(
-                        f"اعتذر الطيار {request.user.phone} عن توصيل طلبك #{order.id} بسبب: ({reason}). "
-                        f"تم إرجاع الطلب فوراً للوحة الطلبات المتاحة للبحث عن طيار بديل."
-                    ),
-                    notification_type='driver_emergency_cancelled'
-                )
+            # Notify all unique shop and restaurant owners involved
+            for item in order.items.select_related('product__shop', 'menu_item__restaurant').all():
+                if item.product and item.product.shop:
+                    Notification.objects.create(
+                        user=item.product.shop.owner,
+                        shop=item.product.shop,
+                        title="\U0001f6a8 إلغاء توصيل الطلب لحالة طارئة",
+                        message=(
+                            f"اعتذر الطيار {request.user.phone} عن توصيل طلبك #{order.id} بسبب: ({reason}). "
+                            f"تم إرجاع الطلب فوراً للوحة الطلبات المتاحة للبحث عن طيار بديل."
+                        ),
+                        notification_type='driver_emergency_cancelled'
+                    )
+                if item.menu_item and item.menu_item.restaurant:
+                    RestaurantNotification.objects.create(
+                        user=item.menu_item.restaurant.owner,
+                        restaurant=item.menu_item.restaurant,
+                        title="\U0001f6a8 إلغاء توصيل الطلب لحالة طارئة",
+                        message=(
+                            f"اعتذر الطيار {request.user.phone} عن توصيل طلبك #{order.id} بسبب: ({reason}). "
+                            f"تم إرجاع الطلب فوراً للوحة الطلبات المتاحة للبحث عن طيار بديل."
+                        ),
+                        notification_type='driver_emergency_cancelled'
+                    )
                 
             # Notify the customer
             Notification.objects.create(
@@ -621,9 +643,10 @@ class OrderViewSet(viewsets.ModelViewSet):
     def confirm_emergency_returned(self, request, pk=None):
         order = self.get_object()
         
-        # Verify if the requesting user is a shop owner involved in this order
+        # Verify if the requesting user is a shop or restaurant owner involved in this order
         is_shop_owner = order.items.filter(product__shop__owner=request.user).exists()
-        if not is_shop_owner and not request.user.is_staff:
+        is_restaurant_owner = order.items.filter(menu_item__restaurant__owner=request.user).exists()
+        if not is_shop_owner and not is_restaurant_owner and not request.user.is_staff:
             return Response({"detail": "Not authorized to confirm return receipt for this order."},
                             status=status.HTTP_403_FORBIDDEN)
             

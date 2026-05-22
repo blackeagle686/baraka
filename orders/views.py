@@ -148,8 +148,8 @@ class OrderViewSet(viewsets.ModelViewSet):
 
         # ── 4) Async driver notification (non-blocking) ──
         send_order_notifications_to_drivers.delay(order.id)
-        # Schedule auto-cancellation after 15 minutes (900 seconds) if order remains unaccepted (PENDING)
-        auto_cancel_expired_orders.apply_async(args=[order.id], countdown=900)
+        # Schedule auto-cancellation after 30 minutes (1800 seconds) if order remains unaccepted (PENDING)
+        auto_cancel_expired_orders.apply_async(args=[order.id], countdown=1800)
 
         # ── 5) Re-fetch with joins so the serializer doesn't trigger lazy queries ──
         order = Order.objects.select_related(

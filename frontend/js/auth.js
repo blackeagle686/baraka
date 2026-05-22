@@ -19,16 +19,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const tempPhone = sessionStorage.getItem('temp_reg_phone');
     if (tempPhone) {
         const otpTarget = document.getElementById('otpTargetPhone');
-        const otpWrapper = document.getElementById('otpFormWrapper');
-        const card = document.getElementById('authCard');
-        const subtitle = document.getElementById('authSubtitle');
-        
-        if (otpTarget && otpWrapper && card && subtitle) {
+        if (otpTarget) {
             otpTarget.innerText = tempPhone;
-            otpWrapper.style.display = 'block';
-            card.classList.remove('mode-register', 'mode-login');
-            card.classList.add('mode-otp');
-            subtitle.innerText = 'أدخل رمز التحقق لتفعيل حسابك الجديد';
+        }
+        // Use the global setAuthMode function to properly enable/disable inputs
+        if (typeof setAuthMode === 'function') {
+            setAuthMode('otp');
         }
     }
 
@@ -174,13 +170,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 sessionStorage.setItem('temp_reg_password', password);
                 sessionStorage.setItem('temp_reg_name', name);
 
-                // Shift UI state to OTP mode
+                // Shift UI state to OTP mode using the global function
                 document.getElementById('otpTargetPhone').innerText = phone;
-                document.getElementById('otpFormWrapper').style.display = 'block';
-                const card = document.getElementById('authCard');
-                card.classList.remove('mode-register');
-                card.classList.add('mode-otp');
-                document.getElementById('authSubtitle').innerText = 'أدخل رمز التحقق لتفعيل حسابك الجديد';
+                if (typeof setAuthMode === 'function') {
+                    setAuthMode('otp');
+                }
                 
             } catch (error) {
                 let displayError = 'حدث خطأ أثناء التسجيل. يرجى المحاولة مرة أخرى.';
@@ -510,14 +504,7 @@ window.cancelOtpAndReturn = function() {
     sessionStorage.removeItem('temp_reg_password');
     sessionStorage.removeItem('temp_reg_name');
     
-    const card = document.getElementById('authCard');
-    const otpWrapper = document.getElementById('otpFormWrapper');
-    const subtitle = document.getElementById('authSubtitle');
-    
-    if (card && otpWrapper && subtitle) {
-        otpWrapper.style.display = 'none';
-        card.classList.remove('mode-otp');
-        card.classList.add('mode-register');
-        subtitle.innerText = 'انضم إلينا واطلب كل اللي تحتاجه طازة';
+    if (typeof setAuthMode === 'function') {
+        setAuthMode('register');
     }
 };

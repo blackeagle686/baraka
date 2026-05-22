@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>بوابة بركة - تسجيل الدخول وإنشاء حساب</title>
+    <meta name="description" content="سجل دخولك أو أنشئ حساب جديد في بركة - سوق قريتك الرقمي">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -11,12 +12,33 @@
     <link rel="stylesheet" href="/css/auth.css">
 </head>
 <body>
-    <div class="auth-wrapper">
-        <div class="auth-card animate-up mode-login" id="authCard">
-            <!-- Logo & Greeting -->
+
+<div class="auth-page">
+
+    <!-- ═══ Left Branding Panel ═══ -->
+    <div class="auth-brand-panel">
+        <div class="brand-content">
+            <div class="brand-logo-wrap">
+                <img src="/images/baraka_logo_low_nobg.png" alt="بركة">
+            </div>
+            <h1 class="brand-title">بركة</h1>
+            <p class="brand-tagline">سوق قريتك الرقمي — كل اللي تحتاجه من بيتك، طازة وبأحسن سعر.</p>
+            <div class="brand-features">
+                <span class="brand-feature"><i class="bi bi-shop"></i>محلات القرية كلها في مكان واحد</span>
+                <span class="brand-feature"><i class="bi bi-truck"></i>توصيل سريع لحد باب البيت</span>
+                <span class="brand-feature"><i class="bi bi-shield-check"></i>دفع آمن وسهل</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ Right Form Panel ═══ -->
+    <div class="auth-form-panel">
+        <div class="auth-card fade-slide-up mode-login" id="authCard">
+
+            <!-- Logo & Greeting (visible on mobile when brand panel hides) -->
             <div class="text-center mb-4">
                 <div class="auth-logo-icon mb-2">
-                    <img src="/images/baraka_logo_low_nobg.png" alt="بركة" style="width: 44px; height: 44px; object-fit: contain; border-radius: 12px;">
+                    <img src="/images/baraka_logo_low_nobg.png" alt="بركة" style="width: 40px; height: 40px; object-fit: contain;">
                 </div>
                 <a href="/html/index.html" class="text-decoration-none">
                     <div class="auth-logo">بركة</div>
@@ -33,95 +55,95 @@
 
             <!-- Forms Viewport -->
             <div class="forms-viewport">
-                
-                <!-- LOGIN FORM -->
+
+                <!-- ── LOGIN FORM ── -->
                 <div class="auth-form-wrapper" id="loginFormWrapper">
                     <form id="loginForm">
                         <div class="mb-3">
-                            <label class="form-label text-espresso fw-bold"><i class="bi bi-phone me-1 text-marigold"></i>رقم الهاتف</label>
-                            <input type="text" class="form-control rounded-pill px-4 py-2.5 text-center fs-6" id="loginPhone" placeholder="01xxxxxxxxx" required>
+                            <label class="form-label"><i class="bi bi-phone me-1 text-marigold"></i>رقم الهاتف</label>
+                            <input type="text" class="form-control" id="loginPhone" placeholder="01xxxxxxxxx" required>
                         </div>
-                        <div class="mb-4">
-                            <label class="form-label text-espresso fw-bold"><i class="bi bi-lock me-1 text-marigold"></i>كلمة المرور</label>
+                        <div class="mb-3">
+                            <label class="form-label"><i class="bi bi-lock me-1 text-marigold"></i>كلمة المرور</label>
                             <div class="position-relative">
-                                <input type="password" class="form-control rounded-pill px-4 py-2.5 text-center fs-6" id="loginPassword" placeholder="••••••••" required>
-                                <button type="button" class="btn btn-link position-absolute top-50 start-0 translate-middle-y text-mesa text-decoration-none password-toggle" onclick="togglePassword('loginPassword', this)" style="padding-left: 1.2rem;">
+                                <input type="password" class="form-control" id="loginPassword" placeholder="••••••••" required>
+                                <button type="button" class="btn btn-link position-absolute top-50 start-0 translate-middle-y password-toggle" onclick="togglePassword('loginPassword', this)" style="padding-left: 1rem;">
                                     <i class="bi bi-eye"></i>
                                 </button>
                             </div>
                             <div class="text-start mt-2">
-                                <button type="button" class="btn btn-link text-mesa text-decoration-none small fw-bold" onclick="setAuthMode('forgot')" style="padding: 0; font-size: 0.85rem;">نسيت كلمة المرور؟</button>
+                                <button type="button" class="btn btn-link text-mesa text-decoration-none p-0 small fw-bold" onclick="setAuthMode('forgot')" style="font-size: 0.82rem;">نسيت كلمة المرور؟</button>
                             </div>
                         </div>
-                        <button type="submit" id="loginBtn" class="btn btn-primary rounded-pill w-100 py-2.5 fw-bold mb-3 fs-5 position-relative overflow-hidden btn-gradient">
+                        <button type="submit" id="loginBtn" class="btn w-100 fw-bold mb-3 position-relative overflow-hidden btn-gradient">
                             <span class="btn-text"><i class="bi bi-box-arrow-in-left me-1"></i>دخول</span>
                             <span class="spinner-border spinner-border-sm position-absolute top-50 start-50 translate-middle d-none" role="status" aria-hidden="true"></span>
                         </button>
-                        <div id="loginErrorMsg" class="alert alert-danger text-center py-2 rounded-pill d-none small">
+                        <div id="loginErrorMsg" class="alert alert-danger text-center py-2 rounded-4 d-none small">
                             <i class="bi bi-exclamation-triangle me-1"></i>بيانات الدخول غير صحيحة
                         </div>
                     </form>
                 </div>
 
-                <!-- REGISTER FORM -->
+                <!-- ── REGISTER FORM ── -->
                 <div class="auth-form-wrapper" id="registerFormWrapper">
                     <form id="registerForm">
                         <div class="row">
                             <div class="col-md-6 mb-2">
-                                <label class="form-label text-espresso fw-bold"><i class="bi bi-person me-1 text-marigold"></i>الاسم بالكامل</label>
-                                <input type="text" class="form-control rounded-pill px-4 py-2 text-center fs-6" id="regName" placeholder="الاسم ثلاثي" required>
+                                <label class="form-label"><i class="bi bi-person me-1 text-marigold"></i>الاسم بالكامل</label>
+                                <input type="text" class="form-control" id="regName" placeholder="الاسم ثلاثي" required>
                             </div>
                             <div class="col-md-6 mb-2">
-                                <label class="form-label text-espresso fw-bold"><i class="bi bi-phone me-1 text-marigold"></i>رقم الهاتف</label>
-                                <input type="text" class="form-control rounded-pill px-4 py-2 text-center fs-6" id="regPhone" placeholder="01xxxxxxxxx" required>
+                                <label class="form-label"><i class="bi bi-phone me-1 text-marigold"></i>رقم الهاتف</label>
+                                <input type="text" class="form-control" id="regPhone" placeholder="01xxxxxxxxx" required>
                             </div>
                         </div>
                         <div class="mb-2">
-                            <label class="form-label text-espresso fw-bold"><i class="bi bi-geo-alt me-1 text-marigold"></i>العنوان في القرية</label>
-                            <input type="text" class="form-control rounded-pill px-4 py-2 text-center fs-6" id="regLocation" placeholder="شارع كام ">
+                            <label class="form-label"><i class="bi bi-geo-alt me-1 text-marigold"></i>العنوان في القرية</label>
+                            <input type="text" class="form-control" id="regLocation" placeholder="شارع كام ">
                         </div>
                         <div class="mb-2">
-                            <label class="form-label text-espresso fw-bold"><i class="bi bi-person-badge me-1 text-marigold"></i>نوع الحساب</label>
-                            <select class="form-select rounded-pill px-4 py-2 text-center fs-6" id="regRole">
+                            <label class="form-label"><i class="bi bi-person-badge me-1 text-marigold"></i>نوع الحساب</label>
+                            <select class="form-select" id="regRole">
                                 <option value="CUSTOMER">مشتري (طلب للمنزل) 🛍️</option>
                                 <option value="SHOP_OWNER">صاحب محل (بيع وعرض) 🏪</option>
                                 <option value="DRIVER">طيار دليفري (توصيل طلبات) 🛵</option>
                             </select>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label text-espresso fw-bold"><i class="bi bi-lock me-1 text-marigold"></i>كلمة المرور</label>
+                            <label class="form-label"><i class="bi bi-lock me-1 text-marigold"></i>كلمة المرور</label>
                             <div class="position-relative">
-                                <input type="password" class="form-control rounded-pill px-4 py-2 text-center fs-6" id="regPassword" placeholder="••••••••" required>
-                                <button type="button" class="btn btn-link position-absolute top-50 start-0 translate-middle-y text-mesa text-decoration-none password-toggle" onclick="togglePassword('regPassword', this)" style="padding-left: 1.2rem;">
+                                <input type="password" class="form-control" id="regPassword" placeholder="••••••••" required>
+                                <button type="button" class="btn btn-link position-absolute top-50 start-0 translate-middle-y password-toggle" onclick="togglePassword('regPassword', this)" style="padding-left: 1rem;">
                                     <i class="bi bi-eye"></i>
                                 </button>
                             </div>
                         </div>
-                        <button type="submit" id="registerBtn" class="btn btn-primary rounded-pill w-100 py-2.5 fw-bold mb-3 fs-5 position-relative overflow-hidden btn-gradient">
+                        <button type="submit" id="registerBtn" class="btn w-100 fw-bold mb-3 position-relative overflow-hidden btn-gradient">
                             <span class="btn-text"><i class="bi bi-person-plus me-1"></i>إنشاء الحساب الجديد</span>
                             <span class="spinner-border spinner-border-sm position-absolute top-50 start-50 translate-middle d-none" role="status" aria-hidden="true"></span>
                         </button>
-                        <div id="regErrorMsg" class="alert alert-danger text-center py-2 rounded-pill d-none small">
+                        <div id="regErrorMsg" class="alert alert-danger text-center py-2 rounded-4 d-none small">
                             <i class="bi bi-exclamation-triangle me-1"></i>حدث خطأ أثناء التسجيل.
                         </div>
                     </form>
                 </div>
-                
-                <!-- OTP VERIFICATION FORM -->
+
+                <!-- ── OTP VERIFICATION FORM ── -->
                 <div class="auth-form-wrapper" id="otpFormWrapper" style="display: none;">
                     <form id="otpForm">
                         <div class="text-center mb-4">
-                            <div class="auth-logo-icon mb-2 bg-light-subtle d-inline-flex align-items-center justify-content-center" style="width: 60px; height: 60px; border-radius: 50%;">
+                            <div class="auth-logo-icon mb-2 d-inline-flex align-items-center justify-content-center" style="width: 60px; height: 60px; border-radius: 50%;">
                                 <i class="bi bi-shield-check text-marigold fs-2"></i>
                             </div>
-                            <h4 class="mt-2 text-espresso fw-bold">تأكيد رقم الهاتف</h4>
+                            <h4 class="mt-2 fw-bold" style="color: var(--color-espresso);">تأكيد رقم الهاتف</h4>
                             <p class="text-muted small">تم إرسال رمز تحقق مكون من 6 أرقام إلى الهاتف <strong id="otpTargetPhone">010xxxxxxxx</strong>. يرجى إدخاله للمتابعة.</p>
                         </div>
                         <div class="mb-4">
-                            <label class="form-label text-espresso fw-bold"><i class="bi bi-key-fill me-1 text-marigold"></i>رمز التحقق (OTP)</label>
-                            <input type="text" class="form-control rounded-pill px-4 py-2 text-center fs-5" id="otpCode" placeholder="••••••" maxlength="6" required>
+                            <label class="form-label"><i class="bi bi-key-fill me-1 text-marigold"></i>رمز التحقق (OTP)</label>
+                            <input type="text" class="form-control fs-5" id="otpCode" placeholder="••••••" maxlength="6" required>
                         </div>
-                        <button type="submit" id="verifyOtpBtn" class="btn btn-primary rounded-pill w-100 py-2.5 fw-bold mb-3 fs-5 position-relative overflow-hidden btn-gradient">
+                        <button type="submit" id="verifyOtpBtn" class="btn w-100 fw-bold mb-3 position-relative overflow-hidden btn-gradient">
                             <span class="btn-text"><i class="bi bi-check-circle me-1"></i>تأكيد الرمز وتفعيل الحساب</span>
                             <span class="spinner-border spinner-border-sm position-absolute top-50 start-50 translate-middle d-none" role="status" aria-hidden="true"></span>
                         </button>
@@ -130,165 +152,160 @@
                             <span class="text-muted small">|</span>
                             <button type="button" class="btn btn-link text-secondary text-decoration-none small fw-bold" onclick="cancelOtpAndReturn()">العودة لتعديل البيانات</button>
                         </div>
-                        <div id="otpErrorMsg" class="alert alert-danger text-center py-2 rounded-pill d-none small mt-3">
+                        <div id="otpErrorMsg" class="alert alert-danger text-center py-2 rounded-4 d-none small mt-3">
                             <i class="bi bi-exclamation-triangle me-1"></i>الرمز غير صحيح.
                         </div>
                     </form>
                 </div>
 
-                <!-- FORGOT PASSWORD FORM -->
+                <!-- ── FORGOT PASSWORD FORM ── -->
                 <div class="auth-form-wrapper" id="forgotFormWrapper" style="display: none;">
                     <form id="forgotForm">
                         <div class="text-center mb-4">
-                            <div class="auth-logo-icon mb-2 bg-light-subtle d-inline-flex align-items-center justify-content-center" style="width: 60px; height: 60px; border-radius: 50%;">
+                            <div class="auth-logo-icon mb-2 d-inline-flex align-items-center justify-content-center" style="width: 60px; height: 60px; border-radius: 50%;">
                                 <i class="bi bi-shield-lock text-marigold fs-2"></i>
                             </div>
-                            <h4 class="mt-2 text-espresso fw-bold">استعادة كلمة المرور</h4>
+                            <h4 class="mt-2 fw-bold" style="color: var(--color-espresso);">استعادة كلمة المرور</h4>
                             <p class="text-muted small">أدخل رقم الهاتف المسجل وسنرسل لك رمز تحقق OTP لإعادة تعيين كلمة المرور.</p>
                         </div>
                         <div class="mb-4">
-                            <label class="form-label text-espresso fw-bold"><i class="bi bi-phone me-1 text-marigold"></i>رقم الهاتف</label>
-                            <input type="text" class="form-control rounded-pill px-4 py-2.5 text-center fs-6" id="forgotPhone" placeholder="01xxxxxxxxx" required>
+                            <label class="form-label"><i class="bi bi-phone me-1 text-marigold"></i>رقم الهاتف</label>
+                            <input type="text" class="form-control" id="forgotPhone" placeholder="01xxxxxxxxx" required>
                         </div>
-                        <button type="submit" id="forgotBtn" class="btn btn-primary rounded-pill w-100 py-2.5 fw-bold mb-3 fs-5 position-relative overflow-hidden btn-gradient">
+                        <button type="submit" id="forgotBtn" class="btn w-100 fw-bold mb-3 position-relative overflow-hidden btn-gradient">
                             <span class="btn-text"><i class="bi bi-send me-1"></i>إرسال رمز التحقق</span>
                             <span class="spinner-border spinner-border-sm position-absolute top-50 start-50 translate-middle d-none" role="status" aria-hidden="true"></span>
                         </button>
                         <div class="text-center">
                             <button type="button" class="btn btn-link text-secondary text-decoration-none small fw-bold" onclick="setAuthMode('login')">العودة لتسجيل الدخول</button>
                         </div>
-                        <div id="forgotErrorMsg" class="alert alert-danger text-center py-2 rounded-pill d-none small mt-3">
+                        <div id="forgotErrorMsg" class="alert alert-danger text-center py-2 rounded-4 d-none small mt-3">
                             <i class="bi bi-exclamation-triangle me-1"></i>
                         </div>
                     </form>
                 </div>
 
-                <!-- RESET PASSWORD FORM -->
+                <!-- ── RESET PASSWORD FORM ── -->
                 <div class="auth-form-wrapper" id="resetFormWrapper" style="display: none;">
                     <form id="resetForm">
                         <div class="text-center mb-4">
-                            <div class="auth-logo-icon mb-2 bg-light-subtle d-inline-flex align-items-center justify-content-center" style="width: 60px; height: 60px; border-radius: 50%;">
+                            <div class="auth-logo-icon mb-2 d-inline-flex align-items-center justify-content-center" style="width: 60px; height: 60px; border-radius: 50%;">
                                 <i class="bi bi-key-fill text-marigold fs-2"></i>
                             </div>
-                            <h4 class="mt-2 text-espresso fw-bold">تعيين كلمة المرور الجديدة</h4>
+                            <h4 class="mt-2 fw-bold" style="color: var(--color-espresso);">تعيين كلمة المرور الجديدة</h4>
                             <p class="text-muted small">أدخل رمز التحقق المرسل إلى الهاتف وكلمة المرور الجديدة لإكمال العملية.</p>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label text-espresso fw-bold"><i class="bi bi-shield-check me-1 text-marigold"></i>رمز التحقق (OTP)</label>
-                            <input type="text" class="form-control rounded-pill px-4 py-2 text-center fs-5" id="resetOtpCode" placeholder="••••••" maxlength="6" required>
+                            <label class="form-label"><i class="bi bi-shield-check me-1 text-marigold"></i>رمز التحقق (OTP)</label>
+                            <input type="text" class="form-control fs-5" id="resetOtpCode" placeholder="••••••" maxlength="6" required>
                         </div>
                         <div class="mb-4">
-                            <label class="form-label text-espresso fw-bold"><i class="bi bi-lock me-1 text-marigold"></i>كلمة المرور الجديدة</label>
+                            <label class="form-label"><i class="bi bi-lock me-1 text-marigold"></i>كلمة المرور الجديدة</label>
                             <div class="position-relative">
-                                <input type="password" class="form-control rounded-pill px-4 py-2 text-center fs-6" id="resetNewPassword" placeholder="••••••••" required>
-                                <button type="button" class="btn btn-link position-absolute top-50 start-0 translate-middle-y text-mesa text-decoration-none password-toggle" onclick="togglePassword('resetNewPassword', this)" style="padding-left: 1.2rem;">
+                                <input type="password" class="form-control" id="resetNewPassword" placeholder="••••••••" required>
+                                <button type="button" class="btn btn-link position-absolute top-50 start-0 translate-middle-y password-toggle" onclick="togglePassword('resetNewPassword', this)" style="padding-left: 1rem;">
                                     <i class="bi bi-eye"></i>
                                 </button>
                             </div>
                         </div>
-                        <button type="submit" id="resetBtn" class="btn btn-primary rounded-pill w-100 py-2.5 fw-bold mb-3 fs-5 position-relative overflow-hidden btn-gradient">
+                        <button type="submit" id="resetBtn" class="btn w-100 fw-bold mb-3 position-relative overflow-hidden btn-gradient">
                             <span class="btn-text"><i class="bi bi-check-circle me-1"></i>حفظ كلمة المرور والدخول</span>
                             <span class="spinner-border spinner-border-sm position-absolute top-50 start-50 translate-middle d-none" role="status" aria-hidden="true"></span>
                         </button>
                         <div class="text-center">
                             <button type="button" class="btn btn-link text-secondary text-decoration-none small fw-bold" onclick="setAuthMode('forgot')">العودة وإعادة الإرسال</button>
                         </div>
-                        <div id="resetErrorMsg" class="alert alert-danger text-center py-2 rounded-pill d-none small mt-3">
+                        <div id="resetErrorMsg" class="alert alert-danger text-center py-2 rounded-4 d-none small mt-3">
                             <i class="bi bi-exclamation-triangle me-1"></i>
                         </div>
                     </form>
                 </div>
 
             </div>
-
         </div>
     </div>
 
-    <!-- Mode switching script -->
-    <script>
-        function setAuthMode(mode) {
-            const card = document.getElementById('authCard');
-            const subtitle = document.getElementById('authSubtitle');
-            const btnLogin = document.getElementById('switchToLogin');
-            const btnRegister = document.getElementById('switchToRegister');
+</div>
 
-            // Hide and clear all form error warnings when switching tabs
-            const errorIds = ['loginErrorMsg', 'regErrorMsg', 'otpErrorMsg', 'forgotErrorMsg', 'resetErrorMsg'];
-            errorIds.forEach(id => {
-                const el = document.getElementById(id);
-                if (el) {
-                    el.classList.add('d-none');
-                    el.classList.remove('d-block');
-                    el.style.display = 'none';
-                }
-            });
+<!-- Mode switching script -->
+<script>
+    function setAuthMode(mode) {
+        const card = document.getElementById('authCard');
+        const subtitle = document.getElementById('authSubtitle');
+        const btnLogin = document.getElementById('switchToLogin');
+        const btnRegister = document.getElementById('switchToRegister');
 
-            // Handle displays of forms to prevent HTML5 required validation issues
-            const forms = {
-                'loginFormWrapper': 'login',
-                'registerFormWrapper': 'register',
-                'otpFormWrapper': 'otp',
-                'forgotFormWrapper': 'forgot',
-                'resetFormWrapper': 'reset'
-            };
-            
-            Object.keys(forms).forEach(wrapperId => {
-                const wrapper = document.getElementById(wrapperId);
-                if (wrapper) {
-                    if (forms[wrapperId] === mode) {
-                        wrapper.style.display = 'block';
-                        // Enable inputs
-                        wrapper.querySelectorAll('input, select, button').forEach(el => el.removeAttribute('disabled'));
-                    } else {
-                        wrapper.style.display = 'none';
-                        // Disable inputs in hidden forms to bypass HTML5 validation
-                        wrapper.querySelectorAll('input, select, button').forEach(el => el.setAttribute('disabled', 'true'));
-                    }
-                }
-            });
-
-            card.classList.remove('mode-login', 'mode-register', 'mode-otp', 'mode-forgot', 'mode-reset');
-            card.classList.add(`mode-${mode}`);
-
-            if (mode === 'login') {
-                btnLogin.classList.add('active');
-                btnRegister.classList.remove('active');
-                subtitle.innerText = 'سجل دخولك للمتابعة والتسوق';
-                
-                // Update URL parameter silently
-                const newurl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?mode=login';
-                window.history.pushState({path:newurl},'',newurl);
-            } else if (mode === 'register') {
-                btnRegister.classList.add('active');
-                btnLogin.classList.remove('active');
-                subtitle.innerText = 'انضم إلينا واطلب كل اللي تحتاجه طازة';
-                
-                // Update URL parameter silently
-                const newurl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?mode=register';
-                window.history.pushState({path:newurl},'',newurl);
-            } else if (mode === 'otp') {
-                subtitle.innerText = 'أدخل رمز التحقق لتفعيل حسابك الجديد';
-            } else if (mode === 'forgot') {
-                subtitle.innerText = 'أدخل رقم هاتفك لاستعادة حسابك';
-            } else if (mode === 'reset') {
-                subtitle.innerText = 'أدخل رمز OTP وكلمة المرور الجديدة';
-            }
-        }
-
-        // Initialize from URL params on load
-        window.addEventListener('DOMContentLoaded', () => {
-            const params = new URLSearchParams(window.location.search);
-            const mode = params.get('mode');
-            if (mode === 'register') {
-                setAuthMode('register');
-            } else {
-                setAuthMode('login');
+        // Hide all error messages
+        const errorIds = ['loginErrorMsg', 'regErrorMsg', 'otpErrorMsg', 'forgotErrorMsg', 'resetErrorMsg'];
+        errorIds.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.classList.add('d-none');
+                el.classList.remove('d-block');
+                el.style.display = 'none';
             }
         });
-    </script>
 
-    <script src="/js/api.js"></script>
-    <script src="/js/main.js"></script>
-    <script src="/js/auth.js"></script>
+        // Toggle form visibility & disable hidden inputs
+        const forms = {
+            'loginFormWrapper': 'login',
+            'registerFormWrapper': 'register',
+            'otpFormWrapper': 'otp',
+            'forgotFormWrapper': 'forgot',
+            'resetFormWrapper': 'reset'
+        };
+
+        Object.keys(forms).forEach(wrapperId => {
+            const wrapper = document.getElementById(wrapperId);
+            if (wrapper) {
+                if (forms[wrapperId] === mode) {
+                    wrapper.style.display = 'block';
+                    wrapper.querySelectorAll('input, select, button').forEach(el => el.removeAttribute('disabled'));
+                } else {
+                    wrapper.style.display = 'none';
+                    wrapper.querySelectorAll('input, select, button').forEach(el => el.setAttribute('disabled', 'true'));
+                }
+            }
+        });
+
+        card.classList.remove('mode-login', 'mode-register', 'mode-otp', 'mode-forgot', 'mode-reset');
+        card.classList.add(`mode-${mode}`);
+
+        if (mode === 'login') {
+            btnLogin.classList.add('active');
+            btnRegister.classList.remove('active');
+            subtitle.innerText = 'سجل دخولك للمتابعة والتسوق';
+            const newurl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?mode=login';
+            window.history.pushState({path:newurl},'',newurl);
+        } else if (mode === 'register') {
+            btnRegister.classList.add('active');
+            btnLogin.classList.remove('active');
+            subtitle.innerText = 'انضم إلينا واطلب كل اللي تحتاجه طازة';
+            const newurl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?mode=register';
+            window.history.pushState({path:newurl},'',newurl);
+        } else if (mode === 'otp') {
+            subtitle.innerText = 'أدخل رمز التحقق لتفعيل حسابك الجديد';
+        } else if (mode === 'forgot') {
+            subtitle.innerText = 'أدخل رقم هاتفك لاستعادة حسابك';
+        } else if (mode === 'reset') {
+            subtitle.innerText = 'أدخل رمز OTP وكلمة المرور الجديدة';
+        }
+    }
+
+    // Initialize from URL params
+    window.addEventListener('DOMContentLoaded', () => {
+        const params = new URLSearchParams(window.location.search);
+        const mode = params.get('mode');
+        if (mode === 'register') {
+            setAuthMode('register');
+        } else {
+            setAuthMode('login');
+        }
+    });
+</script>
+
+<script src="/js/api.js"></script>
+<script src="/js/main.js"></script>
+<script src="/js/auth.js"></script>
 </body>
 </html>

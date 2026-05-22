@@ -21,19 +21,28 @@ def send_order_notifications_to_drivers(order_id):
 @shared_task
 def auto_cancel_expired_orders(order_id):
     """
-    Retrieves a PENDING order after 15 minutes and cancels it if no action is taken,
+    Retrieves a PENDING order after 30 minutes and cancels it if no action is taken,
     restoring inventory stock atomically.
     """
     from django.db import transaction
     from .models import Order, OrderStatus
     from shops.models import Notification
+    from django.utils import timezone
+    from datetime import timedelta
     
     logger.info(f"⏳ Running stock recovery / auto-cancel check for Order #{order_id}...")
     try:
         with transaction.atomic():
             order = Order.objects.select_for_update().get(id=order_id)
             if order.status == 'PENDING':
-                logger.info(f"🚨 Order #{order_id} remained PENDING for 15 minutes. Automatically cancelling order and releasing stock...")
+                # Prevent cancellation if the order was created less than 28 minutes ago
+                # (e.g. if Celery is running synchronously with CELERY_TASK_ALWAYS_EAGER)
+                time_elapsed = timezone.now() - order.created_at
+                if time_elapsed < timedelta(minutes=28):
+                    logger.info(f"⏳ Order #{order_id} check ran, but it was created only {time_elapsed.total_seconds() / 60:.1f} minutes ago. Skipping cancellation.")
+                    return f"Order {order_id} check skipped: too fresh ({time_elapsed.total_seconds() / 60:.1f}m old)."
+                
+                logger.info(f"🚨 Order #{order_id} remained PENDING for 30 minutes. Automatically cancelling order and releasing stock...")
                 order.status = 'CANCELLED'
                 order.save()
                 
@@ -49,7 +58,7 @@ def auto_cancel_expired_orders(order_id):
                 Notification.objects.create(
                     user=order.customer,
                     title="⏳ تم إلغاء الطلب تلقائياً لعدم الاستجابة",
-                    message=f"عذراً، تم إلغاء طلبك #{order.id} تلقائياً لعدم قبول المحل أو توفر طيار خلال 15 دقيقة. تم إرجاع المنتجات للمخزن.",
+                    message=f"عذراً، تم إلغاء طلبك #{order.id} تلقائياً لعدم قبول المحل أو توفر طيار خلال 30 دقيقة. تم إرجاع المنتجات للمخزن.",
                     notification_type='order_auto_cancelled'
                 )
                 return f"Order {order_id} successfully auto-cancelled."

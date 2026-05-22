@@ -3,11 +3,16 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
 from django.core.cache import cache
+
 import hashlib
 from orders.tasks import recalculate_shop_rating_stats
+
 from .models import Shop, Category, Product, Notification
-from .serializers import ShopSerializer, ShopCreateSerializer, CategorySerializer, ProductSerializer, NotificationSerializer
-from .permissions import IsOwnerOrReadOnly
+from orders.models import Order, OrderStatus
+
+from .serializers import ShopRating, ShopSerializer, ShopCreateSerializer, CategorySerializer, ProductSerializer, NotificationSerializer
+from .permissions import IsOwnerOrReadOnly, ShopRatingSerializer
+
 from users.permissions import IsApprovedOrReadOnly
 
 class ShopPagination(PageNumberPagination):
@@ -97,7 +102,6 @@ class ShopViewSet(viewsets.ModelViewSet):
             return Response({"detail": "Rating must be an integer between 1 and 5."}, status=status.HTTP_400_BAD_REQUEST)
 
         # Check if the user has a completed order from this shop (including multi-shop orders)
-        from orders.models import Order, OrderStatus
         has_bought = Order.objects.filter(customer=user, items__product__shop=shop, status=OrderStatus.DELIVERED).exists()
         if not has_bought:
             return Response(
@@ -105,8 +109,6 @@ class ShopViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_403_FORBIDDEN
             )
 
-        from .models import ShopRating
-        from .serializers import ShopRatingSerializer
         
         # Create or update rating
         rating_obj, created = ShopRating.objects.update_or_create(
@@ -136,10 +138,8 @@ class ShopViewSet(viewsets.ModelViewSet):
     def rating_status(self, request, pk=None):
         shop = self.get_object()
         user = request.user
-        from orders.models import Order, OrderStatus
         has_bought = Order.objects.filter(customer=user, items__product__shop=shop, status=OrderStatus.DELIVERED).exists()
         
-        from .models import ShopRating
         existing_rating = ShopRating.objects.filter(shop=shop, customer=user).first()
         existing_data = {
             'rating': existing_rating.rating,

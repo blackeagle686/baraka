@@ -2,21 +2,19 @@ from celery import shared_task
 import time
 import logging
 
-logger = logging.getLogger(__name__)
+from django.db import transaction
+from django.db.models import Avg, Count
+from datetime import timedelta
+from django.core.cache import cache
 
-@shared_task
-def send_order_notifications_to_drivers(order_id):
-    """
-    Simulates sending instant push notifications or SMS alerts to all nearby drivers
-    in the background. This avoids blocking the main HTTP request thread during checkout!
-    """
-    logger.info(f"🚀 Starting background driver notification dispatch for Order #{order_id}...")
-    
-    # Simulate heavy network communication or third-party SMS gateway call
-    time.sleep(3) 
-    
-    logger.info(f"✅ Notification dispatch complete. All nearby drivers notified about Order #{order_id}!")
-    return f"Order {order_id} notification sent successfully."
+from .models import Order, OrderStatus, DriverRating
+from shops.models import Notification, Shop, ShopRating
+from django.utils import timezone
+
+from django.contrib.auth import get_user_model
+
+
+logger = logging.getLogger(__name__)
 
 @shared_task
 def auto_cancel_expired_orders(order_id):
@@ -24,13 +22,8 @@ def auto_cancel_expired_orders(order_id):
     Retrieves a PENDING order after 30 minutes and cancels it if no action is taken,
     restoring inventory stock atomically.
     """
-    from django.db import transaction
-    from .models import Order, OrderStatus
-    from shops.models import Notification
-    from django.utils import timezone
-    from datetime import timedelta
     
-    logger.info(f"⏳ Running stock recovery / auto-cancel check for Order #{order_id}...")
+    logger.info(f"[/] Running stock recovery / auto-cancel check for Order #{order_id}...")
     try:
         with transaction.atomic():
             order = Order.objects.select_for_update().get(id=order_id)
@@ -42,7 +35,7 @@ def auto_cancel_expired_orders(order_id):
                     logger.info(f"⏳ Order #{order_id} check ran, but it was created only {time_elapsed.total_seconds() / 60:.1f} minutes ago. Skipping cancellation.")
                     return f"Order {order_id} check skipped: too fresh ({time_elapsed.total_seconds() / 60:.1f}m old)."
                 
-                logger.info(f"🚨 Order #{order_id} remained PENDING for 30 minutes. Automatically cancelling order and releasing stock...")
+                logger.info(f"[*] Order #{order_id} remained PENDING for 30 minutes. Automatically cancelling order and releasing stock...")
                 order.status = 'CANCELLED'
                 order.save()
                 
@@ -52,7 +45,7 @@ def auto_cancel_expired_orders(order_id):
                         item.product.quantity += item.quantity
                         item.product.available = True
                         item.product.save()
-                        logger.info(f"📦 Restored {item.quantity} units for product '{item.product.name}'.")
+                        logger.info(f"[+] Restored {item.quantity} units for product '{item.product.name}'.")
                         
                 # Notify customer about auto-cancellation
                 Notification.objects.create(
@@ -63,10 +56,10 @@ def auto_cancel_expired_orders(order_id):
                 )
                 return f"Order {order_id} successfully auto-cancelled."
             else:
-                logger.info(f"✅ Order #{order_id} status is '{order.status}'. No cancel action needed.")
+                logger.info(f"[+] Order #{order_id} status is '{order.status}'. No cancel action needed.")
                 return f"Order {order_id} status is {order.status}. No action taken."
     except Order.DoesNotExist:
-        logger.warning(f"⚠️ Order #{order_id} does not exist.")
+        logger.warning(f"[-] Order #{order_id} does not exist.")
         return f"Order {order_id} not found."
 
 @shared_task
@@ -74,11 +67,8 @@ def recalculate_shop_rating_stats(shop_id):
     """
     Asynchronously aggregates ratings for a shop and updates cache and lists.
     """
-    from shops.models import Shop, ShopRating
-    from django.db.models import Avg, Count
-    from django.core.cache import cache
     
-    logger.info(f"📊 Recalculating rating statistics for Shop #{shop_id}...")
+    logger.info(f"[/] Recalculating rating statistics for Shop #{shop_id}...")
     try:
         shop = Shop.objects.get(id=shop_id)
         stats = ShopRating.objects.filter(shop=shop).aggregate(
@@ -94,10 +84,11 @@ def recalculate_shop_rating_stats(shop_id):
         current_version = cache.get("shops_list_version", 1)
         cache.set("shops_list_version", current_version + 1, timeout=None)
         
-        logger.info(f"✅ Shop #{shop_id} average rating recalculated: {stats['avg_rating']}★ across {stats['total_reviews']} reviews.")
+        logger.info(f"[+] Shop #{shop_id} average rating recalculated: {stats['avg_rating']}★ across {stats['total_reviews']} reviews.")
         return f"Shop {shop_id} rating stats updated successfully."
+    
     except Shop.DoesNotExist:
-        logger.warning(f"⚠️ Shop #{shop_id} not found.")
+        logger.warning(f"[-] Shop #{shop_id} not found.")
         return f"Shop {shop_id} not found."
 
 @shared_task
@@ -105,13 +96,9 @@ def recalculate_driver_rating_stats(driver_id):
     """
     Asynchronously aggregates ratings for a driver.
     """
-    from django.contrib.auth import get_user_model
-    from .models import DriverRating
-    from django.db.models import Avg, Count
-    from django.core.cache import cache
     
     User = get_user_model()
-    logger.info(f"📊 Recalculating rating statistics for Driver #{driver_id}...")
+    logger.info(f"[/] Recalculating rating statistics for Driver #{driver_id}...")
     try:
         driver = User.objects.get(id=driver_id)
         stats = DriverRating.objects.filter(driver=driver).aggregate(
@@ -123,10 +110,11 @@ def recalculate_driver_rating_stats(driver_id):
         cache.set(f"driver_rating_avg:{driver_id}", stats['avg_rating'] or 0.0, timeout=None)
         cache.set(f"driver_rating_count:{driver_id}", stats['total_reviews'] or 0, timeout=None)
         
-        logger.info(f"✅ Driver #{driver_id} rating recalculated: {stats['avg_rating']}★ across {stats['total_reviews']} reviews.")
+        logger.info(f"[+] Driver #{driver_id} rating recalculated: {stats['avg_rating']}★ across {stats['total_reviews']} reviews.")
         return f"Driver {driver_id} rating stats updated successfully."
+    
     except User.DoesNotExist:
-        logger.warning(f"⚠️ Driver #{driver_id} not found.")
+        logger.warning(f"[-] Driver #{driver_id} not found.")
         return f"Driver {driver_id} not found."
 
 @shared_task
@@ -134,14 +122,12 @@ def auto_escalate_unresolved_disputes(order_id):
     """
     Checks if a raised dispute is still unresolved after 6 hours and auto-escalates to administrators.
     """
-    from .models import Order
-    from shops.models import Notification
     
-    logger.info(f"⚖️ SLA Check: Checking dispute resolution status for Order #{order_id}...")
+    logger.info(f"[/] SLA Check: Checking dispute resolution status for Order #{order_id}...")
     try:
         order = Order.objects.get(id=order_id)
         if order.dispute_status == 'PENDING':
-            logger.warning(f"🚨 SLA Violation: Order #{order_id} dispute remains PENDING for over 6 hours! Auto-escalating to administrators...")
+            logger.warning(f"[*] SLA Violation: Order #{order_id} dispute remains PENDING for over 6 hours! Auto-escalating to administrators...")
             order.dispute_status = 'ESCALATED'
             order.save()
             
@@ -154,9 +140,11 @@ def auto_escalate_unresolved_disputes(order_id):
                     notification_type='dispute_escalated'
                 )
             return f"Order {order_id} dispute successfully escalated to admin."
+        
         else:
-            logger.info(f"✅ Dispute for Order #{order_id} has status '{order.dispute_status}'. No escalation needed.")
+            logger.info(f"[+] Dispute for Order #{order_id} has status '{order.dispute_status}'. No escalation needed.")
             return f"Order {order_id} dispute status is {order.dispute_status}. No action taken."
+    
     except Order.DoesNotExist:
-        logger.warning(f"⚠️ Order #{order_id} not found.")
+        logger.warning(f"[-] Order #{order_id} not found.")
         return f"Order {order_id} not found."

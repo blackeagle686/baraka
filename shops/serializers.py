@@ -1,4 +1,6 @@
 from rest_framework import serializers
+from django.core.exceptions import ValidationError as DjangoValidationError
+
 from .models import Shop, Category, Product, ShopRating, Notification
 from users.validators import validate_secure_file
 
@@ -11,7 +13,6 @@ class ProductSerializer(serializers.ModelSerializer):
     category_name = serializers.ReadOnlyField(source='category.name')
 
     def validate_image(self, value):
-        from django.core.exceptions import ValidationError as DjangoValidationError
         try:
             return validate_secure_file(value)
         except DjangoValidationError as e:
@@ -33,7 +34,6 @@ class ShopRatingSerializer(serializers.ModelSerializer):
 
 class ShopCreateSerializer(serializers.ModelSerializer):
     def validate_image(self, value):
-        from django.core.exceptions import ValidationError as DjangoValidationError
         try:
             return validate_secure_file(value)
         except DjangoValidationError as e:
@@ -52,11 +52,11 @@ class ShopSerializer(serializers.ModelSerializer):
     owner_phone = serializers.ReadOnlyField(source='owner.phone')
 
     def validate_image(self, value):
-        from django.core.exceptions import ValidationError as DjangoValidationError
         try:
             return validate_secure_file(value)
         except DjangoValidationError as e:
             raise serializers.ValidationError(e.message)
+        
     average_rating = serializers.SerializerMethodField()
     total_ratings = serializers.SerializerMethodField()
     ratings_list = ShopRatingSerializer(source='ratings', many=True, read_only=True)

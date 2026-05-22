@@ -5,16 +5,18 @@ from rest_framework.pagination import PageNumberPagination
 
 from django.db import transaction
 from django.db.models import Q
+from django.utils import timezone
 
-from .models import Order, OrderItem, OrderStatus
+from .models import Order, OrderItem, OrderStatus, DriverRating
 from shops.models import Shop, Product, Notification
+from core.models import Report
 
-from .serializers import OrderSerializer
+from .serializers import OrderSerializer, DriverRatingSerializer
+from users.permissions import IsApprovedOrReadOnly, IsApprovedUser, IsAdminUserRole
 
-from users.permissions import IsApprovedOrReadOnly, IsApprovedUser
-from users.permissions import IsAdminUserRole
+from datetime import timedelta
+
 from .tasks import (
-    send_order_notifications_to_drivers,
     auto_cancel_expired_orders,
     recalculate_driver_rating_stats,
     auto_escalate_unresolved_disputes
@@ -30,8 +32,7 @@ class OrderViewSet(viewsets.ModelViewSet):
         base_qs = Order.objects.select_related(
             'customer', 'driver',
             'shop', 'shop__owner'
-        ).prefetch_related( 'items',
-                           'items__product').order_by('-created_at')
+        ).prefetch_related( 'items','items__product').order_by('-created_at')
 
         # Admins have their own dedicated AdminOrderListView (/api/admin/orders/) for global access.
         # When an admin uses the standard order endpoint (e.g. from their personal cart),
@@ -43,8 +44,10 @@ class OrderViewSet(viewsets.ModelViewSet):
             if not user.is_approved:
                 return base_qs.filter(driver=user)
             return base_qs.filter(
-                Q(driver=user) | Q(driver__isnull=True, status__in=['PENDING', 'ACCEPTED', 'PREPARING', 'ON_DELIVERY'])
-            )
+                Q(driver=user) | Q(driver__isnull=True, status__in=['PENDING',
+                                                                    'ACCEPTED',
+                                                                    'PREPARING',
+                                                                    'ON_DELIVERY']))
             
         else:
             # Customer
@@ -52,7 +55,8 @@ class OrderViewSet(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         if request.user.role != 'CUSTOMER' and not request.user.is_staff:
-            return Response({"detail": "Only customers can place orders."}, status=status.HTTP_403_FORBIDDEN)
+            return Response({"detail": "Only customers can place orders."},
+                            status=status.HTTP_403_FORBIDDEN)
 
         if not request.user.is_phone_verified and not request.user.is_staff:
             return Response(
@@ -65,7 +69,8 @@ class OrderViewSet(viewsets.ModelViewSet):
         items_data = data.get('items', [])
 
         if not items_data:
-            return Response({"detail": "Missing items data."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail": "Missing items data."}, 
+                            status=status.HTTP_400_BAD_REQUEST)
 
         # ── 1) Atomic transaction: single DB commit for order + items + stock + race protection ──
         with transaction.atomic():
@@ -147,7 +152,6 @@ class OrderViewSet(viewsets.ModelViewSet):
                 )
 
         # ── 4) Async driver notification (non-blocking) ──
-        send_order_notifications_to_drivers.delay(order.id)
         # Schedule auto-cancellation after 30 minutes (1800 seconds) if order remains unaccepted (PENDING)
         auto_cancel_expired_orders.apply_async(args=[order.id], countdown=1800)
 
@@ -170,24 +174,29 @@ class OrderViewSet(viewsets.ModelViewSet):
         is_driver = (order.driver == request.user)
         
         if not (is_shop_owner or is_driver or request.user.is_staff):
-            return Response({"detail": "Not authorized to update this order's status."}, status=status.HTTP_403_FORBIDDEN)
+            return Response({"detail": "Not authorized to update this order's status."}, 
+                            status=status.HTTP_403_FORBIDDEN)
         
         if new_status not in [c[0] for c in OrderStatus.choices]:
-            return Response({"detail": "Invalid status value."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail": "Invalid status value."},
+                            status=status.HTTP_400_BAD_REQUEST)
 
         # Enforce role-specific transition constraints
         if is_driver and not is_shop_owner and not request.user.is_staff:
             if new_status != 'DELIVERED':
-                return Response({"detail": "Drivers are only authorized to mark orders as DELIVERED."}, status=status.HTTP_403_FORBIDDEN)
+                return Response({"detail": "Drivers are only authorized to mark orders as DELIVERED."},
+                                status=status.HTTP_403_FORBIDDEN)
             
             # Enforce Customer OTP code verification for drivers marking delivered
             customer_otp = request.data.get('customer_otp')
             if not customer_otp or customer_otp != order.customer_otp:
-                return Response({"detail": "رمز التوصيل غير صحيح! يرجى إدخال الرمز المكون من 4 أرقام المستلم من العميل لتأكيد التوصيل."}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({"detail": "رمز التوصيل غير صحيح! يرجى إدخال الرمز المكون من 4 أرقام المستلم من العميل لتأكيد التوصيل."},
+                                status=status.HTTP_400_BAD_REQUEST)
         
         if is_shop_owner and not is_driver and not request.user.is_staff:
             if new_status == 'DELIVERED':
-                return Response({"detail": "Only drivers can mark orders as DELIVERED."}, status=status.HTTP_403_FORBIDDEN)
+                return Response({"detail": "Only drivers can mark orders as DELIVERED."}, 
+                                status=status.HTTP_403_FORBIDDEN)
             
         if new_status == 'CANCELLED' and order.status != 'CANCELLED':
             for item in order.items.all():
@@ -203,7 +212,8 @@ class OrderViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated, IsApprovedUser])
     def accept_delivery(self, request, pk=None):
         if request.user.role != 'DRIVER':
-            return Response({"detail": "Only drivers can accept delivery assignment."}, status=status.HTTP_403_FORBIDDEN)
+            return Response({"detail": "Only drivers can accept delivery assignment."},
+                            status=status.HTTP_403_FORBIDDEN)
         
         # Check active orders limit: at most 5 active orders in progress
         active_count = Order.objects.filter(
@@ -216,8 +226,6 @@ class OrderViewSet(viewsets.ModelViewSet):
             }, status=status.HTTP_400_BAD_REQUEST)
 
         # Check for overdue payments (> 5 hours since picked_up_at)
-        from django.utils import timezone
-        from datetime import timedelta
         limit_time = timezone.now() - timedelta(hours=5)
         
         delivered_unpaid = Order.objects.filter(
@@ -246,23 +254,27 @@ class OrderViewSet(viewsets.ModelViewSet):
 
         order = self.get_object()
         if order.driver:
-            return Response({"detail": "Order already has an assigned driver."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail": "Order already has an assigned driver."},
+                            status=status.HTTP_400_BAD_REQUEST)
         
         delivery_price = request.data.get('delivery_price')
         if delivery_price is not None:
             try:
                 price_val = float(delivery_price)
             except ValueError:
-                return Response({"detail": "سعر التوصيل غير صالح."}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({"detail": "سعر التوصيل غير صالح."},
+                                status=status.HTTP_400_BAD_REQUEST)
             
             # Enforce constraints: Minimum 15.00 EGP, Maximum 2% of the total order price (capped to at least 15.00 EGP)
             min_price = 15.00
             max_price = max(15.00, float(order.total_price) * 0.02)
             
             if price_val < min_price:
-                return Response({"detail": f"سعر خدمة التوصيل لا يمكن أن يقل عن {min_price} ج.م."}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({"detail": f"سعر خدمة التوصيل لا يمكن أن يقل عن {min_price} ج.م."},
+                                status=status.HTTP_400_BAD_REQUEST)
             if price_val > max_price:
-                return Response({"detail": f"سعر خدمة التوصيل لا يمكن أن يتخطى الحد الأقصى المسموح به (2% من إجمالي الطلب: {max_price:.2f} ج.م)."}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({"detail": f"سعر خدمة التوصيل لا يمكن أن يتخطى الحد الأقصى المسموح به (2% من إجمالي الطلب: {max_price:.2f} ج.م)."},
+                                status=status.HTTP_400_BAD_REQUEST)
             
             order.delivery_price = price_val
         else:
@@ -293,12 +305,12 @@ class OrderViewSet(viewsets.ModelViewSet):
         order = self.get_object()
         
         # Identify the shops owned by this user that are involved in this order
-        from shops.models import Shop
         shops_owned_by_user = Shop.objects.filter(owner=request.user)
         order_items_belonging_to_user_shops = order.items.filter(product__shop__in=shops_owned_by_user)
         
         if not order_items_belonging_to_user_shops.exists() and not request.user.is_staff:
-            return Response({"detail": "Not authorized to settle this order's cash."}, status=status.HTTP_403_FORBIDDEN)
+            return Response({"detail": "Not authorized to settle this order's cash."},
+                            status=status.HTTP_403_FORBIDDEN)
             
         # Enforce Driver OTP code verification for shop owners confirming receipt of money
         driver_otp = request.data.get('driver_otp')
@@ -308,7 +320,8 @@ class OrderViewSet(viewsets.ModelViewSet):
             if item.product and item.product.shop:
                 shop_otp = order.get_or_create_shop_otp(item.product.shop.id)
                 if not driver_otp or driver_otp != shop_otp:
-                    return Response({"detail": "رمز تصفية الحساب غير صحيح! يرجى إدخال الرمز المكون من 4 أرقام الموضح على شاشة الطيار لتأكيد التصفية."}, status=status.HTTP_400_BAD_REQUEST)
+                    return Response({"detail": "رمز تصفية الحساب غير صحيح! يرجى إدخال الرمز المكون من 4 أرقام الموضح على شاشة الطيار لتأكيد التصفية."},
+                                    status=status.HTTP_400_BAD_REQUEST)
 
         # Parse current paid shops list
         paid_shops_list = [id_str for id_str in order.paid_shops.split(',') if id_str]
@@ -335,17 +348,19 @@ class OrderViewSet(viewsets.ModelViewSet):
     def postpone_shop_settlement(self, request, pk=None):
         order = self.get_object()
         if order.driver != request.user:
-            return Response({"detail": "Not authorized to postpone this order's settlement."}, status=status.HTTP_403_FORBIDDEN)
+            return Response({"detail": "Not authorized to postpone this order's settlement."},
+                            status=status.HTTP_403_FORBIDDEN)
             
         shop_id = request.data.get('shop_id')
         if not shop_id:
-            return Response({"detail": "shop_id is required."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail": "shop_id is required."}, 
+                            status=status.HTTP_400_BAD_REQUEST)
             
-        from shops.models import Shop
         try:
             shop = Shop.objects.get(id=shop_id)
         except Shop.DoesNotExist:
-            return Response({"detail": "Shop not found."}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"detail": "Shop not found."},
+                            status=status.HTTP_404_NOT_FOUND)
             
         postponed_list = [sid for sid in order.postponed_shops.split(',') if sid]
         shop_id_str = str(shop_id)
@@ -377,11 +392,13 @@ class OrderViewSet(viewsets.ModelViewSet):
         is_driver = (order.driver == request.user)
         
         if not (is_customer or is_shop_owner or is_driver or request.user.is_staff):
-            return Response({"detail": "Not authorized to dispute this order."}, status=status.HTTP_403_FORBIDDEN)
+            return Response({"detail": "Not authorized to dispute this order."},
+                            status=status.HTTP_403_FORBIDDEN)
             
         reason = request.data.get('reason')
         if not reason:
-            return Response({"detail": "Please provide a reason for the dispute."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail": "Please provide a reason for the dispute."},
+                            status=status.HTTP_400_BAD_REQUEST)
             
         order.dispute_status = 'PENDING'
         order.dispute_reason = reason
@@ -389,7 +406,7 @@ class OrderViewSet(viewsets.ModelViewSet):
         order.save()
         
         # Create a Report in core app to make it visible in the admin dashboard reports panel
-        from core.models import Report
+        
         Report.objects.create(
             user=request.user,
             subject=f"نزاع على الطلب #{order.id}",
@@ -430,14 +447,17 @@ class OrderViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated, IsApprovedUser])
     def report_emergency(self, request, pk=None):
         if request.user.role != 'DRIVER':
-            return Response({"detail": "Only drivers can report a delivery emergency."}, status=status.HTTP_403_FORBIDDEN)
+            return Response({"detail": "Only drivers can report a delivery emergency."},
+                            status=status.HTTP_403_FORBIDDEN)
             
         order = self.get_object()
         if order.driver != request.user:
-            return Response({"detail": "You are not the assigned driver for this order."}, status=status.HTTP_403_FORBIDDEN)
+            return Response({"detail": "You are not the assigned driver for this order."}, 
+                            status=status.HTTP_403_FORBIDDEN)
             
         if order.status not in ['ACCEPTED', 'PREPARING', 'ON_DELIVERY']:
-            return Response({"detail": "لا يمكن إلغاء هذا الطلب لأنه مكتمل أو غير نشط بالفعل."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail": "لا يمكن إلغاء هذا الطلب لأنه مكتمل أو غير نشط بالفعل."},
+                            status=status.HTTP_400_BAD_REQUEST)
             
         reason = request.data.get('reason', 'ظرف طارئ / عطل بالمركبة')
         
@@ -464,7 +484,9 @@ class OrderViewSet(viewsets.ModelViewSet):
             return Response({
                 "status": "PENDING_RETURN",
                 "detail": "تم تسجيل الحالة الطارئة. نظراً لأنك استلمت المنتجات بالفعل، تم تعليق حسابك مؤقتاً حتى تقوم بإرجاع المنتجات للمحلات وتأكيد استلامهم للعهدة."
-            })
+            },
+            status=status.HTTP_200_OK)
+            
         else:
             # Driver has NOT picked up the products yet! Safely release the order back to PENDING.
             order.driver = None
@@ -509,10 +531,12 @@ class OrderViewSet(viewsets.ModelViewSet):
         # Verify if the requesting user is a shop owner involved in this order
         is_shop_owner = order.items.filter(product__shop__owner=request.user).exists()
         if not is_shop_owner and not request.user.is_staff:
-            return Response({"detail": "Not authorized to confirm return receipt for this order."}, status=status.HTTP_403_FORBIDDEN)
+            return Response({"detail": "Not authorized to confirm return receipt for this order."},
+                            status=status.HTTP_403_FORBIDDEN)
             
         if order.status != 'PENDING_RETURN':
-            return Response({"detail": "هذا الطلب ليس بانتظار مرتجع طوارئ حالياً."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail": "هذا الطلب ليس بانتظار مرتجع طوارئ حالياً."},
+                            status=status.HTTP_400_BAD_REQUEST)
             
         # Reset the order so a new driver can accept it!
         old_driver = order.driver
@@ -543,7 +567,8 @@ class OrderViewSet(viewsets.ModelViewSet):
             notification_type='driver_emergency_cancelled'
         )
         
-        return Response({"detail": "تم تأكيد استلام المنتجات المرتجعة وإعادة طرح الطلب للطيارين بنجاح."})
+        return Response({"detail": "تم تأكيد استلام المنتجات المرتجعة وإعادة طرح الطلب للطيارين بنجاح."},
+                        status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
     def rate_driver(self, request, pk=None):
@@ -580,10 +605,9 @@ class OrderViewSet(viewsets.ModelViewSet):
             if rating_val < 1 or rating_val > 5:
                 raise ValueError
         except (TypeError, ValueError):
-            return Response({"detail": "التقييم يجب أن يكون رقماً صحيحاً بين 1 و 5."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail": "التقييم يجب أن يكون رقماً صحيحاً بين 1 و 5."},
+                            status=status.HTTP_400_BAD_REQUEST)
             
-        from .models import DriverRating
-        from .serializers import DriverRatingSerializer
         
         rating_obj, created = DriverRating.objects.update_or_create(
             order=order,
@@ -628,8 +652,8 @@ class OrderViewSet(viewsets.ModelViewSet):
             (is_customer or is_shop_owner)
         )
         
-        from .models import DriverRating
         existing_rating = None
+        
         if can_rate:
             existing_rating_obj = DriverRating.objects.filter(
                 order=order, rater=user

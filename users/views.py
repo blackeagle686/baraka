@@ -8,6 +8,19 @@ from .permissions import IsAdminUserRole
 from .throttles import AuthAnonRateThrottle
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
+from orders.models import Order
+from shops.models import Shop
+from core.models import Report
+
+import random
+from django.utils import timezone
+from datetime import timedelta
+from rest_framework.views import APIView
+from .validators import validate_egyptian_phone, validate_strong_password
+from django.core.exceptions import ValidationError as DjangoValidationError
+from .models import PhoneOTP
+from .tasks import async_send_sms_otp
+
 User = get_user_model()
 
 
@@ -17,14 +30,11 @@ class RegisterView(generics.CreateAPIView):
     serializer_class = UserSerializer
     throttle_classes = [AuthAnonRateThrottle]
 
-
 class ThrottledTokenObtainPairView(TokenObtainPairView):
     throttle_classes = [AuthAnonRateThrottle]
 
-
 class ThrottledTokenRefreshView(TokenRefreshView):
     throttle_classes = [AuthAnonRateThrottle]
-
 
 class ProfileView(generics.RetrieveUpdateAPIView):
     serializer_class = UserSerializer
@@ -32,7 +42,6 @@ class ProfileView(generics.RetrieveUpdateAPIView):
 
     def get_object(self):
         return self.request.user
-
 
 # ==========================================
 # Admin Dashboard API Views
@@ -42,7 +51,6 @@ class AdminPagination(PageNumberPagination):
     page_size = 15
     page_size_query_param = 'page_size'
     max_page_size = 100
-
 
 class AdminUserListView(generics.ListAPIView):
     """List all users with search & filter by role, approval, active status."""
@@ -67,23 +75,17 @@ class AdminUserListView(generics.ListAPIView):
             qs = qs.filter(is_active=(active == 'true'))
         return qs
 
-
 class AdminUserDetailView(generics.RetrieveUpdateAPIView):
     """Get or update a specific user (block/unblock, approve/reject)."""
     serializer_class = AdminUserSerializer
     permission_classes = [IsAdminUserRole]
     queryset = User.objects.all()
 
-
 class AdminStatsView(generics.GenericAPIView):
     """Return dashboard stats (total users, orders, etc.)."""
     permission_classes = [IsAdminUserRole]
 
     def get(self, request):
-        from orders.models import Order
-        from shops.models import Shop
-        from core.models import Report
-
         total_users = User.objects.count()
         total_customers = User.objects.filter(role='CUSTOMER').count()
         total_shop_owners = User.objects.filter(role='SHOP_OWNER').count()
@@ -108,15 +110,9 @@ class AdminStatsView(generics.GenericAPIView):
             'unresolved_reports': unresolved_reports,
         })
 
-
-import random
-from django.utils import timezone
-from datetime import timedelta
-from rest_framework.views import APIView
-from .validators import validate_egyptian_phone
-from django.core.exceptions import ValidationError as DjangoValidationError
-from .models import PhoneOTP
-from .tasks import async_send_sms_otp
+# =========================================
+# OTP Views for Phone Verification & Password Reset
+# =========================================
 
 class SendOTPView(APIView):
     """
@@ -227,7 +223,6 @@ class VerifyOTPView(APIView):
             "is_verified": True
         }, status=status.HTTP_200_OK)
 
-
 class RequestPasswordResetOTPView(APIView):
     """
     Checks if user exists, generates OTP, and sends it for password reset.
@@ -264,7 +259,6 @@ class RequestPasswordResetOTPView(APIView):
             "phone": phone
         }, status=status.HTTP_200_OK)
 
-
 class ResetPasswordWithOTPView(APIView):
     """
     Verifies OTP and resets the user's password.
@@ -273,7 +267,7 @@ class ResetPasswordWithOTPView(APIView):
     throttle_classes = [AuthAnonRateThrottle]
 
     def post(self, request):
-        from .validators import validate_strong_password
+        
         
         phone = request.data.get('phone')
         otp = request.data.get('otp')

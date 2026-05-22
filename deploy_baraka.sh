@@ -4,16 +4,16 @@
 #   Target OS: Ubuntu 20.04 LTS / 22.04 LTS / 24.04 LTS
 #
 #   Usage:
-#     ./deploy.sh                  — Full deployment (install + start all)
-#     ./deploy.sh start            — Start all background services
-#     ./deploy.sh stop             — Stop all background services
-#     ./deploy.sh restart          — Restart all background services
-#     ./deploy.sh status           — Show status of all services
-#     ./deploy.sh logs django      — Tail Django/Gunicorn logs
-#     ./deploy.sh logs celery      — Tail Celery worker logs
-#     ./deploy.sh logs frontend    — Tail Nginx/frontend logs
-#     ./deploy.sh logs ngrok       — Tail Ngrok tunnel logs
-#     ./deploy.sh logs all         — Tail all logs combined
+#     ./deploy_baraka.sh                  — Full deployment (install + start all)
+#     ./deploy_baraka.sh start            — Start all background services
+#     ./deploy_baraka.sh stop             — Stop all background services
+#     ./deploy_baraka.sh restart          — Restart all background services
+#     ./deploy_baraka.sh status           — Show status of all services
+#     ./deploy_baraka.sh logs django      — Tail Django/Gunicorn logs
+#     ./deploy_baraka.sh logs celery      — Tail Celery worker logs
+#     ./deploy_baraka.sh logs frontend    — Tail Nginx/frontend logs
+#     ./deploy_baraka.sh logs ngrok       — Tail Ngrok tunnel logs
+#     ./deploy_baraka.sh logs all         — Tail all logs combined
 # ==============================================================================
 
 # --- Configuration -----------------------------------------------------------
@@ -121,7 +121,7 @@ start_django() {
     print_step "🚀 Starting Django/Gunicorn server in background..."
     cd "$SCRIPT_DIR"
     nohup ./venv/bin/gunicorn backend.wsgi:application \
-        --bind 127.0.0.1:8000 \
+        --bind 127.0.0.1:8003 \
         --workers 4 \
         --threads 2 \
         --timeout 120 \
@@ -215,8 +215,8 @@ start_all() {
     start_ngrok
     echo ""
     echo -e "${GREEN}✅ All services started in background.${NC}"
-    echo -e "   Use ${CYAN}./deploy.sh logs <service>${NC} to view logs."
-    echo -e "   Use ${CYAN}./deploy.sh status${NC} to check service status."
+    echo -e "   Use ${CYAN}./deploy_baraka.sh logs <service>${NC} to view logs."
+    echo -e "   Use ${CYAN}./deploy_baraka.sh status${NC} to check service status."
     echo ""
 }
 
@@ -398,10 +398,28 @@ show_logs() {
             echo -e "    ${CYAN}ngrok${NC}     — Ngrok tunnel logs"
             echo -e "    ${CYAN}all${NC}       — All logs combined"
             echo ""
-            echo "  Usage: ./deploy.sh logs <service>"
+            echo "  Usage: ./deploy_baraka.sh logs <service>"
             exit 1
             ;;
     esac
+}
+
+# --- PostgreSQL Setup -------------------------------------------------------
+
+setup_postgres() {
+    sudo systemctl start postgresql 2>/dev/null || true
+    echo "  Creating role tlk@tlk..."
+    sudo -u postgres psql -tc "SELECT 1 FROM pg_roles WHERE rolname='tlk@tlk'" | grep -q 1 \
+        && echo "  Role already exists" \
+        || sudo -u postgres psql -c "CREATE ROLE \"tlk@tlk\" LOGIN PASSWORD 'tlk_vesta_1680';"
+    echo "  Creating database baraka_db..."
+    sudo -u postgres psql -tc "SELECT 1 FROM pg_database WHERE datname='baraka_db'" | grep -q 1 \
+        && echo "  Database already exists" \
+        || sudo -u postgres psql -c "CREATE DATABASE baraka_db OWNER \"tlk@tlk\";"
+    echo "  Granting privileges..."
+    sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE baraka_db TO \"tlk@tlk\";"
+    sudo -u postgres psql -d baraka_db -c "ALTER SCHEMA public OWNER TO \"tlk@tlk\";"
+    echo -e "  ${GREEN}✅${NC} PostgreSQL setup complete (user: tlk@tlk, db: baraka_db)"
 }
 
 # --- Full Deployment (Install + Setup) --------------------------------------
@@ -426,10 +444,8 @@ full_deploy() {
     sudo systemctl start postgresql
 
     # 4. PostgreSQL Database Creation
-    print_step "🗄️  [4/10] Setting up PostgreSQL production database 'baraka'..."
-    sudo -u postgres psql -c "CREATE DATABASE baraka;" 2>/dev/null || echo "  Database already exists"
-    sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'barakasecurepass';"
-    sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE baraka TO postgres;"
+    print_step "🗄️  [4/10] Setting up PostgreSQL production database 'baraka_db'..."
+    setup_postgres
 
     # 5. Virtual Environment & Dependencies
     print_step "🐍 [5/10] Setting up Python virtual environment & packages..."
@@ -444,10 +460,8 @@ full_deploy() {
     print_step "📝 [6/10] Assuring Production Environment Variables (.env)..."
     if [ ! -f ".env" ]; then
         cp .env.example .env
-        sed -i 's/DB_HOST=/DB_HOST=127.0.0.1/g' .env
-        sed -i 's/REDIS_URL=/REDIS_URL=redis:\/\/127.0.0.1:6379\/1/g' .env
-        sed -i 's/CELERY_BROKER_URL=/CELERY_BROKER_URL=redis:\/\/127.0.0.1:6379\/1/g' .env
-        sed -i 's/ALLOWED_HOSTS=/ALLOWED_HOSTS=*,/g' .env
+        # Override for production
+        sed -i 's|^ALLOWED_HOSTS=.*$|ALLOWED_HOSTS=*,127.0.0.1,localhost|' .env
         echo "  ✅ Generated standard production .env file."
     fi
 
@@ -476,7 +490,7 @@ server {
 
     # API Backend Reverse Proxy
     location /api/ {
-        proxy_pass http://127.0.0.1:8000/api/;
+        proxy_pass http://127.0.0.1:8003/api/;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
@@ -485,7 +499,7 @@ server {
 
     # Media Files Proxy
     location /media/ {
-        proxy_pass http://127.0.0.1:8000/media/;
+        proxy_pass http://127.0.0.1:8003/media/;
         proxy_set_header Host \$host;
     }
 }
@@ -536,14 +550,14 @@ EOF
     echo -e "   ${GREEN}●${NC} All services are running in the background"
     echo ""
     echo -e "   ${BOLD}Commands:${NC}"
-    echo -e "     ${CYAN}./deploy.sh status${NC}           — Check all service statuses"
-    echo -e "     ${CYAN}./deploy.sh logs django${NC}      — View Django logs"
-    echo -e "     ${CYAN}./deploy.sh logs celery${NC}      — View Celery logs"
-    echo -e "     ${CYAN}./deploy.sh logs frontend${NC}    — View Nginx logs"
-    echo -e "     ${CYAN}./deploy.sh logs ngrok${NC}       — View Ngrok logs"
-    echo -e "     ${CYAN}./deploy.sh logs all${NC}         — View all logs"
-    echo -e "     ${CYAN}./deploy.sh stop${NC}             — Stop all services"
-    echo -e "     ${CYAN}./deploy.sh restart${NC}          — Restart all services"
+    echo -e "     ${CYAN}./deploy_baraka.sh status${NC}           — Check all service statuses"
+    echo -e "     ${CYAN}./deploy_baraka.sh logs django${NC}      — View Django logs"
+    echo -e "     ${CYAN}./deploy_baraka.sh logs celery${NC}      — View Celery logs"
+    echo -e "     ${CYAN}./deploy_baraka.sh logs frontend${NC}    — View Nginx logs"
+    echo -e "     ${CYAN}./deploy_baraka.sh logs ngrok${NC}       — View Ngrok logs"
+    echo -e "     ${CYAN}./deploy_baraka.sh logs all${NC}         — View all logs"
+    echo -e "     ${CYAN}./deploy_baraka.sh stop${NC}             — Stop all services"
+    echo -e "     ${CYAN}./deploy_baraka.sh restart${NC}          — Restart all services"
     echo ""
 }
 
@@ -555,6 +569,28 @@ SERVICE="$2"
 case "$COMMAND" in
     deploy|install|setup)
         full_deploy
+        ;;
+    baraka)
+        print_header "First-Time PostgreSQL Setup + Migrations"
+        ensure_dirs
+        setup_postgres
+        cd "$SCRIPT_DIR"
+        if [ ! -d "venv" ]; then
+            python3 -m venv venv
+        fi
+        ./venv/bin/pip install --upgrade pip
+        ./venv/bin/pip install -r requirements.txt
+        if [ ! -f ".env" ]; then
+            cp .env.example .env
+            sed -i 's|^ALLOWED_HOSTS=.*$|ALLOWED_HOSTS=*,127.0.0.1,localhost|' .env
+        fi
+        print_step "📦 Running makemigrations..."
+        ./venv/bin/python manage.py makemigrations
+        print_step "🗄️  Running migrate..."
+        ./venv/bin/python manage.py migrate
+        echo ""
+        echo -e "${GREEN}✅ Baraka database setup complete.${NC}"
+        echo ""
         ;;
     start)
         start_all
@@ -573,7 +609,7 @@ case "$COMMAND" in
         if [ -z "$SERVICE" ]; then
             print_error "Please specify a service to view logs for."
             echo ""
-            echo "  Usage: ./deploy.sh logs <service>"
+            echo "  Usage: ./deploy_baraka.sh logs <service>"
             echo ""
             echo "  Available services:"
             echo -e "    ${CYAN}django${NC}    — Django/Gunicorn backend logs"
@@ -589,10 +625,11 @@ case "$COMMAND" in
         echo ""
         echo -e "${BOLD}Baraka Deployment Script${NC}"
         echo ""
-        echo "Usage: ./deploy.sh [command] [options]"
+        echo "Usage: ./deploy_baraka.sh [command] [options]"
         echo ""
         echo "Commands:"
         echo -e "  ${CYAN}deploy${NC}              Full deployment (install deps + configure + start)"
+        echo -e "  ${CYAN}baraka${NC}              First-time Postgres setup (user, db, migrations)"
         echo -e "  ${CYAN}start${NC}               Start all background services"
         echo -e "  ${CYAN}stop${NC}                Stop all background services"
         echo -e "  ${CYAN}restart${NC}             Restart all background services"
@@ -603,7 +640,7 @@ case "$COMMAND" in
         ;;
     *)
         print_error "Unknown command: '$COMMAND'"
-        echo "  Run ${CYAN}./deploy.sh help${NC} to see available commands."
+        echo "  Run ${CYAN}./deploy_baraka.sh help${NC} to see available commands."
         exit 1
         ;;
 esac

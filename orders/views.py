@@ -71,78 +71,125 @@ class OrderViewSet(viewsets.ModelViewSet):
         data = request.data
         address = data.get('address')
         items_data = data.get('items', [])
+        menu_items_data = data.get('menu_items', [])
 
-        if not items_data:
-            return Response({"detail": "Missing items data."}, 
+        if not items_data and not menu_items_data:
+            return Response({"detail": "Missing items data."},
                             status=status.HTTP_400_BAD_REQUEST)
 
-        # ── 1) Atomic transaction: single DB commit for order + items + stock + race protection ──
         with transaction.atomic():
-            product_ids = [it['product'] for it in items_data]
-            # Use select_for_update() to lock the product rows and prevent concurrent checkout stock race conditions!
-            products_map = {
-                p.id: p for p in Product.objects.select_for_update().filter(id__in=product_ids).select_related('shop', 'shop__owner')
-            }
-
-            # ── 2) Validate all items and compute totals (zero DB hits, thread-safe) ──
             total_price = 0
             order_items = []
             unique_shops = set()
+            unique_restaurants = set()
 
-            for it in items_data:
-                prod = products_map.get(int(it['product']))
-                if not prod:
-                    return Response(
-                        {"detail": f"المنتج {it['product']} غير موجود."},
-                        status=status.HTTP_400_BAD_REQUEST,
-                    )
-                
-                if prod.shop and not prod.shop.is_open:
-                    return Response(
-                        {"detail": f"عذراً، المحل '{prod.shop.name}' مغلق حالياً. لا يمكنك الطلب منه."},
-                        status=status.HTTP_400_BAD_REQUEST,
-                    )
+            # Handle product items
+            if items_data:
+                product_ids = [it['product'] for it in items_data]
+                products_map = {
+                    p.id: p for p in Product.objects.select_for_update().filter(id__in=product_ids).select_related('shop', 'shop__owner')
+                }
+                for it in items_data:
+                    prod = products_map.get(int(it['product']))
+                    if not prod:
+                        return Response(
+                            {"detail": f"المنتج {it['product']} غير موجود."},
+                            status=status.HTTP_400_BAD_REQUEST,
+                        )
+                    if prod.shop and not prod.shop.is_open:
+                        return Response(
+                            {"detail": f"عذراً، المحل '{prod.shop.name}' مغلق حالياً. لا يمكنك الطلب منه."},
+                            status=status.HTTP_400_BAD_REQUEST,
+                        )
+                    qty = int(it.get('quantity', 1))
+                    if qty > prod.quantity:
+                        return Response(
+                            {"detail": f"المنتج '{prod.name}' لا يحتوي على كمية كافية في المخزن! المتاح حالياً: {prod.quantity} فقط."},
+                            status=status.HTTP_400_BAD_REQUEST,
+                        )
+                    price = prod.price
+                    total_price += price * qty
+                    order_items.append({'prod': prod, 'qty': qty, 'price': price, 'type': 'product'})
+                    if prod.shop:
+                        unique_shops.add(prod.shop)
 
-                qty = int(it.get('quantity', 1))
-                if qty > prod.quantity:
-                    return Response(
-                        {"detail": f"المنتج '{prod.name}' لا يحتوي على كمية كافية في المخزن! المتاح حالياً: {prod.quantity} فقط."},
-                        status=status.HTTP_400_BAD_REQUEST,
-                    )
-
-                price = prod.price
-                total_price += price * qty
-                order_items.append((prod, qty, price))
-                if prod.shop:
-                    unique_shops.add(prod.shop)
+            # Handle menu items
+            if menu_items_data:
+                menu_item_ids = [it['menu_item'] for it in menu_items_data]
+                menu_items_map = {
+                    m.id: m for m in MenuItem.objects.select_for_update().filter(id__in=menu_item_ids).select_related('restaurant')
+                }
+                for it in menu_items_data:
+                    mitem = menu_items_map.get(int(it['menu_item']))
+                    if not mitem:
+                        return Response(
+                            {"detail": f"صنف الطعام {it['menu_item']} غير موجود."},
+                            status=status.HTTP_400_BAD_REQUEST,
+                        )
+                    if mitem.restaurant and not mitem.restaurant.is_open:
+                        return Response(
+                            {"detail": f"عذراً، المطعم '{mitem.restaurant.name}' مغلق حالياً. لا يمكنك الطلب منه."},
+                            status=status.HTTP_400_BAD_REQUEST,
+                        )
+                    qty = int(it.get('quantity', 1))
+                    if qty > mitem.quantity:
+                        return Response(
+                            {"detail": f"صنف '{mitem.name}' لا يحتوي على كمية كافية! المتاح حالياً: {mitem.quantity} فقط."},
+                            status=status.HTTP_400_BAD_REQUEST,
+                        )
+                    price = mitem.price
+                    total_price += price * qty
+                    order_items.append({'mitem': mitem, 'qty': qty, 'price': price, 'type': 'menu_item'})
+                    if mitem.restaurant:
+                        unique_restaurants.add(mitem.restaurant)
 
             order_shop = list(unique_shops)[0] if len(unique_shops) == 1 else None
+            order_restaurant = list(unique_restaurants)[0] if len(unique_restaurants) == 1 else None
 
             order = Order.objects.create(
                 customer=request.user,
                 shop=order_shop,
+                restaurant=order_restaurant,
                 total_price=total_price,
                 address=address or request.user.location or '',
                 status=OrderStatus.PENDING,
             )
 
-            # Bulk insert all OrderItems in ONE query (replaces N inserts)
-            OrderItem.objects.bulk_create([
-                OrderItem(order=order, product=prod, quantity=qty, price=price)
-                for prod, qty, price in order_items
-            ])
+            order_item_objs = []
+            for item_data in order_items:
+                if item_data['type'] == 'product':
+                    order_item_objs.append(
+                        OrderItem(order=order, product=item_data['prod'], quantity=item_data['qty'], price=item_data['price'])
+                    )
+                else:
+                    order_item_objs.append(
+                        OrderItem(order=order, menu_item=item_data['mitem'], quantity=item_data['qty'], price=item_data['price'])
+                    )
 
-            # Bulk update all product stock in ONE query (replaces N updates)
+            OrderItem.objects.bulk_create(order_item_objs)
+
             products_to_update = []
-            for prod, qty, price in order_items:
-                prod.quantity -= qty
-                if prod.quantity == 0:
-                    prod.available = False
-                products_to_update.append(prod)
+            for item_data in order_items:
+                if item_data['type'] == 'product':
+                    prod = item_data['prod']
+                    prod.quantity -= item_data['qty']
+                    if prod.quantity == 0:
+                        prod.available = False
+                    products_to_update.append(prod)
+            if products_to_update:
+                Product.objects.bulk_update(products_to_update, ['quantity', 'available'])
 
-            Product.objects.bulk_update(products_to_update, ['quantity', 'available'])
+            menu_items_to_update = []
+            for item_data in order_items:
+                if item_data['type'] == 'menu_item':
+                    mitem = item_data['mitem']
+                    mitem.quantity -= item_data['qty']
+                    if mitem.quantity == 0:
+                        mitem.available = False
+                    menu_items_to_update.append(mitem)
+            if menu_items_to_update:
+                MenuItem.objects.bulk_update(menu_items_to_update, ['quantity', 'available'])
 
-            # Notify all unique shop owners about the new order.
             for s in unique_shops:
                 Notification.objects.create(
                     user=s.owner,
@@ -155,15 +202,24 @@ class OrderViewSet(viewsets.ModelViewSet):
                     notification_type='new_order'
                 )
 
-        # ── 4) Async driver notification (non-blocking) ──
-        # Schedule auto-cancellation after 30 minutes (1800 seconds) if order remains unaccepted (PENDING)
+            for r in unique_restaurants:
+                RestaurantNotification.objects.create(
+                    user=r.owner,
+                    restaurant=r,
+                    title="طلب جديد من الزبون",
+                    message=(
+                        f"تلقيت طلبًا جديدًا من عميلك يشمل مطعم '{r.name}'. "
+                        f"إجمالي الطلب: {total_price:.2f} ج.م. راجع الطلب الآن لإدارته."
+                    ),
+                    notification_type='new_order'
+                )
+
         auto_cancel_expired_orders.apply_async(args=[order.id], countdown=1800)
 
-        # ── 5) Re-fetch with joins so the serializer doesn't trigger lazy queries ──
         order = Order.objects.select_related(
-            'customer', 'driver', 'shop', 'shop__owner'
+            'customer', 'driver', 'shop', 'shop__owner', 'restaurant'
         ).prefetch_related(
-            'items', 'items__product'
+            'items', 'items__product', 'items__menu_item'
         ).get(pk=order.pk)
 
         serializer = self.get_serializer(order)

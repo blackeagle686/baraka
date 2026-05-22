@@ -146,9 +146,9 @@
                 </div>
 
                 <div class="d-flex gap-2 mb-3" id="orderFilterTabs">
-                    <span class="badge rounded-pill px-3 py-2" style="cursor: pointer; background: var(--restaurant-primary); color: white;" onclick="filterRestOrders('all', this)" data-filter="all">الكل</span>
-                    <span class="badge rounded-pill px-3 py-2" style="cursor: pointer; background: white; color: #666; border: 1px solid #ddd;" onclick="filterRestOrders('active', this)" data-filter="active">نشط</span>
-                    <span class="badge rounded-pill px-3 py-2" style="cursor: pointer; background: white; color: #666; border: 1px solid #ddd;" onclick="filterRestOrders('completed', this)" data-filter="completed">مكتمل</span>
+                    <span class="badge rounded-pill px-3 py-2 rest-filter-badge active" onclick="filterRestOrders('all', this)" data-filter="all">الكل</span>
+                    <span class="badge rounded-pill px-3 py-2 rest-filter-badge" onclick="filterRestOrders('active', this)" data-filter="active">نشط</span>
+                    <span class="badge rounded-pill px-3 py-2 rest-filter-badge" onclick="filterRestOrders('completed', this)" data-filter="completed">مكتمل</span>
                 </div>
 
                 <div class="row g-3" id="restOrdersList">
@@ -196,7 +196,7 @@
                                     <span class="text-white fs-4" id="restInitials">صورة المطعم</span>
                                 </div>
                                 <label for="restImage" class="upload-btn position-absolute bottom-0 start-0 translate-middle-y ms-2">
-                                    <i class="bi bi-camera-fill" style="font-size: 0.85rem;"></i>
+                                    <i class="bi bi-camera-fill rest-camera-icon"></i>
                                 </label>
                                 <input type="file" id="restImage" accept="image/*" class="d-none">
                             </div>

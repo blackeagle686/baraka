@@ -151,8 +151,14 @@ async function initRestaurantDetails(id) {
         initRestaurantRatings(restaurant);
         loadRestCartFromStorage();
     } catch (error) {
-        document.getElementById('restaurantDetailContent').innerHTML = `
-            <div class="text-center py-5"><i class="bi bi-exclamation-triangle fs-1 text-danger mb-2 d-block"></i><p class="fw-bold">فشل تحميل بيانات المطعم</p></div>`;
+        const header = document.getElementById('restCoverHeader');
+        if (header) {
+            header.innerHTML = `
+                <div class="text-center py-5">
+                    <i class="bi bi-exclamation-triangle fs-1 text-danger mb-2 d-block"></i>
+                    <p class="fw-bold text-white">فشل تحميل بيانات المطعم</p>
+                </div>`;
+        }
     }
 }
 
@@ -224,21 +230,25 @@ function renderFilteredMenuItems(items, category) {
 
     const filtered = category ? items.filter(i => (i.category_name || 'أخرى') === category) : items;
     if (filtered.length === 0) {
-        container.innerHTML = `<div class="text-center py-4 text-mesa"><p>لا توجد أصناف في هذا القسم</p></div>`;
+        container.innerHTML = `<div class="col-12"><div class="text-center py-4 text-mesa"><p>لا توجد أصناف في هذا القسم</p></div></div>`;
         return;
     }
 
-    container.innerHTML = filtered.map(item => `
-        <div class="menu-item-card mb-2 animate-up">
-            <img src="${item.image || '/images/restaurant-placeholder.png'}" class="menu-item-img" onerror="this.src='/images/restaurant-placeholder.png'">
-            <div class="menu-item-info">
-                <div class="menu-item-name">${item.name}</div>
-                ${item.description ? `<div class="menu-item-desc">${item.description}</div>` : ''}
-                <div class="menu-item-price">${item.price} ج.م</div>
+    container.innerHTML = filtered.map((item, idx) => `
+        <div class="col-md-6 animate-up" style="animation-delay: ${idx * 0.05}s;">
+            <div class="menu-item-card h-100 mb-0">
+                <img src="${item.image || '/images/restaurant-placeholder.png'}" class="menu-item-img" onerror="this.src='/images/restaurant-placeholder.png'">
+                <div class="menu-item-info d-flex flex-column flex-grow-1">
+                    <div class="menu-item-name">${item.name}</div>
+                    ${item.description ? `<div class="menu-item-desc">${item.description}</div>` : ''}
+                    <div class="d-flex justify-content-between align-items-center mt-auto pt-2">
+                        <div class="menu-item-price mb-0">${item.price} ج.م</div>
+                        <button class="add-to-cart-btn ${!item.available ? 'disabled' : ''}" ${item.available ? `onclick="addToRestCart(${item.id}, '${item.name.replace(/'/g, "\\'")}', ${item.price})"` : 'disabled'}>
+                            ${item.available ? '<i class="bi bi-plus-lg"></i>' : 'غير متاح'}
+                        </button>
+                    </div>
+                </div>
             </div>
-            <button class="add-to-cart-btn ${!item.available ? 'disabled' : ''}" ${item.available ? `onclick="addToRestCart(${item.id}, '${item.name.replace(/'/g, "\\'")}', ${item.price})"` : 'disabled'}>
-                ${item.available ? '<i class="bi bi-plus-lg me-1"></i>أضف' : 'غير متاح'}
-            </button>
         </div>
     `).join('');
 }

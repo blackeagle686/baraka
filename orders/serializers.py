@@ -64,13 +64,17 @@ class OrderSerializer(serializers.ModelSerializer):
     driver_details = UserSerializer(source='driver', read_only=True)
     shop_details = ShopLiteSerializer(source='shop', read_only=True)
     shops_details = serializers.SerializerMethodField()
+    restaurant_details = RestaurantLiteSerializer(source='restaurant', read_only=True)
+    restaurants_details = serializers.SerializerMethodField()
 
     class Meta:
         model = Order
         fields = [
             'id', 'customer', 'customer_details', 'shop', 'shop_details', 'shops_details',
+            'restaurant', 'restaurant_details', 'restaurants_details',
             'driver', 'driver_details', 'total_price', 'delivery_price', 'status', 'address',
-            'is_paid_to_shop', 'paid_shops', 'postponed_shops', 'picked_up_at', 'customer_otp', 'driver_otp', 'dispute_status', 
+            'is_paid_to_shop', 'paid_shops', 'postponed_shops', 'picked_up_at',
+            'customer_otp', 'driver_otp', 'dispute_status',
             'dispute_reason', 'disputed_by', 'items', 'created_at', 'updated_at'
         ]
         read_only_fields = ['customer', 'driver', 'total_price', 'status', 'customer_otp', 'driver_otp']
@@ -82,32 +86,48 @@ class OrderSerializer(serializers.ModelSerializer):
                 shops.add(item.product.shop)
         return ShopLiteSerializer(shops, many=True).data
 
+    def get_restaurants_details(self, obj):
+        restaurants = set()
+        for item in obj.items.all():
+            if item.menu_item and item.menu_item.restaurant:
+                restaurants.add(item.menu_item.restaurant)
+        return RestaurantLiteSerializer(restaurants, many=True).data
+
     def to_representation(self, instance):
         ret = super().to_representation(instance)
         request = self.context.get('request')
-        
-        # Safe pop by default so no third party gets these private trust tokens
+
         ret.pop('customer_otp', None)
         ret.pop('driver_otp', None)
-        
+
         if request and request.user.is_authenticated:
-            # Only the actual customer of this order can see the delivery verification OTP
             if instance.customer == request.user or request.user.is_staff:
                 ret['customer_otp'] = instance.customer_otp
-                
-            # Driver or staff see all shop-specific settlement OTPs
+
             if instance.driver == request.user or request.user.is_staff:
                 ret['driver_otp'] = instance.driver_otp
-                ret['shop_otps_map'] = {
-                    str(shop.id): instance.get_or_create_shop_otp(shop.id)
-                    for shop in set(item.product.shop for item in instance.items.all() if item.product and item.product.shop)
-                }
-                
-            # Each shop owner sees ONLY their own shop's settlement OTP
+                shop_otps = {}
+                for item in instance.items.all():
+                    if item.product and item.product.shop:
+                        shop_otps[str(item.product.shop.id)] = instance.get_or_create_shop_otp(item.product.shop.id)
+                    if item.menu_item and item.menu_item.restaurant:
+                        shop_otps[f"r_{item.menu_item.restaurant.id}"] = instance.get_or_create_shop_otp(f"r_{item.menu_item.restaurant.id}")
+                ret['shop_otps_map'] = shop_otps
+
             from shops.models import Shop
             shops_owned_by_user = Shop.objects.filter(owner=request.user)
             order_items_belonging_to_user_shops = instance.items.filter(product__shop__in=shops_owned_by_user)
             if order_items_belonging_to_user_shops.exists():
-                ret['my_shop_otp'] = instance.get_or_create_shop_otp(order_items_belonging_to_user_shops.first().product.shop.id)
-                
+                ret['my_shop_otp'] = instance.get_or_create_shop_otp(
+                    order_items_belonging_to_user_shops.first().product.shop.id
+                )
+
+            from restaurants.models import Restaurant
+            restaurants_owned_by_user = Restaurant.objects.filter(owner=request.user)
+            order_menu_items_belonging_to_user = instance.items.filter(menu_item__restaurant__in=restaurants_owned_by_user)
+            if order_menu_items_belonging_to_user.exists():
+                ret['my_restaurant_otp'] = instance.get_or_create_shop_otp(
+                    f"r_{order_menu_items_belonging_to_user.first().menu_item.restaurant.id}"
+                )
+
         return ret

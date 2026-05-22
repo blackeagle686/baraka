@@ -9,6 +9,7 @@ from django.utils import timezone
 
 from .models import Order, OrderItem, OrderStatus, DriverRating
 from shops.models import Shop, Product, Notification
+from restaurants.models import Restaurant, MenuItem, RestaurantNotification
 from core.models import Report
 
 from .serializers import OrderSerializer, DriverRatingSerializer
@@ -39,6 +40,9 @@ class OrderViewSet(viewsets.ModelViewSet):
         # they should only see their own personal orders.
         if user.role == 'SHOP_OWNER':
             return base_qs.filter(items__product__shop__owner=user).distinct()
+
+        elif user.role == 'RESTAURANT_OWNER':
+            return base_qs.filter(items__menu_item__restaurant__owner=user).distinct()
         
         elif user.role == 'DRIVER':
             if not user.is_approved:

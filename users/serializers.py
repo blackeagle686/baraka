@@ -46,7 +46,7 @@ class UserSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         role = validated_data.get('role', 'CUSTOMER')
         # Shop owners and drivers need admin approval
-        needs_approval = role in ('SHOP_OWNER', 'DRIVER')
+        needs_approval = role in ('SHOP_OWNER', 'RESTAURANT_OWNER', 'DRIVER')
         user = User.objects.create_user(
             phone=validated_data['phone'],
             password=validated_data['password'],

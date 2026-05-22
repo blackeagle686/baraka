@@ -231,9 +231,10 @@ class OrderViewSet(viewsets.ModelViewSet):
         new_status = request.data.get('status')
         
         is_shop_owner = order.items.filter(product__shop__owner=request.user).exists()
+        is_restaurant_owner = order.items.filter(menu_item__restaurant__owner=request.user).exists()
         is_driver = (order.driver == request.user)
         
-        if not (is_shop_owner or is_driver or request.user.is_staff):
+        if not (is_shop_owner or is_restaurant_owner or is_driver or request.user.is_staff):
             return Response({"detail": "Not authorized to update this order's status."}, 
                             status=status.HTTP_403_FORBIDDEN)
         
@@ -253,7 +254,7 @@ class OrderViewSet(viewsets.ModelViewSet):
                 return Response({"detail": "رمز التوصيل غير صحيح! يرجى إدخال الرمز المكون من 4 أرقام المستلم من العميل لتأكيد التوصيل."},
                                 status=status.HTTP_400_BAD_REQUEST)
         
-        if is_shop_owner and not is_driver and not request.user.is_staff:
+        if (is_shop_owner or is_restaurant_owner) and not is_driver and not request.user.is_staff:
             if new_status == 'DELIVERED':
                 return Response({"detail": "Only drivers can mark orders as DELIVERED."}, 
                                 status=status.HTTP_403_FORBIDDEN)
@@ -345,18 +346,29 @@ class OrderViewSet(viewsets.ModelViewSet):
         order.save()
 
         # Notify all unique shop owners involved in this order
-        unique_shops = set(item.product.shop for item in order.items.select_related('product__shop').all() if item.product and item.product.shop)
-        for s in unique_shops:
-            Notification.objects.create(
-                user=s.owner,
-                shop=s,
-                title="السائق قبل طلب التوصيل",
-                message=(
-                    f"تم قبول طلب #{order.id} من قبل السائق {request.user.phone}. "
-                    f"يمكنك متابعة حالة التوصيل الآن."
-                ),
-                notification_type='driver_accepted_order'
-            )
+        for item in order.items.select_related('product__shop', 'menu_item__restaurant').all():
+            if item.product and item.product.shop:
+                Notification.objects.create(
+                    user=item.product.shop.owner,
+                    shop=item.product.shop,
+                    title="السائق قبل طلب التوصيل",
+                    message=(
+                        f"تم قبول طلب #{order.id} من قبل السائق {request.user.phone}. "
+                        f"يمكنك متابعة حالة التوصيل الآن."
+                    ),
+                    notification_type='driver_accepted_order'
+                )
+            if item.menu_item and item.menu_item.restaurant:
+                RestaurantNotification.objects.create(
+                    user=item.menu_item.restaurant.owner,
+                    restaurant=item.menu_item.restaurant,
+                    title="السائق قبل طلب التوصيل",
+                    message=(
+                        f"تم قبول طلب #{order.id} من قبل السائق {request.user.phone}. "
+                        f"يمكنك متابعة حالة التوصيل الآن."
+                    ),
+                    notification_type='driver_accepted_order'
+                )
 
         return Response(self.get_serializer(order).data)
 

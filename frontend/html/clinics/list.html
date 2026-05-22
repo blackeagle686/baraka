@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>العيادات - منصة بركة</title>
+    <meta name="description" content="تصفح عيادات بركة، احجز موعد مع دكتور في قريتك بسهولة.">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/main_style.css">
+    <link rel="stylesheet" href="/css/shops.css">
+    <link rel="stylesheet" href="/css/shopl_list.css">
+    <link rel="stylesheet" href="/css/clinics.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+</head>
+<body class="bg-dune overflow-hidden">
+
+    <div id="header-placeholder"></div>
+
+    <div class="shops-split-container">
+
+        <!-- ===================== SIDEBAR ===================== -->
+        <aside class="shops-sidebar">
+
+            <div class="sidebar-top-panel">
+
+                <div class="sidebar-brand-row">
+                    <div>
+                        <div class="sidebar-brand-title">
+                            <i class="bi bi-heart-pulse text-marigold me-1" style="font-size: 1.1rem;"></i>
+                            عيادات قريتك
+                        </div>
+                        <div class="sidebar-brand-subtitle">احجز موعد مع دكتور في أقرب عيادة</div>
+                    </div>
+                    <span class="shops-count-pill" id="clinicsCountPill">
+                        <i class="bi bi-pin-map-fill me-1"></i>
+                        <span id="clinicsCountNum">...</span> عيادة
+                    </span>
+                </div>
+
+                <div class="shops-search-wrap">
+                    <i class="bi bi-search search-icon"></i>
+                    <input type="text" id="clinicSearchInput"
+                           class="shops-search-input"
+                           placeholder="ابحث عن عيادة، دكتور، تخصص...">
+                    <button class="shops-search-clear" id="searchClearBtn" title="مسح البحث">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+
+                <div class="open-now-row">
+                    <label for="openNowFilter" class="open-now-label" style="cursor: pointer;">
+                        <span class="pulse-dot"></span>
+                        مفتوح دلوقتي فقط
+                    </label>
+                    <div class="form-check form-switch p-0 m-0">
+                        <input class="form-check-input m-0" type="checkbox" role="switch"
+                               id="openNowFilter">
+                    </div>
+                </div>
+
+                <div class="category-pills" id="specializationPillsRow">
+                    <button class="cat-pill active" data-cat="" onclick="filterBySpecialization(this, '')">
+                        🏥 الكل
+                    </button>
+                    <button class="cat-pill" data-cat="قلب" onclick="filterBySpecialization(this, 'قلب')">
+                        ❤️ قلب
+                    </button>
+                    <button class="cat-pill" data-cat="أطفال" onclick="filterBySpecialization(this, 'أطفال')">
+                        👶 أطفال
+                    </button>
+                    <button class="cat-pill" data-cat="جلدية" onclick="filterBySpecialization(this, 'جلدية')">
+                        🫂 جلدية
+                    </button>
+                    <button class="cat-pill" data-cat="عظام" onclick="filterBySpecialization(this, 'عظام')">
+                        🦴 عظام
+                    </button>
+                    <button class="cat-pill" data-cat="أسنان" onclick="filterBySpecialization(this, 'أسنان')">
+                        🦷 أسنان
+                    </button>
+                    <button class="cat-pill" data-cat="نساء" onclick="filterBySpecialization(this, 'نساء')">
+                        👩 نساء وتوليد
+                    </button>
+                    <button class="cat-pill" data-cat="عيون" onclick="filterBySpecialization(this, 'عيون')">
+                        👁️ عيون
+                    </button>
+                </div>
+
+            </div>
+
+            <div class="shops-list-scroll" id="allClinicsList">
+                <div class="text-center py-5" style="color: var(--color-mesa);">
+                    <div class="spinner-border mb-3" style="color: var(--color-marigold); width: 2rem; height: 2rem;" role="status"></div>
+                    <p class="fw-bold mb-0" style="font-size: 0.9rem;">بنحمل العيادات عشانك...</p>
+                </div>
+            </div>
+
+            <div class="shops-pagination-bar d-flex justify-content-center align-items-center gap-2" id="clinicsPagination">
+            </div>
+
+        </aside>
+
+        <!-- ===================== MAP ===================== -->
+        <main class="shops-map-wrapper">
+
+            <div class="map-top-bar">
+                <div class="map-top-badge">
+                    <span class="dot"></span>
+                    <span id="activeClinicsMapCount">جاري تحديد العيادات...</span>
+                </div>
+            </div>
+
+            <div id="clinicsDirectoryMap" style="width: 100%; height: 100%;"></div>
+
+        </main>
+
+    </div>
+
+    <button id="mobileViewToggle" class="btn btn-primary rounded-pill shadow-lg px-4 py-2 fw-bold position-fixed bottom-0 start-50 translate-middle-x mb-4" style="z-index: 9999 !important;">
+        <i class="bi bi-map me-1"></i> عرض الخريطة 🗺️
+    </button>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/main.js"></script>
+    <script src="/js/clinics.js"></script>
+    <script src="/js/clinic_list.js"></script>
+</body>
+</html>

@@ -423,6 +423,16 @@
                 }
             }
         };
+
+        window.filterRestOrders = function(filter, el) {
+            restOrderFilter = filter;
+            document.querySelectorAll('#orderFilterTabs .rest-filter-badge').forEach(b => {
+                b.classList.remove('active');
+            });
+            if (el) el.classList.add('active');
+            currentRestOrdersPage = 1;
+            renderRestOrders(currentRestOrders);
+        };
     </script>
 </body>
 </html>

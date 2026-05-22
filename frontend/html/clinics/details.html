@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تفاصيل العيادة - منصة بركة</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/main_style.css">
+    <link rel="stylesheet" href="/css/shops.css">
+    <link rel="stylesheet" href="/css/clinics.css">
+</head>
+<body class="bg-dune">
+
+    <div id="header-placeholder"></div>
+
+    <!-- Cover Banner -->
+    <div id="clinicCoverBanner"></div>
+
+    <div class="container py-4">
+        <div class="row g-4">
+            <!-- Main Content -->
+            <div class="col-lg-8">
+
+                <!-- Services Card -->
+                <div class="dashboard-card mb-4 animate-up" id="clinicServicesCard">
+                    <div class="dashboard-section-title">
+                        <span><i class="bi bi-prescription2 text-marigold me-2"></i>الخدمات المتاحة</span>
+                    </div>
+                    <div id="servicesList" class="row g-3">
+                        <div class="text-center py-4 text-mesa">
+                            <div class="spinner-border text-marigold mb-3" role="status"></div>
+                            <p>جاري تحميل الخدمات...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Booking Card -->
+                <div class="dashboard-card mb-4 animate-up" id="bookingCard">
+                    <div class="dashboard-section-title">
+                        <span><i class="bi bi-calendar-check text-marigold me-2"></i>احجز موعد</span>
+                    </div>
+
+                    <div id="bookingFormSection">
+                        <div class="mb-3">
+                            <label class="form-label text-espresso fw-bold"><i class="bi bi-prescription me-1"></i>اختر الخدمة</label>
+                            <select class="form-select rounded-pill px-4 py-2" id="bookingServiceSelect">
+                                <option value="" disabled selected>اختر الخدمة أولاً...</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-espresso fw-bold"><i class="bi bi-calendar me-1"></i>اختر التاريخ</label>
+                            <input type="date" class="form-control rounded-pill px-4 py-2" id="bookingDate">
+                        </div>
+
+                        <div id="timeSlotsSection" style="display: none;">
+                            <label class="form-label text-espresso fw-bold mb-3"><i class="bi bi-clock me-1"></i>اختر الموعد المناسب</label>
+                            <div class="row g-2" id="timeSlotsGrid">
+                                <!-- Loaded dynamically -->
+                            </div>
+                        </div>
+
+                        <div class="mb-3" id="bookingNotesSection" style="display: none;">
+                            <label class="form-label text-espresso fw-bold"><i class="bi bi-chat-dots me-1"></i>ملاحظات (اختياري)</label>
+                            <textarea class="form-control rounded-4 px-4 py-2" id="bookingNotes" rows="2" placeholder="أي ملاحظات للدكتور..."></textarea>
+                        </div>
+
+                        <button class="btn btn-marigold w-100 rounded-pill py-2 fw-bold text-white shadow-sm" id="confirmBookingBtn" style="display: none;" onclick="submitBooking()">
+                            <i class="bi bi-check2-circle me-1"></i>تأكيد الحجز
+                        </button>
+                    </div>
+
+                    <div id="bookingSuccessSection" style="display: none;" class="text-center py-4">
+                        <div class="mb-3" style="font-size: 4rem; color: #22c55e;">
+                            <i class="bi bi-check-circle-fill"></i>
+                        </div>
+                        <h4 class="fw-bold text-espresso">تم الحجز بنجاح! ✅</h4>
+                        <p class="text-mesa" id="bookingSuccessDetails">تم إرسال طلب الحجز إلى العيادة وسيتم تأكيده قريباً.</p>
+                        <a href="/html/clinics/list.html" class="btn btn-outline-mesa rounded-pill px-4 fw-bold mt-2">
+                            <i class="bi bi-arrow-right-short me-1"></i>العودة للعيادات
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Ratings Card -->
+                <div class="dashboard-card animate-up" id="clinicRatingsCard">
+                    <div class="dashboard-section-title">
+                        <span><i class="bi bi-star-fill text-warning me-2"></i>التقييمات</span>
+                    </div>
+                    <div id="ratingsContent">
+                        <div class="text-center py-4 text-mesa">
+                            <div class="spinner-border text-marigold mb-3" role="status"></div>
+                            <p>جاري تحميل التقييمات...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="col-lg-4">
+                <div class="dashboard-card sticky-top animate-up" style="top: 90px;">
+                    <div class="dashboard-section-title">
+                        <span><i class="bi bi-info-circle text-marigold me-2"></i>معلومات العيادة</span>
+                    </div>
+                    <div id="clinicInfoSidebar">
+                        <div class="text-center py-4 text-mesa">
+                            <div class="spinner-border text-marigold mb-3" role="status"></div>
+                            <p>جاري التحميل...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/main.js"></script>
+    <script src="/js/clinics.js"></script>
+</body>
+</html>

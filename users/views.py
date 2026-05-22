@@ -13,6 +13,7 @@ from shops.models import Shop
 from restaurants.models import Restaurant
 from core.models import Report
 
+from orders.models import Order
 import random
 from django.utils import timezone
 from datetime import timedelta

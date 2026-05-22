@@ -310,6 +310,8 @@ const api = {
             return true;
         }
     },
+
+    
     categories: {
         getAll: async () => {
             const res = await fetch(`${API_BASE}/categories/`);
@@ -318,7 +320,7 @@ const api = {
         }
     },
 
-    
+    // ----------------------------------------- Order-related APIs -----------------------------------------
 
 
     orders: {

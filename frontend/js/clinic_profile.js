@@ -711,11 +711,19 @@ async function loadCurrentSlots() {
 
         container.innerHTML = '';
         slots.forEach(slot => {
+            const dateStr = slot.date || '';
+            const timeStr = slot.start_time?.substring(0,5) || '';
+            // Format date: weekday + day/month
+            let dateLabel = dateStr;
+            try {
+                const d = new Date(dateStr + 'T00:00:00');
+                dateLabel = d.toLocaleDateString('ar-EG', { weekday: 'short', day: 'numeric', month: 'short' });
+            } catch (e) {}
             const html = `
                 <div class="col-4 col-md-3 col-lg-2">
                     <div class="time-slot-card ${!slot.is_available ? 'opacity-50' : ''}" style="${!slot.is_available ? 'background: #f8d7da; border-color: #f5c2c7;' : ''}">
-                        <span class="time-slot-time">${slot.date}</span>
-                        <span class="time-slot-duration">${slot.start_time?.substring(0,5) || ''}</span>
+                        <span class="time-slot-time">${timeStr}</span>
+                        <span class="time-slot-duration">${dateLabel}</span>
                         <span class="badge ${slot.is_available ? 'bg-success' : 'bg-danger'} d-block mt-1" style="font-size: 0.6rem;">
                             ${slot.is_available ? 'متاح' : 'محجوز'}
                         </span>

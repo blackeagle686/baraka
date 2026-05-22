@@ -33,12 +33,30 @@ class ShopLiteSerializer(serializers.ModelSerializer):
         model = Shop
         fields = ['id', 'name', 'owner', 'owner_phone', 'address', 'image']
 
+class MenuItemLiteSerializer(serializers.ModelSerializer):
+    """Minimal menu item info for order items."""
+    restaurant_id = serializers.ReadOnlyField(source='restaurant.id')
+    restaurant_name = serializers.ReadOnlyField(source='restaurant.name')
+
+    class Meta:
+        model = MenuItem
+        fields = ['id', 'name', 'price', 'image', 'available', 'restaurant_id', 'restaurant_name']
+
+class RestaurantLiteSerializer(serializers.ModelSerializer):
+    """Minimal restaurant info for order responses."""
+    owner_phone = serializers.ReadOnlyField(source='owner.phone')
+
+    class Meta:
+        model = Restaurant
+        fields = ['id', 'name', 'owner', 'owner_phone', 'address', 'image']
+
 class OrderItemSerializer(serializers.ModelSerializer):
     product_details = ProductLiteSerializer(source='product', read_only=True)
+    menu_item_details = MenuItemLiteSerializer(source='menu_item', read_only=True)
 
     class Meta:
         model = OrderItem
-        fields = ['id', 'product', 'product_details', 'quantity', 'price', 'is_ready']
+        fields = ['id', 'product', 'product_details', 'menu_item', 'menu_item_details', 'quantity', 'price', 'is_ready']
 
 class OrderSerializer(serializers.ModelSerializer):
     items = OrderItemSerializer(many=True, read_only=True)

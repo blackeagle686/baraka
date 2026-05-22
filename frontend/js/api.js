@@ -218,6 +218,9 @@ const api = {
             return await res.json();
         }
     },
+
+
+    
     shops: {
         getAll: async (page = 1, search = '') => {
             const url = new URL(`${API_BASE}/shops/`, window.location.origin);
@@ -311,7 +314,8 @@ const api = {
         }
     },
 
-    
+    // ------------------------------------------ Category-related APIs -----------------------------------------
+
     categories: {
         getAll: async () => {
             const res = await fetch(`${API_BASE}/categories/`);

@@ -479,9 +479,10 @@ class OrderViewSet(viewsets.ModelViewSet):
         order = self.get_object()
         is_customer = (order.customer == request.user)
         is_shop_owner = order.items.filter(product__shop__owner=request.user).exists()
+        is_restaurant_owner = order.items.filter(menu_item__restaurant__owner=request.user).exists()
         is_driver = (order.driver == request.user)
         
-        if not (is_customer or is_shop_owner or is_driver or request.user.is_staff):
+        if not (is_customer or is_shop_owner or is_restaurant_owner or is_driver or request.user.is_staff):
             return Response({"detail": "Not authorized to dispute this order."},
                             status=status.HTTP_403_FORBIDDEN)
             
@@ -522,7 +523,9 @@ class OrderViewSet(viewsets.ModelViewSet):
         except OrderItem.DoesNotExist:
             return Response({"detail": "Item not found in this order."}, status=status.HTTP_404_NOT_FOUND)
             
-        if user.role != 'SHOP_OWNER' or item.product.shop.owner != user:
+        is_shop_owner = item.product and item.product.shop and item.product.shop.owner == user
+        is_restaurant_owner = item.menu_item and item.menu_item.restaurant and item.menu_item.restaurant.owner == user
+        if not (is_shop_owner or is_restaurant_owner or user.is_staff):
             return Response({"detail": "Not authorized to update this item's readiness."}, status=status.HTTP_403_FORBIDDEN)
             
         item.is_ready = not item.is_ready

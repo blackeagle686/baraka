@@ -532,6 +532,7 @@ const api = {
             return await res.json();
         }
     },
+    // ----------------------------------------- Clin
     clinics: {
         getAll: async (page = 1, search = '', specialization = '') => {
             const url = new URL(`${API_BASE}/clinics/`, window.location.origin);

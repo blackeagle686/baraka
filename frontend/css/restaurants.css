@@ -187,17 +187,6 @@
     color: #991b1b;
 }
 
-/* ===========================
-   Restaurant Profile Dashboard
-   =========================== */
-
-:root {
-    --restaurant-primary: #f97316;
-    --restaurant-dark: #c2410c;
-    --restaurant-light: #fff7ed;
-    --restaurant-accent: #f59e0b;
-}
-
 .rest-sidebar-brand-icon {
     background: linear-gradient(135deg, var(--restaurant-primary), var(--restaurant-dark));
 }

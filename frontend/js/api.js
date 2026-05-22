@@ -744,6 +744,9 @@ const api = {
             return await res.json();
         }
     },
+
+    // ------------------------------------------ General User Notifications APIs -----------------------------------------
+
     notifications: {
         getAll: async (token) => {
             const res = await fetch(`${API_BASE}/notifications/`, {

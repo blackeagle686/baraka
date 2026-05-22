@@ -9,6 +9,8 @@ document.addEventListener('DOMContentLoaded', () => {
             window.location.href = '/html/profile/driver.html';
         } else if (role === 'SHOP_OWNER') {
             window.location.href = '/html/profile/shop.html';
+        } else if (role === 'DOCTOR') {
+            window.location.href = '/html/profile/clinic.html';
         } else {
             window.location.href = '/html/index.html';
         }

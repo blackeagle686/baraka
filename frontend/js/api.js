@@ -600,10 +600,13 @@ const api = {
             if (!res.ok) throw await res.json();
             return await res.json();
         },
-        getAvailableSlots: async (clinicId, date, serviceId) => {
-            let url = `${API_BASE}/clinics/${clinicId}/available_slots/?date=${date}`;
-            if (serviceId) url += `&service_id=${serviceId}`;
-            const res = await fetch(url);
+        getAvailableSlots: async (clinicId, date) => {
+            const res = await fetch(`${API_BASE}/clinics/${clinicId}/available_slots/?date=${date}`);
+            if (!res.ok) throw await res.json();
+            return await res.json();
+        },
+        getAvailableDates: async (clinicId) => {
+            const res = await fetch(`${API_BASE}/clinics/${clinicId}/available_dates/`);
             if (!res.ok) throw await res.json();
             return await res.json();
         },

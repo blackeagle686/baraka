@@ -187,6 +187,89 @@
     color: #991b1b;
 }
 
+/* ===========================
+   Restaurant Profile Dashboard
+   =========================== */
+
+:root {
+    --restaurant-primary: #f97316;
+    --restaurant-dark: #c2410c;
+    --restaurant-light: #fff7ed;
+    --restaurant-accent: #f59e0b;
+}
+
+.rest-sidebar-brand-icon {
+    background: linear-gradient(135deg, var(--restaurant-primary), var(--restaurant-dark));
+}
+
+.rest-sidebar .dash-nav-link.active {
+    background: rgba(249,115,22,0.12);
+    border-right: 3px solid var(--restaurant-primary);
+}
+
+.rest-sidebar .dash-nav-link.active i {
+    color: var(--restaurant-primary) !important;
+}
+
+.stat-card .stat-icon.stat-restaurant {
+    background: linear-gradient(135deg, #f97316, #c2410c);
+}
+
+.stat-card .stat-icon.stat-restaurant-light {
+    background: rgba(249,115,22,0.12);
+    color: var(--restaurant-primary);
+}
+
+.rest-auto-refresh-indicator {
+    display: none;
+}
+
+.rest-filter-badge {
+    cursor: pointer;
+    background: white;
+    color: #666;
+    border: 1px solid #ddd;
+}
+
+.rest-filter-badge.active {
+    background: var(--restaurant-primary);
+    color: white;
+    border: none;
+}
+
+.rest-map-container {
+    height: 280px;
+    border-radius: var(--radius-md);
+    border: 2px solid rgba(201, 153, 151, 0.15);
+    box-shadow: var(--shadow-sm);
+    z-index: 10;
+}
+
+.rest-camera-icon {
+    font-size: 0.85rem;
+}
+
+.rest-empty-state-text {
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.rest-modal-content {
+    background-color: var(--color-dune-light);
+}
+
+.rest-modal-icon {
+    color: var(--restaurant-primary);
+}
+
+.rest-revenue-section {
+    display: none;
+}
+
+.rest-no-revenue-state {
+    display: block;
+}
+
 @media (max-width: 768px) {
     .menu-item-card {
         flex-direction: column;

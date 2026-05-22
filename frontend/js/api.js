@@ -639,6 +639,9 @@ const api = {
             return await res.json();
         }
     },
+
+    // ------------------------------------------ Service-related APIs ------------------------------------------
+
     services: {
         getAll: async (clinicId) => {
             const res = await fetch(`${API_BASE}/services/?clinic_id=${clinicId}`);

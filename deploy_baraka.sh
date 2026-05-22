@@ -534,10 +534,9 @@ server {
         proxy_set_header X-Forwarded-Proto \$scheme;
     }
 
-    # Media Files Proxy
+    # Media Files (served directly by nginx, not proxied to Django)
     location /media/ {
-        proxy_pass http://127.0.0.1:8003/media/;
-        proxy_set_header Host \$host;
+        alias $SCRIPT_DIR/media/;
     }
 }
 EOF

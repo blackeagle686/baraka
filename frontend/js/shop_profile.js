@@ -591,6 +591,55 @@ async function loadShopOrders() {
     }
 }
 
+// ==========================================
+// Shop Owner Auto-Refresh Engine (15 seconds)
+// ==========================================
+let shopRefreshCountdownTimer = null;
+let shopRefreshSecondsLeft = 15;
+
+function startShopAutoRefresh() {
+    if (shopRefreshCountdownTimer) clearInterval(shopRefreshCountdownTimer);
+
+    const indicatorEl = document.getElementById('shopAutoRefreshIndicator');
+    const countdownEl = document.getElementById('shopRefreshCountdown');
+
+    if (!indicatorEl || !countdownEl) return;
+
+    indicatorEl.style.display = 'flex';
+    shopRefreshSecondsLeft = 15;
+    countdownEl.innerText = shopRefreshSecondsLeft;
+
+    shopRefreshCountdownTimer = setInterval(() => {
+        shopRefreshSecondsLeft--;
+        if (countdownEl) countdownEl.innerText = shopRefreshSecondsLeft;
+        if (shopRefreshSecondsLeft <= 0) {
+            clearInterval(shopRefreshCountdownTimer);
+            shopRefreshCountdownTimer = null;
+            loadShopOrders().finally(() => {
+                startShopAutoRefresh();
+            });
+        }
+    }, 1000);
+}
+
+window.manualRefreshShopOrders = function() {
+    const iconEl = document.getElementById('shopRefreshIcon');
+    if (iconEl) iconEl.classList.add('bi-arrow-clockwise-spin');
+
+    if (shopRefreshCountdownTimer) {
+        clearInterval(shopRefreshCountdownTimer);
+        shopRefreshCountdownTimer = null;
+    }
+
+    loadShopOrders().finally(() => {
+        if (iconEl) iconEl.classList.remove('bi-arrow-clockwise-spin');
+        if (window.showBarakaToast) {
+            window.showBarakaToast('تم تحديث الطلبات بنجاح!', 'success', 'bi-arrow-clockwise');
+        }
+        startShopAutoRefresh();
+    });
+};
+
 function renderShopOrders(orders) {
     currentOrders = orders;
     const container = document.getElementById('shopOrdersList');

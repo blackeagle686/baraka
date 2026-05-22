@@ -561,7 +561,7 @@ function renderShopStops(group) {
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
-                            <span class="badge bg-marigold text-white rounded-pill px-2 py-1 small" style="font-size: 0.8rem;">استلام من محل ${index + 1}</span>
+                            <span class="badge bg-marigold text-white rounded-pill px-2 py-1 small" style="font-size: 0.8rem;">استلام من ${shop.type === 'restaurant' ? 'مطعم' : 'محل'} ${index + 1}</span>
                             ${readyBadge}
                         </div>
                         <div class="transit-title mt-1">${shop.name}</div>

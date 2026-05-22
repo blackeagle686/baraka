@@ -170,22 +170,39 @@ start_celery() {
 
 start_ngrok() {
     ensure_dirs
+    if ! command -v ngrok &>/dev/null; then
+        print_warn "Ngrok is not installed — skipping. (Run: sudo apt-get install -y ngrok)"
+        return
+    fi
     if is_running "$NGROK_PID"; then
         print_warn "Ngrok is already running (PID $(cat "$NGROK_PID"))"
         return
     fi
     print_step "🚇 Starting Ngrok tunnel in background..."
     nohup ngrok http 80 --log=stdout >> "$NGROK_LOG" 2>&1 &
-    echo $! > "$NGROK_PID"
-    echo -e "  ${GREEN}●${NC} Ngrok tunnel started (PID $!)"
+    local ngrok_pid=$!
+    echo "$ngrok_pid" > "$NGROK_PID"
+    echo -e "  ${GREEN}●${NC} Ngrok tunnel started (PID $ngrok_pid)"
 
-    # Wait a moment and try to grab the public URL
     sleep 4
-    NGROK_URL=$(python3 -c "import urllib.request, json; print(json.loads(urllib.request.urlopen('http://127.0.0.1:4040/api/tunnels').read().decode())['tunnels'][0]['public_url'])" 2>/dev/null || echo "")
-    if [ -n "$NGROK_URL" ]; then
-        echo -e "  ${GREEN}🌐${NC} Ngrok URL: ${BOLD}$NGROK_URL${NC}"
+    # Auto-detect ngrok API port (it varies: 4040, 4041, 4042, ...)
+    local api_port
+    for port in 4040 4041 4042 4043 4044; do
+        if curl -s "http://127.0.0.1:$port/api/tunnels" >/dev/null 2>&1; then
+            api_port=$port
+            break
+        fi
+    done
+    if [ -n "$api_port" ]; then
+        local ngrok_url
+        ngrok_url=$(python3 -c "import urllib.request, json; print(json.loads(urllib.request.urlopen('http://127.0.0.1:${api_port}/api/tunnels').read().decode())['tunnels'][0]['public_url'])" 2>/dev/null || echo "")
+        if [ -n "$ngrok_url" ]; then
+            echo -e "  ${GREEN}🌐${NC} Ngrok URL: ${BOLD}$ngrok_url${NC}"
+        else
+            echo -e "  ${YELLOW}⏳${NC} Ngrok URL pending — check with: ${CYAN}curl -s http://127.0.0.1:${api_port}/api/tunnels${NC}"
+        fi
     else
-        echo -e "  ${YELLOW}⏳${NC} Ngrok URL pending — check with: ${CYAN}curl -s http://127.0.0.1:4040/api/tunnels${NC}"
+        echo -e "  ${YELLOW}⏳${NC} Ngrok API not ready yet — check logs: ./deploy_baraka.sh logs ngrok"
     fi
 }
 
@@ -300,8 +317,18 @@ check_status() {
     local nkstatus; nkstatus=$(_pid_status "$NGROK_PID")
     case "$nkstatus" in
         Running)
-            local ngrok_url
-            ngrok_url=$(python3 -c "import urllib.request, json; print(json.loads(urllib.request.urlopen('http://127.0.0.1:4040/api/tunnels').read().decode())['tunnels'][0]['public_url'])" 2>/dev/null || echo "N/A")
+            local ngrok_url ngrok_api_port
+            for port in 4040 4041 4042 4043 4044; do
+                if curl -s "http://127.0.0.1:$port/api/tunnels" >/dev/null 2>&1; then
+                    ngrok_api_port=$port
+                    break
+                fi
+            done
+            if [ -n "$ngrok_api_port" ]; then
+                ngrok_url=$(python3 -c "import urllib.request, json; print(json.loads(urllib.request.urlopen('http://127.0.0.1:${ngrok_api_port}/api/tunnels').read().decode())['tunnels'][0]['public_url'])" 2>/dev/null || echo "N/A")
+            else
+                ngrok_url="N/A"
+            fi
             echo -e "  ${GREEN}●${NC} Ngrok          — ${GREEN}Running${NC} (PID $(cat "$NGROK_PID")) → ${BOLD}$ngrok_url${NC}"
             ;;
         Crashed) echo -e "  ${YELLOW}●${NC} Ngrok          — ${YELLOW}Crashed${NC} (stale PID) — check: ./deploy_baraka.sh logs ngrok" ;;
@@ -463,9 +490,11 @@ full_deploy() {
         cp .env.example .env
         echo "  ✅ Generated standard production .env file."
     fi
-    # Ensure Celery/Redis URLs are set (avoid kombu parsing bugs)
+    # Force-correct Celery/Redis URLs (replace any existing or duplicated values)
     for var in REDIS_URL CELERY_BROKER_URL CELERY_RESULT_BACKEND; do
-        if ! grep -q "^${var}=" .env 2>/dev/null; then
+        if grep -q "^${var}=" .env 2>/dev/null; then
+            sed -i "s|^${var}=.*$|${var}=redis://127.0.0.1:6380/1|" .env
+        else
             echo "${var}=redis://127.0.0.1:6380/1" >> .env
         fi
     done
@@ -589,9 +618,11 @@ case "$COMMAND" in
         if [ ! -f ".env" ]; then
             cp .env.example .env
         fi
-        # Ensure Celery/Redis URLs are explicitly set (avoid kombu parsing issues)
+        # Force-correct Celery/Redis URLs (replace any existing or duplicated values)
         for var in REDIS_URL CELERY_BROKER_URL CELERY_RESULT_BACKEND; do
-            if ! grep -q "^${var}=" .env 2>/dev/null; then
+            if grep -q "^${var}=" .env 2>/dev/null; then
+                sed -i "s|^${var}=.*$|${var}=redis://127.0.0.1:6380/1|" .env
+            else
                 echo "${var}=redis://127.0.0.1:6380/1" >> .env
             fi
         done

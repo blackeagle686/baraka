@@ -711,6 +711,10 @@ const api = {
             return await res.json();
         }
     },
+
+
+    // ------------------------------------------- Notification-related APIs -----------------------------------------
+
     clinicNotifications: {
         getAll: async (token) => {
             const res = await fetch(`${API_BASE}/clinic-notifications/`, {

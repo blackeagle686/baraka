@@ -334,10 +334,56 @@ function updateRestCartUI() {
     // Sync header cart count
     const headerCartCount = document.getElementById('headerCartCount');
     if (headerCartCount) {
-        const existingCount = parseInt(headerCartCount.innerText) || 0;
-        const restSpecific = count;
-        // We don't overwrite - just add a rest-specific attribute
         headerCartCount.dataset.restCount = count;
+    }
+
+    // Refresh modal body if modal is open
+    const modalEl = document.getElementById('restCartModal');
+    if (modalEl && modalEl.classList.contains('show')) {
+        const body = document.getElementById('restCartModalBody');
+        const footer = document.getElementById('restCartModalFooter');
+        if (body) {
+            body.innerHTML = `
+                <div class="mb-3">
+                    ${restCart.length === 0 ? '<p class="text-center text-mesa py-4">سلة الطلب فارغة</p>' :
+                    restCart.map(i => `
+                        <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-white rounded-3">
+                            <div>
+                                <div class="fw-bold text-espresso">${i.name}</div>
+                                <div class="text-muted small">${i.price} ج.م</div>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <button class="btn btn-sm btn-outline-mesa rounded-circle p-0" style="width: 28px; height: 28px;" onclick="changeRestCartQty(${i.id}, -1)">−</button>
+                                <span class="fw-bold">${i.qty}</span>
+                                <button class="btn btn-sm btn-outline-mesa rounded-circle p-0" style="width: 28px; height: 28px;" onclick="changeRestCartQty(${i.id}, 1)">+</button>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold text-espresso small"><i class="bi bi-geo-alt me-1 text-marigold"></i>عنوان التوصيل</label>
+                    <textarea class="form-control rounded-3 px-3 py-2" id="restOrderAddress" rows="2" placeholder="اكتب عنوان التوصيل..." ${!localStorage.getItem('access_token') ? 'disabled' : ''}>${localStorage.getItem('user_location') || ''}</textarea>
+                </div>
+            `;
+        }
+        if (footer) {
+            const token = localStorage.getItem('access_token');
+            footer.innerHTML = `
+                <div class="w-100">
+                    <div class="d-flex justify-content-between fw-bold text-espresso mb-2">
+                        <span>الإجمالي</span>
+                        <span style="color: var(--restaurant-primary);">${total.toFixed(2)} ج.م</span>
+                    </div>
+                    ${token ? `
+                        <button class="btn w-100 rounded-pill fw-bold py-2 text-white" style="background: var(--restaurant-primary);" onclick="submitRestOrder()">
+                            <i class="bi bi-check2 me-1"></i>تأكيد الطلب
+                        </button>
+                    ` : `
+                        <a href="/html/auth/login.html" class="btn btn-primary w-100 rounded-pill fw-bold py-2">تسجيل الدخول للطلب</a>
+                    `}
+                </div>
+            `;
+        }
     }
 }
 

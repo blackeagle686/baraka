@@ -201,6 +201,26 @@
     box-shadow: 0 3px 10px rgba(249, 115, 22, 0.25);
 }
 
+.rest-category-pill {
+    cursor: pointer;
+    background: white;
+    color: var(--color-espresso);
+    border: 1px solid rgba(201, 153, 151, 0.2);
+    font-size: 0.8rem;
+    transition: all 0.2s ease;
+}
+
+.rest-category-pill:hover {
+    border-color: var(--restaurant-primary);
+    color: var(--restaurant-primary);
+}
+
+.rest-category-pill.active {
+    background: var(--color-espresso);
+    color: white;
+    border-color: var(--color-espresso);
+}
+
 /* List Scroll Area */
 .rest-list-scroll {
     flex-grow: 1;

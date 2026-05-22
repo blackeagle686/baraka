@@ -157,49 +157,45 @@ async function initRestaurantDetails(id) {
 }
 
 function renderRestaurantDetail(r) {
-    const container = document.getElementById('restaurantDetailContent');
-    if (!container) return;
+    document.title = `${r.name} - منصة بركة`;
 
-    container.innerHTML = `
-        <div class="restaurant-detail-header animate-up">
-            <div class="d-flex align-items-center gap-3">
-                <img src="${r.image || '/images/restaurant-placeholder.png'}" class="restaurant-detail-img" onerror="this.src='/images/restaurant-placeholder.png'">
-                <div class="flex-grow-1">
-                    <h2 class="fw-bold mb-1">${r.name}</h2>
-                    <p class="mb-1 small opacity-75"><i class="bi bi-geo-alt me-1"></i>${r.address || ''}</p>
-                    <div class="d-flex align-items-center gap-3 mt-2">
-                        <span class="restaurant-status-badge ${r.is_open ? 'open' : 'closed'}">
-                            <i class="bi ${r.is_open ? 'bi-check-circle' : 'bi-x-circle'} me-1"></i>${r.is_open ? 'مفتوح' : 'مغلق'}
-                        </span>
-                        ${r.average_rating > 0 ? `<span><i class="bi bi-star-fill" style="color: #f59e0b;"></i> ${r.average_rating} (${r.total_ratings || 0})</span>` : ''}
-                        ${r.opening_time ? `<span class="small opacity-75"><i class="bi bi-clock me-1"></i>${r.opening_time.substring(0,5)} - ${r.closing_time ? r.closing_time.substring(0,5) : ''}</span>` : ''}
-                    </div>
-                </div>
+    const coverBanner = document.querySelector('.rest-cover-banner');
+    if (coverBanner) {
+        const img = r.image || '/images/restaurant-placeholder.png';
+        coverBanner.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.7)), url('${img}')`;
+    }
+
+    const header = document.getElementById('restCoverHeader');
+    if (header) {
+        const badges = `
+            <div class="rest-cover-badges">
+                <span class="rest-cover-badge-item">
+                    <i class="bi ${r.is_open ? 'bi-check-circle' : 'bi-x-circle'}"></i>
+                    ${r.is_open ? 'مفتوح' : 'مغلق'}
+                </span>
+                ${r.average_rating > 0 ? `
+                    <span class="rest-cover-badge-item">
+                        <i class="bi bi-star-fill" style="color: #f59e0b;"></i>
+                        ${r.average_rating} (${r.total_ratings || 0})
+                    </span>
+                ` : ''}
+                ${r.opening_time ? `
+                    <span class="rest-cover-badge-item">
+                        <i class="bi bi-clock"></i>
+                        ${r.opening_time.substring(0,5)} - ${r.closing_time ? r.closing_time.substring(0,5) : ''}
+                    </span>
+                ` : ''}
+                <span class="rest-cover-badge-item">
+                    <i class="bi bi-geo-alt"></i>
+                    ${r.address || ''}
+                </span>
             </div>
-        </div>
-        <div class="row g-3">
-            <div class="col-lg-8">
-                <div class="d-flex gap-2 overflow-auto pb-2 mb-3" id="menuCategoryTabs"></div>
-                <div id="menuItemsContainer"></div>
-            </div>
-            <div class="col-lg-4">
-                <div class="restaurant-checkout-card" id="restCheckoutSidebar">
-                    <h6 class="fw-bold text-espresso mb-3"><i class="bi bi-bag me-1 text-marigold"></i>طلبي</h6>
-                    <div id="restCheckoutItems"><p class="text-mesa small text-center py-3">لم تختار أي أصناف بعد</p></div>
-                    <hr>
-                    <div class="d-flex justify-content-between fw-bold text-espresso">
-                        <span>الإجمالي</span>
-                        <span id="restCheckoutTotal">0.00 ج.م</span>
-                    </div>
-                    <button class="btn w-100 mt-3 rounded-pill fw-bold text-white" id="restSubmitOrderBtn" style="background: var(--restaurant-primary, #f97316); display: none;" onclick="submitRestOrder()">
-                        <i class="bi bi-check2 me-1"></i>تأكيد الطلب
-                    </button>
-                </div>
-                <div class="mt-3" id="restaurantRatingsSection"></div>
-            </div>
-        </div>
-    `;
-    updateRestCartUI();
+        `;
+        header.innerHTML = `
+            <h1 class="rest-cover-title text-white fw-bold mb-2">${r.name}</h1>
+            ${badges}
+        `;
+    }
 }
 
 function renderMenuItems(items) {

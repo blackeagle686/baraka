@@ -24,6 +24,10 @@ function renderHeader() {
                 <i class="bi bi-compass fs-5 text-mesa"></i>
                 <span>لف في المحلات</span>
             </a>
+            <a class="nav-link d-flex align-items-center gap-2 fw-bold text-espresso me-3" href="/html/restaurants/list.html" style="font-size: 0.95rem; color: var(--color-espresso) !important;">
+                <i class="bi bi-shop fs-5 text-mesa"></i>
+                <span>مطاعم القرية</span>
+            </a>
             <a class="nav-link d-flex align-items-center gap-2 fw-bold text-espresso me-3" href="/html/clinics/list.html" style="font-size: 0.95rem; color: var(--color-espresso) !important;">
                 <i class="bi bi-heart-pulse fs-5 text-mesa"></i>
                 <span>عيادات القرية</span>
@@ -69,6 +73,8 @@ function renderHeader() {
             `;
         } else if (userRole === 'DRIVER') {
             roleBadge = `<a href="/html/profile/driver.html" class="btn btn-success btn-sm rounded-pill fw-bold text-white px-3 py-1 me-2" style="font-size: 0.8rem;"><i class="bi bi-bicycle me-1"></i>لوحة الطيار</a>`;
+        } else if (userRole === 'RESTAURANT_OWNER') {
+            roleBadge = `<a href="/html/profile/restaurant.html" class="btn btn-orange btn-sm rounded-pill fw-bold text-white px-3 py-1 me-2" style="font-size: 0.8rem; background: #f97316; border-color: #f97316;"><i class="bi bi-shop me-1"></i>مطعمي</a>`;
         } else if (userRole === 'DOCTOR') {
             roleBadge = `<a href="/html/profile/clinic.html" class="btn btn-info btn-sm rounded-pill fw-bold text-white px-3 py-1 me-2" style="font-size: 0.8rem;"><i class="bi bi-heart-pulse me-1"></i>عيادتي</a>`;
         } else if (userRole === 'ADMIN') {

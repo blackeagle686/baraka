@@ -193,6 +193,19 @@
                     </div>
                 </div>
 
+                <!-- Auto-refresh bar -->
+                <div class="d-flex align-items-center justify-content-between mb-3 animate-up">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="d-flex align-items-center text-mesa small fw-bold" id="driverAutoRefreshIndicator" style="display: none;">
+                            <span class="spinner-grow spinner-grow-sm text-marigold me-2" role="status"></span>
+                            تحديث تلقائي خلال <span id="driverRefreshCountdown" class="mx-1 text-marigold">15</span>ث
+                        </div>
+                    </div>
+                    <button class="btn btn-outline-mesa rounded-pill btn-sm fw-bold px-3" onclick="manualRefreshDriverOrders()">
+                        <i class="bi bi-arrow-clockwise me-1" id="driverRefreshIcon"></i>تحديث الطلبات
+                    </button>
+                </div>
+
                 <div class="row g-4" id="availableOrdersList">
                     <div class="text-center text-mesa py-5">
                         <div class="spinner-border text-marigold mb-3" role="status"></div>

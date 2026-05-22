@@ -79,6 +79,9 @@ async function initDriverDashboard() {
         // Load orders data
         await loadDriverOrders();
 
+        // Start auto-refresh cycle every 15 seconds
+        startDriverAutoRefresh();
+
         // Bind form save event
         const profileForm = document.getElementById('driverProfileForm');
         profileForm.addEventListener('submit', handleDriverProfileSubmit);
@@ -356,6 +359,62 @@ async function loadDriverOrders() {
         console.error("Error loading driver orders:", error);
     }
 }
+
+// ==========================================
+// Driver Auto-Refresh Engine (15 seconds)
+// ==========================================
+let driverRefreshCountdownTimer = null;
+let driverRefreshTimer = null;
+let driverRefreshSecondsLeft = 15;
+
+function startDriverAutoRefresh() {
+    if (driverRefreshCountdownTimer) clearInterval(driverRefreshCountdownTimer);
+    if (driverRefreshTimer) clearTimeout(driverRefreshTimer);
+
+    const indicatorEl = document.getElementById('driverAutoRefreshIndicator');
+    const countdownEl = document.getElementById('driverRefreshCountdown');
+
+    if (!indicatorEl || !countdownEl) return;
+
+    indicatorEl.style.display = 'flex';
+    driverRefreshSecondsLeft = 15;
+    countdownEl.innerText = driverRefreshSecondsLeft;
+
+    if (driverRefreshCountdownTimer) clearInterval(driverRefreshCountdownTimer);
+    driverRefreshCountdownTimer = setInterval(() => {
+        driverRefreshSecondsLeft--;
+        if (countdownEl) countdownEl.innerText = driverRefreshSecondsLeft;
+        if (driverRefreshSecondsLeft <= 0) {
+            clearInterval(driverRefreshCountdownTimer);
+            driverRefreshCountdownTimer = null;
+            loadDriverOrders().finally(() => {
+                startDriverAutoRefresh();
+            });
+        }
+    }, 1000);
+}
+
+window.manualRefreshDriverOrders = function() {
+    const iconEl = document.getElementById('driverRefreshIcon');
+    if (iconEl) iconEl.classList.add('bi-arrow-clockwise-spin');
+
+    if (driverRefreshCountdownTimer) {
+        clearInterval(driverRefreshCountdownTimer);
+        driverRefreshCountdownTimer = null;
+    }
+    if (driverRefreshTimer) {
+        clearTimeout(driverRefreshTimer);
+        driverRefreshTimer = null;
+    }
+
+    loadDriverOrders().finally(() => {
+        if (iconEl) iconEl.classList.remove('bi-arrow-clockwise-spin');
+        if (window.showBarakaToast) {
+            window.showBarakaToast('تم تحديث الطلبات المتاحة بنجاح!', 'success', 'bi-arrow-clockwise');
+        }
+        startDriverAutoRefresh();
+    });
+};
 
 let currentAvailablePage = 1;
 const AVAILABLE_PAGE_SIZE = 4;

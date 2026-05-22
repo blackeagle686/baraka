@@ -309,26 +309,26 @@ function renderClinicHeader(clinic) {
     const specialization = clinic.specialization || 'عيادة عامة';
 
     bannerContainer.innerHTML = `
-        <div class="shop-cover-banner" style="background-image: linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.75)), url('${coverPhoto}');">
+        <div class="clinic-cover-banner" style="background-image: linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.75)), url('${coverPhoto}');">
             <div class="container pb-4 w-100 animate-up">
                 <nav aria-label="breadcrumb">
                     <ol class="breadcrumb m-0 mb-3">
                         <li class="breadcrumb-item"><a href="/html/clinics/list.html" class="text-white-50 text-decoration-none fw-bold"><i class="bi bi-arrow-right-short"></i> الرجوع للعيادات</a></li>
                     </ol>
                 </nav>
-                <h1 class="shop-cover-title text-white fw-bold mb-3">${clinic.name}</h1>
-                <div class="shop-cover-badges">
-                    <span class="shop-cover-badge-item">
-                        <i class="bi bi-star-fill text-warning me-1"></i>
+                <h1 class="clinic-cover-title text-white fw-bold mb-3">${clinic.name}</h1>
+                <div class="clinic-cover-badges">
+                    <span class="clinic-cover-badge-item">
+                        <i class="bi bi-star-fill" style="color: #f59e0b;"></i>
                         <span>${rating} (${totalRatings} تقييم)</span>
                     </span>
-                    <span class="shop-cover-badge-item">
+                    <span class="clinic-cover-badge-item">
                         <i class="bi bi-tag-fill"></i>
                         <span>${specialization}</span>
                     </span>
-                    <span class="shop-cover-badge-item">
-                        <i class="bi ${clinic.is_open ? 'bi-check-circle-fill text-success' : 'bi-x-circle-fill text-danger'}"></i>
-                        <span class="${clinic.is_open ? 'text-success' : 'text-danger'}">${clinic.is_open ? 'مفتوح دلوقتي' : 'مقفول دلوقتي'}</span>
+                    <span class="clinic-cover-badge-item">
+                        <i class="bi ${clinic.is_open ? 'bi-check-circle-fill' : 'bi-x-circle-fill'}"></i>
+                        <span>${clinic.is_open ? 'مفتوح دلوقتي' : 'مقفول دلوقتي'}</span>
                     </span>
                 </div>
             </div>

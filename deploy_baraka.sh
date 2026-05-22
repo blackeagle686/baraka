@@ -179,7 +179,8 @@ start_ngrok() {
     rm -f "$NGROK_PID"
     sleep 1
     print_step "🚇 Starting Ngrok tunnel in background..."
-    nohup ngrok http 8003 --log=stdout >> "$NGROK_LOG" 2>&1 &
+    # Tunnel to Nginx (port 80) — serves frontend and proxies /api/ to Django
+    nohup ngrok http 80 --log=stdout >> "$NGROK_LOG" 2>&1 &
     local ngrok_pid=$!
     echo "$ngrok_pid" > "$NGROK_PID"
     echo -e "  ${GREEN}●${NC} Ngrok tunnel started (PID $ngrok_pid)"

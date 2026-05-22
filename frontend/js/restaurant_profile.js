@@ -80,15 +80,11 @@ async function initRestProfile() {
         if (restaurant) {
             currentRestaurantId = restaurant.id;
             populateRestForm(restaurant);
-            document.getElementById('menuPanel').style.display = 'block';
-            document.getElementById('revenuePanel').style.display = 'block';
             loadMenuItems();
             loadRestOrders();
             startRestAutoRefresh();
         } else {
             document.getElementById('restSettingsTitle').innerText = 'إنشاء مطعم جديد';
-            document.getElementById('menuPanel').style.display = 'none';
-            document.getElementById('revenuePanel').style.display = 'none';
             document.getElementById('noRestaurantRevenueState').style.display = 'block';
             initRestMap(null, null);
         }

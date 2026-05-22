@@ -797,13 +797,14 @@
     background: linear-gradient(135deg, var(--restaurant-primary), var(--restaurant-dark));
 }
 
-.rest-sidebar .dash-nav-link.active {
-    background: rgba(249, 115, 22, 0.12);
-    border-right: 3px solid var(--restaurant-primary);
+.rest-dash-sidebar .dash-nav-link.active {
+    background: linear-gradient(135deg, var(--restaurant-primary), var(--restaurant-dark));
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
 }
 
-.rest-sidebar .dash-nav-link.active i {
-    color: var(--restaurant-primary);
+.rest-dash-sidebar .dash-nav-link.active i {
+    color: #fff !important;
 }
 
 .stat-card .stat-icon.stat-restaurant {

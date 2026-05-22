@@ -605,6 +605,12 @@ function populateManualSlotServiceSelect(services) {
 }
 
 async function generateSlots() {
+    if (!currentClinicId) {
+        if (window.showBarakaToast) {
+            window.showBarakaToast('يجب إنشاء عيادة أولاً.', 'warning', 'bi-exclamation-triangle');
+        }
+        return;
+    }
     const token = localStorage.getItem('access_token');
     const startDate = document.getElementById('slotsStartDate').value;
     const endDate = document.getElementById('slotsEndDate').value;
@@ -623,7 +629,12 @@ async function generateSlots() {
         }
         loadCurrentSlots();
     } catch (error) {
-        alert('خطأ: ' + JSON.stringify(error));
+        const msg = error?.detail || error?.message || JSON.stringify(error);
+        if (window.showBarakaToast) {
+            window.showBarakaToast(msg, 'error', 'bi-exclamation-triangle');
+        } else {
+            alert('خطأ: ' + msg);
+        }
     }
 }
 

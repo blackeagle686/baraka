@@ -661,18 +661,27 @@ async function handleManualSlotSubmit() {
     if (serviceId) formData.append('service', serviceId);
 
     try {
-        await fetch(`/api/time-slots/`, {
+        const res = await fetch('/api/time-slots/', {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${token}` },
             body: formData
         });
+        if (!res.ok) {
+            const errData = await res.json();
+            throw errData;
+        }
         if (window.showBarakaToast) {
             window.showBarakaToast('تم إضافة الموعد يدوياً!', 'success', 'bi-plus-circle');
         }
         document.getElementById('manualSlotForm').reset();
         loadCurrentSlots();
     } catch (error) {
-        alert('خطأ: ' + JSON.stringify(error));
+        const msg = error?.detail || error?.message || JSON.stringify(error);
+        if (window.showBarakaToast) {
+            window.showBarakaToast(msg, 'error', 'bi-exclamation-triangle');
+        } else {
+            alert('خطأ: ' + msg);
+        }
     }
 }
 

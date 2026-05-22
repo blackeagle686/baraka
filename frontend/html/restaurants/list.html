@@ -3,63 +3,105 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مطاعم القرية - BARAKA</title>
-    <link rel="icon" href="/images/baraka_logo_low_nobg.png">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="stylesheet" href="/css/main.css">
+    <title>مطاعم القرية - منصة بركة</title>
+    <meta name="description" content="تصفح مطاعم بركة القريبة منك، ابحث عن فطار، غدا، عشاء، مشاوي وغيرها من مطاعم قريتك.">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/main_style.css">
     <link rel="stylesheet" href="/css/restaurants.css">
-    <style>
-        .restaurant-card-hover { transition: all 0.25s ease; cursor: pointer; border: 1px solid rgba(249,115,22,0.08); border-radius: 16px; overflow: hidden; background: white; }
-        .restaurant-card-hover:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(249,115,22,0.12); border-color: rgba(249,115,22,0.2); }
-        .restaurant-card-img { height: 150px; object-fit: cover; width: 100%; background: var(--color-dune-light); }
-        .restaurant-card-body { padding: 1rem; }
-        .restaurant-card-name { font-weight: 700; color: var(--color-espresso); font-size: 1rem; }
-        .restaurant-card-address { font-size: 0.78rem; color: var(--color-mesa); }
-        .restaurant-card-rating { color: var(--restaurant-accent, #f59e0b); font-size: 0.85rem; }
-        .rest-list-layout { display: flex; height: calc(100vh - 72px); gap: 0; }
-        .rest-list-sidebar { width: 440px; min-width: 440px; overflow-y: auto; padding: 1.25rem; background: var(--color-dune-light); }
-        .rest-list-map { flex: 1; position: relative; }
-        #restMap { width: 100%; height: 100%; }
-        .rest-mobile-toggle { display: none; position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 1000; border-radius: 100px; padding: 0.6rem 1.5rem; background: var(--color-espresso); color: white; border: none; font-weight: 700; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
-        @media (max-width: 768px) {
-            .rest-list-layout { flex-direction: column; }
-            .rest-list-sidebar { width: 100%; min-width: 100%; height: 50%; }
-            .rest-list-map { height: 50%; }
-            .rest-mobile-toggle { display: flex; align-items: center; gap: 0.5rem; }
-        }
-    </style>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 </head>
-<body>
+<body class="bg-dune rest-overflow-hidden">
+
     <div id="header-placeholder"></div>
-    <div class="rest-list-layout">
-        <div class="rest-list-sidebar" id="restSidebarPanel">
-            <div class="d-flex align-items-center gap-2 mb-3">
-                <div class="input-group">
-                    <span class="input-group-text bg-white border-0" style="border-radius: 100px 0 0 100px;"><i class="bi bi-search text-mesa"></i></span>
-                    <input type="text" class="form-control border-0 px-0" id="restSearchInput" placeholder="ابحث عن مطعم..." style="background: transparent;">
-                    <button class="btn border-0" id="restSearchClear" style="display: none;"><i class="bi bi-x-lg text-mesa"></i></button>
+
+    <div class="rest-split-container">
+
+        <!-- Sidebar -->
+        <aside class="rest-sidebar" id="restSidebarPanel">
+
+            <div class="rest-sidebar-top-panel">
+
+                <div class="rest-sidebar-brand-row">
+                    <div>
+                        <div class="rest-sidebar-brand-title">
+                            <i class="bi bi-shop-window text-marigold me-1" style="font-size: 1.1rem;"></i>
+                            مطاعم قريتك
+                        </div>
+                        <div class="rest-sidebar-brand-subtitle">اطلب من أقرب مطعم وبأسرع وقت</div>
+                    </div>
+                    <span class="rest-count-pill">
+                        <i class="bi bi-pin-map-fill me-1"></i>
+                        <span id="restaurantsCountNum">...</span> مطعم
+                    </span>
+                </div>
+
+                <div class="rest-search-wrap">
+                    <i class="bi bi-search rest-search-icon"></i>
+                    <input type="text" id="restSearchInput"
+                           class="rest-search-input"
+                           placeholder="ابحث عن مطعم، مشاوي، فطار...">
+                    <button class="rest-search-clear" id="restSearchClear" title="مسح البحث">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+
+                <div class="rest-open-now-row">
+                    <label for="restOpenNowFilter" class="rest-open-now-label" style="cursor: pointer;">
+                        <span class="pulse-dot"></span>
+                        مفتوح دلوقتي فقط
+                    </label>
+                    <div class="form-check form-switch p-0 m-0">
+                        <input class="form-check-input m-0" type="checkbox" role="switch" id="restOpenNowFilter">
+                    </div>
+                </div>
+
+                <div class="rest-category-pills" id="restCategoryPills">
+                    <span class="badge rounded-pill px-3 py-2 rest-category-pill active" data-search="" style="cursor: pointer; background: var(--color-espresso); color: white; font-size: 0.8rem;">الكل</span>
+                    <span class="badge rounded-pill px-3 py-2 rest-category-pill" data-search="فطار" style="cursor: pointer; background: white; color: var(--color-espresso); border: 1px solid rgba(201,153,151,0.2); font-size: 0.8rem;">فطار</span>
+                    <span class="badge rounded-pill px-3 py-2 rest-category-pill" data-search="غدا" style="cursor: pointer; background: white; color: var(--color-espresso); border: 1px solid rgba(201,153,151,0.2); font-size: 0.8rem;">غدا</span>
+                    <span class="badge rounded-pill px-3 py-2 rest-category-pill" data-search="عشاء" style="cursor: pointer; background: white; color: var(--color-espresso); border: 1px solid rgba(201,153,151,0.2); font-size: 0.8rem;">عشاء</span>
+                    <span class="badge rounded-pill px-3 py-2 rest-category-pill" data-search="مشاوي" style="cursor: pointer; background: white; color: var(--color-espresso); border: 1px solid rgba(201,153,151,0.2); font-size: 0.8rem;">مشاوي</span>
+                    <span class="badge rounded-pill px-3 py-2 rest-category-pill" data-search="مأكولات بحرية" style="cursor: pointer; background: white; color: var(--color-espresso); border: 1px solid rgba(201,153,151,0.2); font-size: 0.8rem;">بحري</span>
+                    <span class="badge rounded-pill px-3 py-2 rest-category-pill" data-search="حلويات" style="cursor: pointer; background: white; color: var(--color-espresso); border: 1px solid rgba(201,153,151,0.2); font-size: 0.8rem;">حلويات</span>
+                </div>
+
+            </div>
+
+            <div class="rest-list-scroll" id="restaurantsListContainer">
+                <div class="text-center py-5" style="color: var(--color-mesa);">
+                    <div class="spinner-border mb-3" style="color: var(--restaurant-primary); width: 2rem; height: 2rem;" role="status"></div>
+                    <p class="fw-bold mb-0" style="font-size: 0.9rem;">بنحمل المطاعم عشانك...</p>
                 </div>
             </div>
-            <div class="d-flex gap-2 overflow-auto pb-2 mb-3 flex-wrap" id="restCategoryPills">
-                <span class="badge rounded-pill px-3 py-2 rest-category-pill active" data-search="" style="cursor: pointer; background: var(--color-espresso); color: white; font-size: 0.8rem;">الكل</span>
-                <span class="badge rounded-pill px-3 py-2 rest-category-pill" data-search="فطار" style="cursor: pointer; background: white; color: var(--color-espresso); border: 1px solid rgba(201,153,151,0.2); font-size: 0.8rem;">فطار</span>
-                <span class="badge rounded-pill px-3 py-2 rest-category-pill" data-search="غدا" style="cursor: pointer; background: white; color: var(--color-espresso); border: 1px solid rgba(201,153,151,0.2); font-size: 0.8rem;">غدا</span>
-                <span class="badge rounded-pill px-3 py-2 rest-category-pill" data-search="عشاء" style="cursor: pointer; background: white; color: var(--color-espresso); border: 1px solid rgba(201,153,151,0.2); font-size: 0.8rem;">عشاء</span>
-                <span class="badge rounded-pill px-3 py-2 rest-category-pill" data-search="مشاوي" style="cursor: pointer; background: white; color: var(--color-espresso); border: 1px solid rgba(201,153,151,0.2); font-size: 0.8rem;">مشاوي</span>
-                <span class="badge rounded-pill px-3 py-2 rest-category-pill" data-search="مأكولات بحرية" style="cursor: pointer; background: white; color: var(--color-espresso); border: 1px solid rgba(201,153,151,0.2); font-size: 0.8rem;">بحري</span>
-                <span class="badge rounded-pill px-3 py-2 rest-category-pill" data-search="حلويات" style="cursor: pointer; background: white; color: var(--color-espresso); border: 1px solid rgba(201,153,151,0.2); font-size: 0.8rem;">حلويات</span>
+
+            <div class="rest-pagination-bar d-flex justify-content-center align-items-center gap-2" id="restaurantsPagination"></div>
+
+        </aside>
+
+        <!-- Map -->
+        <main class="rest-map-wrapper" id="restMapWrapper">
+
+            <div class="rest-map-top-bar">
+                <div class="rest-map-top-badge">
+                    <span class="dot"></span>
+                    <span id="restActiveMapCount">جاري تحديد المطاعم...</span>
+                </div>
             </div>
-            <div id="restaurantsListContainer"></div>
-            <div id="restaurantsPagination" class="d-flex justify-content-center mt-3"></div>
-        </div>
-        <div class="rest-list-map" id="restMapWrapper">
-            <div id="restMap"></div>
-        </div>
+
+            <div id="restMap" style="width: 100%; height: 100%;"></div>
+
+        </main>
+
     </div>
-    <button class="rest-mobile-toggle" id="restListToggleView"><i class="bi bi-map fs-5"></i> <span>عرض الخريطة</span></button>
+
+    <button id="restListToggleView" class="btn btn-primary rounded-pill shadow-lg px-4 py-2 fw-bold position-fixed bottom-0 start-50 translate-middle-x mb-4" style="z-index: 9999 !important;">
+        <i class="bi bi-map me-1"></i> عرض الخريطة 🗺️
+    </button>
+
     <div id="footer-placeholder"></div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="/js/api.js"></script>

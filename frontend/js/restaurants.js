@@ -204,9 +204,11 @@ function renderMenuItems(items) {
     if (!container) return;
 
     if (!items || items.length === 0) {
-        container.innerHTML = `<div class="text-center py-5 text-mesa"><p class="fw-bold">لا توجد أصناف في القائمة</p></div>`;
+        container.innerHTML = `<div class="col-12"><div class="text-center py-5 text-mesa"><p class="fw-bold">لا توجد أصناف في القائمة</p></div></div>`;
         return;
     }
+
+    window._allMenuItems = items;
 
     const categories = [...new Set(items.map(i => i.category_name || 'أخرى'))];
     tabsContainer.innerHTML = categories.map((cat, idx) =>

@@ -9,6 +9,8 @@ document.addEventListener('DOMContentLoaded', () => {
             window.location.href = '/html/profile/driver.html';
         } else if (role === 'SHOP_OWNER') {
             window.location.href = '/html/profile/shop.html';
+        } else if (role === 'RESTAURANT_OWNER') {
+            window.location.href = '/html/profile/restaurant.html';
         } else if (role === 'DOCTOR') {
             window.location.href = '/html/profile/clinic.html';
         } else {
@@ -68,6 +70,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     window.location.href = '/html/profile/driver.html';
                 } else if (profile.role === 'SHOP_OWNER') {
                     window.location.href = '/html/profile/shop.html';
+                } else if (profile.role === 'RESTAURANT_OWNER') {
+                    window.location.href = '/html/profile/restaurant.html';
                 } else if (profile.role === 'DOCTOR') {
                     window.location.href = '/html/profile/clinic.html';
                 } else {
@@ -266,6 +270,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     window.location.href = '/html/profile/driver.html';
                 } else if (profile.role === 'SHOP_OWNER') {
                     window.location.href = '/html/profile/shop.html';
+                } else if (profile.role === 'RESTAURANT_OWNER') {
+                    window.location.href = '/html/profile/restaurant.html';
                 } else if (profile.role === 'DOCTOR') {
                     window.location.href = '/html/profile/clinic.html';
                 } else {
@@ -461,6 +467,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     window.location.href = '/html/profile/driver.html';
                 } else if (profile.role === 'SHOP_OWNER') {
                     window.location.href = '/html/profile/shop.html';
+                } else if (profile.role === 'RESTAURANT_OWNER') {
+                    window.location.href = '/html/profile/restaurant.html';
                 } else if (profile.role === 'DOCTOR') {
                     window.location.href = '/html/profile/clinic.html';
                 } else {

@@ -447,11 +447,11 @@ async function loadAvailableDates() {
     try {
         const dates = await api.clinics.getAvailableDates(currentClinic.id);
         if (!dates || dates.length === 0) {
-            section.style.display = 'none';
+            section.classList.add('clinic-booking-hidden');
             return;
         }
 
-        section.style.display = 'block';
+        section.classList.remove('clinic-booking-hidden');
         list.innerHTML = '';
         dates.forEach((d, idx) => {
             const dateObj = new Date(d.date + 'T00:00:00');

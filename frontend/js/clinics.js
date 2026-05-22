@@ -391,14 +391,14 @@ function renderServices(services) {
     services.forEach((service, i) => {
         const html = `
             <div class="col-md-6 animate-up" style="animation-delay: ${i * 0.05}s;">
-                <div class="product-card h-100 p-3 d-flex flex-column justify-content-between" style="background: white; border-radius: 18px; border: 1px solid rgba(201,153,151,0.1);">
+                <div class="clinic-service-card h-100">
                     <div>
-                        <h6 class="fw-bold text-espresso mb-1">${service.name}</h6>
-                        <p class="text-mesa small mb-2" style="min-height: 1.5rem;">${service.description || ''}</p>
+                        <h6 class="service-name">${service.name}</h6>
+                        <p class="service-desc">${service.description || ''}</p>
                     </div>
                     <div class="d-flex justify-content-between align-items-center">
-                        <span class="fw-bold" style="color: var(--color-marigold); font-size: 1.1rem;">${service.price} ج.م</span>
-                        <span class="badge bg-secondary-subtle text-mesa rounded-pill px-3 py-1 fw-bold" style="font-size: 0.75rem;">
+                        <span class="service-price">${service.price} ج.م</span>
+                        <span class="badge rounded-pill px-3 py-1 fw-bold service-duration" style="background: var(--clinic-light); color: var(--clinic-dark);">
                             <i class="bi bi-clock me-1"></i>${service.duration_minutes} دقيقة
                         </span>
                     </div>

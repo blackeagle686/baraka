@@ -154,6 +154,22 @@
 }
 
 /* ==========================================
+   Clinic Button
+   ========================================== */
+
+.btn-clinic {
+    background: linear-gradient(135deg, var(--clinic-primary), var(--clinic-dark)) !important;
+    color: white !important;
+    border: none !important;
+    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.25) !important;
+}
+
+.btn-clinic:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(34, 197, 94, 0.35) !important;
+}
+
+/* ==========================================
    Clinic Floating Booking Button
    ========================================== */
 

@@ -459,8 +459,7 @@ async function loadAvailableSlots() {
     try {
         const slots = await api.clinics.getAvailableSlots(
             currentClinic.id,
-            dateInput.value,
-            serviceSelect.value
+            dateInput.value
         );
 
         if (slots.length === 0) {
@@ -479,12 +478,14 @@ async function loadAvailableSlots() {
         slots.forEach(slot => {
             const slotDiv = document.createElement('div');
             slotDiv.className = 'col-4 col-md-3';
+            const svcDetails = slot.service_details;
+            const durationStr = svcDetails ? svcDetails.duration_minutes + ' د' : '';
             slotDiv.innerHTML = `
                 <div class="time-slot-card" data-slot-id="${slot.id}" 
                      data-start="${slot.start_time}" data-end="${slot.end_time}"
                      onclick="selectTimeSlot(this, '${slot.start_time}', '${slot.end_time}', ${slot.id})">
                     <span class="time-slot-time">${slot.start_time.substring(0, 5)}</span>
-                    <span class="time-slot-duration">${slot.service ? slot.service.duration_minutes || '' : ''} د</span>
+                    ${durationStr ? `<span class="time-slot-duration">${durationStr}</span>` : ''}
                 </div>`;
             slotsGrid.appendChild(slotDiv);
         });

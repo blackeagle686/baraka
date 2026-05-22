@@ -146,7 +146,8 @@ window.fetch = async function (resource, config) {
 
 const api = {
 
-    
+    // ------------------------------------------ Authentication-related APIs ------------------------------------------
+
     auth: {
         login: async (phone, password) => {
             const res = await fetch(`${API_BASE}/auth/login/`, {

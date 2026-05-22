@@ -672,8 +672,8 @@ async function loadCurrentSlots() {
     if (!container) return;
 
     try {
-        let url = `${API_BASE}/time-slots/?clinic_id=${currentClinicId}`;
-        if (filterDate) url += `&date=${filterDate}`;
+        let url = '/api/time-slots/?clinic_id=' + currentClinicId;
+        if (filterDate) url += '&date=' + filterDate;
 
         const res = await fetch(url);
         if (!res.ok) throw await res.json();

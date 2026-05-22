@@ -532,6 +532,189 @@ const api = {
             return await res.json();
         }
     },
+    clinics: {
+        getAll: async (page = 1, search = '', specialization = '') => {
+            const url = new URL(`${API_BASE}/clinics/`, window.location.origin);
+            if (page) url.searchParams.append('page', page);
+            if (search) url.searchParams.append('search', search);
+            if (specialization) url.searchParams.append('specialization', specialization);
+            const res = await fetch(url.toString());
+            if (!res.ok) throw await res.json();
+            return await res.json();
+        },
+        getById: async (id) => {
+            const res = await fetch(`${API_BASE}/clinics/${id}/`);
+            if (!res.ok) throw await res.json();
+            return await res.json();
+        },
+        getMyClinic: async (token) => {
+            const res = await fetch(`${API_BASE}/clinics/my_clinic/`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.status === 404) return null;
+            if (!res.ok) throw await res.json();
+            return await res.json();
+        },
+        createClinic: async (token, formData) => {
+            const res = await fetch(`${API_BASE}/clinics/`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` },
+                body: formData
+            });
+            if (!res.ok) throw await res.json();
+            return await res.json();
+        },
+        updateClinic: async (token, clinicId, formData) => {
+            const res = await fetch(`${API_BASE}/clinics/${clinicId}/`, {
+                method: 'PATCH',
+                headers: { 'Authorization': `Bearer ${token}` },
+                body: formData
+            });
+            if (!res.ok) throw await res.json();
+            return await res.json();
+        },
+        toggleStatus: async (token, clinicId) => {
+            const res = await fetch(`${API_BASE}/clinics/${clinicId}/toggle_status/`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!res.ok) throw await res.json();
+            return await res.json();
+        },
+        getAvailableSlots: async (clinicId, date, serviceId) => {
+            let url = `${API_BASE}/clinics/${clinicId}/available_slots/?date=${date}`;
+            if (serviceId) url += `&service_id=${serviceId}`;
+            const res = await fetch(url);
+            if (!res.ok) throw await res.json();
+            return await res.json();
+        },
+        generateSlots: async (token, clinicId, startDate, endDate) => {
+            const res = await fetch(`${API_BASE}/clinics/${clinicId}/generate_slots/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ start_date: startDate, end_date: endDate })
+            });
+            if (!res.ok) throw await res.json();
+            return await res.json();
+        },
+        rateClinic: async (token, id, rating, review = '') => {
+            const res = await fetch(`${API_BASE}/clinics/${id}/rate/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ rating, review })
+            });
+            if (!res.ok) throw await res.json();
+            return await res.json();
+        },
+        getRatingStatus: async (token, id) => {
+            const res = await fetch(`${API_BASE}/clinics/${id}/rating_status/`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!res.ok) throw await res.json();
+            return await res.json();
+        }
+    },
+    services: {
+        getAll: async (clinicId) => {
+            const res = await fetch(`${API_BASE}/services/?clinic_id=${clinicId}`);
+            if (!res.ok) throw await res.json();
+            return await res.json();
+        },
+        create: async (token, formData) => {
+            const res = await fetch(`${API_BASE}/services/`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` },
+                body: formData
+            });
+            if (!res.ok) throw await res.json();
+            return await res.json();
+        },
+        update: async (token, serviceId, formData) => {
+            const res = await fetch(`${API_BASE}/services/${serviceId}/`, {
+                method: 'PATCH',
+                headers: { 'Authorization': `Bearer ${token}` },
+                body: formData
+            });
+            if (!res.ok) throw await res.json();
+            return await res.json();
+        },
+        delete: async (token, serviceId) => {
+            const res = await fetch(`${API_BASE}/services/${serviceId}/`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!res.ok) throw await res.json();
+            return true;
+        }
+    },
+    appointments: {
+        getAll: async (token) => {
+            const res = await fetch(`${API_BASE}/appointments/`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!res.ok) throw await res.json();
+            return await res.json();
+        },
+        create: async (token, data) => {
+            const res = await fetch(`${API_BASE}/appointments/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(data)
+            });
+            if (!res.ok) throw await res.json();
+            return await res.json();
+        },
+        updateStatus: async (token, appointmentId, status) => {
+            const res = await fetch(`${API_BASE}/appointments/${appointmentId}/update_status/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ status })
+            });
+            if (!res.ok) throw await res.json();
+            return await res.json();
+        }
+    },
+    clinicNotifications: {
+        getAll: async (token) => {
+            const res = await fetch(`${API_BASE}/clinic-notifications/`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!res.ok) throw await res.json();
+            return await res.json();
+        },
+        getUnreadCount: async (token) => {
+            const notifications = await api.clinicNotifications.getAll(token);
+            return notifications.filter(n => !n.is_read).length;
+        },
+        markRead: async (token, id) => {
+            const res = await fetch(`${API_BASE}/clinic-notifications/${id}/mark_read/`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!res.ok) throw await res.json();
+            return await res.json();
+        },
+        markAllRead: async (token) => {
+            const res = await fetch(`${API_BASE}/clinic-notifications/mark_all_read/`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!res.ok) throw await res.json();
+            return await res.json();
+        }
+    },
     notifications: {
         getAll: async (token) => {
             const res = await fetch(`${API_BASE}/notifications/`, {

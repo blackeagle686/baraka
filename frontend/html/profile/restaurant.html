@@ -215,7 +215,7 @@
 
                         <div class="mb-4 animate-up">
                             <label class="form-label text-espresso fw-bold"><i class="bi bi-map me-1 text-marigold"></i>حدد موقع المطعم على الخريطة</label>
-                            <div id="restMap" style="height: 280px; border-radius: var(--radius-md); border: 2px solid rgba(201, 153, 151, 0.15); box-shadow: var(--shadow-sm); z-index: 10;"></div>
+                            <div id="restMap" class="rest-map-container"></div>
                             <div class="form-text text-mesa mt-1"><i class="bi bi-info-circle me-1"></i>اضغط في أي مكان على الخريطة لتغيير مكان دبوس المطعم تلقائياً!</div>
                         </div>
 
@@ -266,10 +266,10 @@
                 <div class="dash-page-title">💰 سجل أرباح المطعم</div>
                 <div class="dash-page-subtitle">تابع إجمالي الطلبات المكتملة والأرباح</div>
 
-                <div id="noRestaurantRevenueState" class="empty-state animate-up" style="display: block;">
+                <div id="noRestaurantRevenueState" class="empty-state animate-up rest-no-revenue-state">
                     <div class="empty-state-icon"><i class="bi bi-shop-window text-marigold"></i></div>
                     <p class="fw-bold fs-5 text-espresso">يا صاحب المطعم، لازم تعمل مطعمك الأول!</p>
-                    <p class="small text-mesa mb-4" style="max-width: 400px; margin: 0 auto;">قم بتحديد بيانات مطعمك من صفحة **"إعدادات المطعم"** ليظهر للناس وتتمكن من تتبع أرباحك بسهولة.</p>
+                    <p class="small text-mesa mb-4 rest-empty-state-text">قم بتحديد بيانات مطعمك من صفحة **"إعدادات المطعم"** ليظهر للناس وتتمكن من تتبع أرباحك بسهولة.</p>
                     <button class="btn btn-primary rounded-pill px-4 fw-bold" onclick="switchTab('settings')">
                         <i class="bi bi-gear-fill me-2"></i>الذهاب لإعدادات المطعم
                     </button>

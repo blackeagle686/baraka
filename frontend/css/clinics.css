@@ -240,10 +240,10 @@
 }
 
 .time-slot-card.selected {
-    background: linear-gradient(135deg, var(--color-marigold), var(--color-bronze));
-    border-color: var(--color-marigold);
+    background: linear-gradient(135deg, var(--clinic-primary), var(--clinic-dark));
+    border-color: var(--clinic-primary);
     color: white;
-    box-shadow: 0 4px 15px rgba(194, 146, 64, 0.3);
+    box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
     transform: translateY(-1px) scale(1.02);
 }
 

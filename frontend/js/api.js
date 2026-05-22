@@ -145,6 +145,8 @@ window.fetch = async function (resource, config) {
 };
 
 const api = {
+
+    
     auth: {
         login: async (phone, password) => {
             const res = await fetch(`${API_BASE}/auth/login/`, {
@@ -219,8 +221,8 @@ const api = {
         }
     },
 
+    // ------------------------------------------ Shop-related APIs ------------------------------------------
 
-    
     shops: {
         getAll: async (page = 1, search = '') => {
             const url = new URL(`${API_BASE}/shops/`, window.location.origin);

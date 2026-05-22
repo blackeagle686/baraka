@@ -1,0 +1,63 @@
+Goal
+Transform the existing platform into a comprehensive clinic booking system.
+Constraints & Preferences
+Doctor registration must use the existing auth system and user roles.
+Clinic dashboard must mirror the shop owner dashboard flow.
+Revenue dashboard must reuse the shop_revenue.js / delivery_revenue.js pattern.
+Notifications must reuse the existing notification engine.
+All UI must follow the existing Egyptian-themed design system (CSS variables, glassmorphism, Bootstrap RTL).
+Timeslot selection must be specific date‑time (not just a date).
+Progress
+Done
+Auto-refresh (every 15 sec) added to driver dashboard orders list (driver_profile.js, driver.html).
+Auto-refresh (every 15 sec) added to shop owner orders list (shop_profile.js, shop.html).
+CSS .bi-arrow-clockwise-spin animation added for refresh button spinner.
+In Progress
+(none)
+Blocked
+(none)
+Key Decisions
+Clinic feature will follow the exact same architectural pattern as Shops → Products → Orders.
+Doctor role should be a new user role (e.g. DOCTOR) distinct from SHOP_OWNER.
+Clinic timeslots will be a new model (Timeslot) tied to a Clinic, each with start/end time and is_booked boolean.
+Booking will replace the existing Order flow but with date‑time selection instead of cart/checkout.
+A new dedicated clinics Django app will mirror the shops app structure.
+Next Steps
+Create the clinics Django app with models: Clinic, Timeslot, Booking, ClinicRating, ClinicNotification.
+Add DOCTOR role to the User model (or use a separate profile).
+Implement backend APIs: CRUD clinics, timeslot management, booking creation, revenue aggregation.
+Build frontend pages: doctor dashboard, clinic setup form, clinic public detail page, user booking flow, revenue dashboard.
+Wire notifications into the booking lifecycle (new booking → doctor, status change → user).
+Critical Context
+Backend is Django DRF with JWT auth (the existing auth system). A new clinics app will reuse the same patterns as shops and orders.
+Frontend is vanilla HTML/CSS/JS — no JS framework. All pages are static HTML served by nginx, communicating via the shared api.js client.
+The platform is in active development – careful to keep existing apps unchanged (sessions 8–13 for shops/orders are already in production).
+Relevant Files
+backend/baraka/urls.py: Root URL router – new clinics/ routes must be registered here.
+backend/shops/models.py, views.py, serializers.py, urls.py: Reference template for the new clinics app.
+backend/shops/permissions.py: IsOwnerOrReadOnly pattern to reuse.
+backend/users/models.py: User model – needs DOCTOR role added.
+frontend/js/api.js: API client – new api.clinics section must be added here.
+frontend/js/shop_profile.js, html/profile/shop.html: Exact blueprint for the doctor dashboard.
+frontend/js/shop_revenue.js: Blueprint for clinic revenue dashboard.
+frontend/js/shops.js, html/shops/list.html, html/shops/details.html: Blueprint for clinic search/list/detail pages.
+frontend/css/profile.css, main_style.css: All styling patterns to reuse.
+The plan is ready. Here's a summary of what we'll build:
+
+Backend (Django):
+
+New DOCTOR role in users/models.py
+New clinics app with 4 models: Clinic, MedicalService, TimeSlot, Appointment
+Slot auto-generation logic based on opening_time → closing_time + service duration
+ViewSets + serializers following the exact same patterns as shops/products/orders
+Notifications integrated for booking lifecycle
+Revenue aggregation from completed appointments
+Frontend:
+
+html/clinics/list.html — directory with search, specialization filter, map
+html/clinics/details.html — clinic detail + service selection + date picker + slot grid + booking
+html/profile/clinic.html — doctor dashboard: appointments, services, slots calendar, revenue, settings
+js/clinics.js, js/clinic_profile.js, js/clinic_revenue.js, css/clinics.css
+Modified api.js, auth.js, main.js for DOCTOR role
+Implementation order: Role → models → serializers → permissions → views → URLs → slot logic → signals → API client → list page → detail page → dashboard → revenue → CSS → auth updates
+

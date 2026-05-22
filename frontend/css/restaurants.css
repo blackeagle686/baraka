@@ -858,11 +858,13 @@
     color: var(--restaurant-primary);
 }
 
-.rest-revenue-section {
+.rest-revenue-section,
+.rest-menu-section {
     display: none;
 }
 
-.rest-no-revenue-state {
+.rest-no-revenue-state,
+.rest-no-menu-state {
     display: block;
 }
 

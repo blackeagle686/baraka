@@ -184,6 +184,7 @@ async function initShopProfile() {
             
             loadShopProducts(shop.id);
             loadShopOrders();
+            startShopAutoRefresh();
         } else {
             document.getElementById('shopTitle').innerText = 'إنشاء محل جديد';
             

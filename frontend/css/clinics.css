@@ -154,16 +154,6 @@
 }
 
 /* ==========================================
-   Override time slot selected to clinic green
-   ========================================== */
-
-.time-slot-card.selected {
-    background: linear-gradient(135deg, var(--clinic-primary), var(--clinic-dark));
-    border-color: var(--clinic-primary);
-    box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
-}
-
-/* ==========================================
    Clinic Floating Booking Button
    ========================================== */
 
@@ -309,4 +299,27 @@
 .slot-date-chip:hover {
     transform: translateY(-1px);
     box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+/* ==========================================
+   Mobile Responsive
+   ========================================== */
+
+@media (max-width: 768px) {
+    .clinic-cover-banner {
+        height: 220px;
+    }
+    .clinic-cover-title {
+        font-size: 1.6rem;
+    }
+    .clinic-cover-badges {
+        gap: 0.6rem;
+    }
+    .clinic-cover-badge-item {
+        font-size: 0.75rem;
+        padding: 0.2rem 0.5rem;
+    }
+    .clinic-card {
+        padding: 1.25rem;
+    }
 }

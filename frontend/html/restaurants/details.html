@@ -14,14 +14,62 @@
 
     <div id="header-placeholder"></div>
 
+    <div id="restCoverBanner">
+        <div class="rest-cover-banner" style="background-image: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.7)), url('/images/restaurant-placeholder.png');">
+            <div class="container pb-4 w-100">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb m-0 mb-3">
+                        <li class="breadcrumb-item">
+                            <a href="/html/restaurants/list.html" class="text-white text-decoration-none fw-bold">
+                                <i class="bi bi-arrow-right-short"></i> الرجوع للمطاعم
+                            </a>
+                        </li>
+                    </ol>
+                </nav>
+                <div id="restCoverHeader">
+                    <h1 class="rest-cover-title text-white fw-bold mb-2">جاري التحميل...</h1>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <section class="py-5">
         <div class="container">
             <div class="row g-4">
-                <div class="col-12" id="restaurantDetailContent">
-                    <div class="text-center py-5" style="color: var(--color-mesa);">
-                        <div class="spinner-border mb-3" style="color: var(--restaurant-primary); width: 2.5rem; height: 2.5rem;" role="status"></div>
-                        <p class="fw-bold">بنحمل بيانات المطعم...</p>
+                <div class="col-lg-8">
+                    <div class="rest-search-filter-section mb-4 p-4 rounded-4 animate-up">
+                        <h6 class="fw-bold text-espresso mb-3 small d-flex align-items-center gap-2">
+                            <i class="bi bi-tags-fill" style="color: var(--restaurant-primary);"></i>
+                            <span>أقسام المنيو:</span>
+                        </h6>
+                        <div class="d-flex gap-2 overflow-auto pb-2" id="menuCategoryTabs"></div>
                     </div>
+
+                    <div class="row g-3" id="menuItemsContainer">
+                        <div class="col-12">
+                            <div class="text-center text-mesa py-5">
+                                <div class="spinner-border mb-3" style="color: var(--restaurant-primary);" role="status"></div>
+                                <p class="fw-bold">بنحمل قائمة الطعام...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <div class="restaurant-checkout-card animate-up" id="restCheckoutSidebar">
+                        <h6 class="fw-bold text-espresso mb-3"><i class="bi bi-bag me-1" style="color: var(--restaurant-primary);"></i>طلبي</h6>
+                        <div id="restCheckoutItems"><p class="text-mesa small text-center py-3">لم تختار أي أصناف بعد</p></div>
+                        <hr>
+                        <div class="d-flex justify-content-between fw-bold text-espresso">
+                            <span>الإجمالي</span>
+                            <span id="restCheckoutTotal">0.00 ج.م</span>
+                        </div>
+                        <button class="btn w-100 mt-3 rounded-pill fw-bold text-white" id="restSubmitOrderBtn" style="background: var(--restaurant-primary, #f97316); display: none;" onclick="submitRestOrder()">
+                            <i class="bi bi-check2 me-1"></i>تأكيد الطلب
+                        </button>
+                    </div>
+
+                    <div class="mt-3" id="restaurantRatingsSection"></div>
                 </div>
             </div>
         </div>
@@ -39,8 +87,8 @@
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content border-0 rounded-4 rest-modal-content">
                 <div class="modal-header border-0">
-                    <h5 class="fw-bold text-espresso"><i class="bi bi-bag-check me-2 text-marigold"></i>طلبي من المطعم</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <h5 class="fw-bold text-espresso"><i class="bi bi-bag-check me-2" style="color: var(--restaurant-primary);"></i>طلبي من المطعم</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-4" id="restCartModalBody"></div>
                 <div class="modal-footer border-0" id="restCartModalFooter"></div>

@@ -422,6 +422,7 @@ function populateBookingServiceSelect(services) {
         const dateInput = document.getElementById('bookingDate');
         if (dateInput && select.value) {
             dateInput.focus();
+            loadAvailableDates();
         }
     };
 

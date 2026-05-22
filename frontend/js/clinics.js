@@ -453,24 +453,34 @@ async function loadAvailableDates() {
 
         section.style.display = 'block';
         list.innerHTML = '';
-        dates.forEach(d => {
+        dates.forEach((d, idx) => {
             const dateObj = new Date(d.date + 'T00:00:00');
             const weekday = dateObj.toLocaleDateString('ar-EG', { weekday: 'short' });
             const dayNum = dateObj.toLocaleDateString('ar-EG', { day: 'numeric' });
             const month = dateObj.toLocaleDateString('ar-EG', { month: 'short' });
             const btn = document.createElement('button');
-            btn.className = 'btn btn-sm rounded-pill px-3 fw-bold slot-date-chip';
+            btn.className = 'btn btn-sm rounded-pill px-3 fw-bold slot-date-chip btn-outline-mesa';
             btn.innerHTML = `${weekday} ${dayNum} ${month} <span class="badge bg-marigold text-white ms-1 rounded-pill" style="font-size:0.65rem;">${d.slot_count}</span>`;
             btn.onclick = () => {
                 document.getElementById('bookingDate').value = d.date;
-                document.querySelectorAll('.slot-date-chip').forEach(b => b.classList.remove('btn-marigold', 'text-white'));
-                document.querySelectorAll('.slot-date-chip').forEach(b => b.classList.add('btn-outline-mesa'));
+                document.querySelectorAll('.slot-date-chip').forEach(b => {
+                    b.classList.remove('btn-marigold', 'text-white');
+                    b.classList.add('btn-outline-mesa');
+                });
                 btn.classList.remove('btn-outline-mesa');
                 btn.classList.add('btn-marigold', 'text-white');
                 loadAvailableSlots();
             };
             list.appendChild(btn);
+            // Auto-select first date chip and trigger slot load
+            if (idx === 0) {
+                document.getElementById('bookingDate').value = d.date;
+                btn.classList.remove('btn-outline-mesa');
+                btn.classList.add('btn-marigold', 'text-white');
+            }
         });
+        // Load slots for the first date
+        loadAvailableSlots();
     } catch (error) {
         console.error('Error loading available dates:', error);
         section.style.display = 'none';

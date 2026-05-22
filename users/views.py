@@ -89,11 +89,13 @@ class AdminStatsView(generics.GenericAPIView):
         total_users = User.objects.count()
         total_customers = User.objects.filter(role='CUSTOMER').count()
         total_shop_owners = User.objects.filter(role='SHOP_OWNER').count()
+        total_restaurant_owners = User.objects.filter(role='RESTAURANT_OWNER').count()
         total_drivers = User.objects.filter(role='DRIVER').count()
         pending_approvals = User.objects.filter(is_approved=False).count()
         blocked_users = User.objects.filter(is_active=False).count()
         total_orders = Order.objects.count()
         total_shops = Shop.objects.count()
+        total_restaurants = Restaurant.objects.count()
         total_reports = Report.objects.count()
         unresolved_reports = Report.objects.filter(is_resolved=False).count()
 
@@ -101,11 +103,13 @@ class AdminStatsView(generics.GenericAPIView):
             'total_users': total_users,
             'total_customers': total_customers,
             'total_shop_owners': total_shop_owners,
+            'total_restaurant_owners': total_restaurant_owners,
             'total_drivers': total_drivers,
             'pending_approvals': pending_approvals,
             'blocked_users': blocked_users,
             'total_orders': total_orders,
             'total_shops': total_shops,
+            'total_restaurants': total_restaurants,
             'total_reports': total_reports,
             'unresolved_reports': unresolved_reports,
         })

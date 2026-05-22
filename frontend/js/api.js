@@ -317,6 +317,10 @@ const api = {
             return await res.json();
         }
     },
+
+    
+
+
     orders: {
         getAll: async (token) => {
             const res = await fetch(`${API_BASE}/orders/`, {
@@ -465,7 +469,7 @@ const api = {
         }
     },
 
-    
+    // ------------------------------------------ Admin-related APIs ------------------------------------------
 
     admin: {
         getStats: async (token) => {

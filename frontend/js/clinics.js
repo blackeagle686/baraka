@@ -2,10 +2,25 @@ document.addEventListener('DOMContentLoaded', () => {
     const isDetailsPage = window.location.pathname.includes('details.html');
     if (isDetailsPage) {
         initClinicDetails();
+        initClinicFloatingBtn();
     } else {
         initClinicsList();
     }
 });
+
+function initClinicFloatingBtn() {
+    const floatingBtn = document.getElementById('clinicFloatingBtn');
+    const bookingCard = document.getElementById('bookingCard');
+    if (!floatingBtn || !bookingCard) return;
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            floatingBtn.style.display = entry.isIntersecting ? 'none' : 'flex';
+        });
+    }, { threshold: 0 });
+
+    observer.observe(bookingCard);
+}
 
 let allFetchedClinics = [];
 let currentPage = 1;
@@ -609,8 +624,8 @@ window.submitBooking = async function() {
     try {
         await api.appointments.create(token, bookingData);
 
-        document.getElementById('bookingFormSection').style.display = 'none';
-        document.getElementById('bookingSuccessSection').style.display = 'block';
+        document.getElementById('bookingFormSection').classList.add('clinic-booking-hidden');
+        document.getElementById('bookingSuccessSection').classList.remove('clinic-booking-hidden');
 
         if (window.showBarakaToast) {
             window.showBarakaToast('تم حجز الموعد بنجاح! في انتظار تأكيد الدكتور.', 'success', 'bi-check-circle');

@@ -285,9 +285,15 @@
 
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h4 class="fw-bold text-espresso m-0"><i class="bi bi-receipt me-2"></i>الطلبات الواردة</h4>
-                    <button class="btn btn-outline-mesa rounded-pill btn-sm fw-bold px-3" onclick="loadShopOrders()">
-                        <i class="bi bi-arrow-clockwise me-1"></i>تحديث الطلبات
-                    </button>
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="d-flex align-items-center text-mesa small fw-bold" id="shopAutoRefreshIndicator" style="display: none;">
+                            <span class="spinner-grow spinner-grow-sm text-marigold me-2" role="status"></span>
+                            تحديث تلقائي خلال <span id="shopRefreshCountdown" class="mx-1 text-marigold">15</span>ث
+                        </div>
+                        <button class="btn btn-outline-mesa rounded-pill btn-sm fw-bold px-3" onclick="manualRefreshShopOrders()">
+                            <i class="bi bi-arrow-clockwise me-1" id="shopRefreshIcon"></i>تحديث الطلبات
+                        </button>
+                    </div>
                 </div>
                 
                 <div class="row g-3" id="shopOrdersList">

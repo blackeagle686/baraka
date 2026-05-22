@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>عيادتي - منصة بركة</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/main_style.css">
+    <link rel="stylesheet" href="/css/profile.css">
+    <link rel="stylesheet" href="/css/clinics.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+</head>
+<body class="bg-dune">
+    <div id="header-placeholder"></div>
+
+    <div class="dash-layout">
+        <!-- Sidebar -->
+        <aside class="dash-sidebar">
+            <div class="dash-sidebar-brand">
+                <div class="dash-sidebar-brand-icon">
+                    <i class="bi bi-heart-pulse"></i>
+                </div>
+                <div class="dash-sidebar-brand-text">
+                    <span id="sidebarClinicName">جاري التحميل...</span>
+                    <small>دكتور</small>
+                </div>
+            </div>
+
+            <ul class="dash-nav">
+                <li class="dash-nav-label">لوحة التحكم</li>
+                <li class="dash-nav-item">
+                    <button class="dash-nav-link active" onclick="switchTab('overview')">
+                        <i class="bi bi-grid-1x2"></i>
+                        <span>نظرة عامة</span>
+                    </button>
+                </li>
+                <li class="dash-nav-item">
+                    <button class="dash-nav-link" onclick="switchTab('appointments')">
+                        <i class="bi bi-calendar-check"></i>
+                        <span>المواعيد</span>
+                        <span class="nav-badge bg-danger" id="sidebarAppointmentBadge">0</span>
+                    </button>
+                </li>
+                <li class="dash-nav-item">
+                    <button class="dash-nav-link" onclick="switchTab('services')">
+                        <i class="bi bi-prescription2"></i>
+                        <span>الخدمات</span>
+                    </button>
+                </li>
+                <li class="dash-nav-item">
+                    <button class="dash-nav-link" onclick="switchTab('slots')">
+                        <i class="bi bi-clock-history"></i>
+                        <span>إدارة المواعيد المتاحة</span>
+                    </button>
+                </li>
+                <li class="dash-nav-item">
+                    <button class="dash-nav-link" onclick="switchTab('settings')">
+                        <i class="bi bi-gear-fill"></i>
+                        <span>إعدادات العيادة</span>
+                    </button>
+                </li>
+                <li class="dash-nav-item">
+                    <button class="dash-nav-link" onclick="switchTab('revenue')">
+                        <i class="bi bi-wallet2 text-success"></i>
+                        <span>أرباح العيادة 💰</span>
+                    </button>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- Main Workspace -->
+        <main class="dash-main">
+
+            <!-- Overview Panel -->
+            <div class="dash-panel active" id="overviewPanel">
+                <div class="dash-page-title">مرحباً دكتور في لوحة تحكم عيادتك</div>
+                <div class="dash-page-subtitle">نظرة سريعة على أداء عيادتك اليوم</div>
+
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4">
+                        <div class="stat-card">
+                            <div class="stat-icon stat-marigold">
+                                <i class="bi bi-prescription2"></i>
+                            </div>
+                            <div>
+                                <div class="stat-value" id="statServiceCount">0</div>
+                                <div class="stat-label">إجمالي الخدمات</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stat-card">
+                            <div class="stat-icon stat-green">
+                                <i class="bi bi-door-open"></i>
+                            </div>
+                            <div>
+                                <div class="stat-value" id="statClinicStatus">مغلق</div>
+                                <div class="stat-label">حالة العيادة</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stat-card">
+                            <div class="stat-icon stat-mesa">
+                                <i class="bi bi-calendar-check"></i>
+                            </div>
+                            <div>
+                                <div class="stat-value" id="statPendingAppointments">0</div>
+                                <div class="stat-label">المواعيد النشطة</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-card mb-4 animate-up">
+                    <div class="dashboard-section-title">
+                        <span><i class="bi bi-lightning-charge-fill text-marigold me-2"></i>إجراءات سريعة</span>
+                    </div>
+                    <div class="d-flex flex-wrap gap-3">
+                        <button class="btn btn-primary rounded-pill px-4 py-2 fw-bold" onclick="switchTab('services')">
+                            <i class="bi bi-pencil-square me-2"></i>تعديل الخدمات
+                        </button>
+                        <button class="btn btn-outline-mesa rounded-pill px-4 py-2 fw-bold" onclick="switchTab('slots')">
+                            <i class="bi bi-clock me-2"></i>إدارة المواعيد
+                        </button>
+                        <button class="btn btn-outline-mesa rounded-pill px-4 py-2 fw-bold" onclick="switchTab('settings')">
+                            <i class="bi bi-gear-wide-connected me-2"></i>تحديث بيانات العيادة
+                        </button>
+                        <a href="/html/clinics/list.html" class="btn btn-outline-secondary rounded-pill px-4 py-2 fw-bold">
+                            <i class="bi bi-eye me-2"></i>عرض المنصة العامة
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Appointments Panel -->
+            <div class="dash-panel" id="appointmentsPanel">
+                <div class="dash-page-title">إدارة المواعيد</div>
+                <div class="dash-page-subtitle">تابع مواعيد مرضاك وقم بتأكيدها أو إلغائها</div>
+
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="fw-bold text-espresso m-0"><i class="bi bi-calendar-check me-2"></i>المواعيد الواردة</h4>
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="d-flex align-items-center text-mesa small fw-bold" id="clinicAutoRefreshIndicator" style="display: none;">
+                            <span class="spinner-grow spinner-grow-sm text-marigold me-2" role="status"></span>
+                            تحديث تلقائي خلال <span id="clinicRefreshCountdown" class="mx-1 text-marigold">15</span>ث
+                        </div>
+                        <button class="btn btn-outline-mesa rounded-pill btn-sm fw-bold px-3" onclick="manualRefreshAppointments()">
+                            <i class="bi bi-arrow-clockwise me-1" id="clinicRefreshIcon"></i>تحديث المواعيد
+                        </button>
+                    </div>
+                </div>
+
+                <div class="row g-3" id="appointmentsList">
+                    <div class="text-center text-mesa py-4">
+                        <div class="spinner-border text-marigold mb-3" role="status"></div>
+                        <p>جاري تحميل المواعيد...</p>
+                    </div>
+                </div>
+                <div id="appointmentsPagination" class="d-flex justify-content-center mt-4"></div>
+            </div>
+
+            <!-- Services Panel -->
+            <div class="dash-panel" id="servicesPanel">
+                <div class="dash-page-title">إدارة الخدمات الطبية</div>
+                <div class="dash-page-subtitle">أضف الخدمات التي تقدمها لعيادتك (كشف, متابعة, إلخ)</div>
+
+                <div id="noClinicServicesState" class="empty-state animate-up" style="display: block;">
+                    <div class="empty-state-icon"><i class="bi bi-heart-pulse text-marigold"></i></div>
+                    <p class="fw-bold fs-5 text-espresso">يا دكتور، لازم تعمل العيادة بتاعتك الأول!</p>
+                    <p class="small text-mesa mb-4" style="max-width: 400px; margin: 0 auto;">قم بتحديد بيانات العيادة من صفحة "إعدادات العيادة" لتتمكن من إضافة الخدمات.</p>
+                    <button class="btn btn-primary rounded-pill px-4 fw-bold" onclick="switchTab('settings')">
+                        <i class="bi bi-gear-fill me-2"></i>الذهاب لإعدادات العيادة
+                    </button>
+                </div>
+
+                <div id="servicesSection" style="display: none;">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4 class="fw-bold text-espresso m-0"><i class="bi bi-prescription2 me-2"></i>خدمات العيادة</h4>
+                        <button class="btn btn-marigold rounded-pill fw-bold shadow-sm px-4" data-bs-toggle="modal" data-bs-target="#addServiceModal">
+                            <i class="bi bi-plus-lg me-1"></i>إضافة خدمة
+                        </button>
+                    </div>
+                    <div class="row g-3" id="servicesManagementList"></div>
+                    <div id="servicesPagination" class="d-flex justify-content-center mt-4"></div>
+                </div>
+            </div>
+
+            <!-- Slots Panel -->
+            <div class="dash-panel" id="slotsPanel">
+                <div class="dash-page-title">إدارة المواعيد المتاحة</div>
+                <div class="dash-page-subtitle">قم بإنشاء المواعيد المتاحة للحجز أو إضافتها يدوياً</div>
+
+                <div id="noClinicSlotsState" class="empty-state animate-up" style="display: block;">
+                    <div class="empty-state-icon"><i class="bi bi-heart-pulse text-marigold"></i></div>
+                    <p class="fw-bold fs-5 text-espresso">يا دكتور، لازم تعمل العيادة بتاعتك الأول!</p>
+                    <button class="btn btn-primary rounded-pill px-4 fw-bold" onclick="switchTab('settings')">
+                        <i class="bi bi-gear-fill me-2"></i>الذهاب لإعدادات العيادة
+                    </button>
+                </div>
+
+                <div id="slotsSection" style="display: none;">
+                    <div class="dashboard-card mb-4">
+                        <div class="dashboard-section-title">
+                            <span><i class="bi bi-magic text-marigold me-2"></i>إنشاء المواعيد تلقائياً</span>
+                        </div>
+                        <p class="text-mesa small mb-3">سيتم إنشاء مواعيد متاحة بناءً على ساعات العمل والخدمات والمدة المحددة لكل خدمة.</p>
+                        <div class="row g-3 align-items-end">
+                            <div class="col-md-4">
+                                <label class="form-label text-espresso fw-bold small">من تاريخ</label>
+                                <input type="date" class="form-control rounded-pill px-4 py-2" id="slotsStartDate">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label text-espresso fw-bold small">إلى تاريخ</label>
+                                <input type="date" class="form-control rounded-pill px-4 py-2" id="slotsEndDate">
+                            </div>
+                            <div class="col-md-4">
+                                <button class="btn btn-primary rounded-pill w-100 py-2 fw-bold" onclick="generateSlots()">
+                                    <i class="bi bi-magic me-1"></i>إنشاء المواعيد
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-card">
+                        <div class="dashboard-section-title">
+                            <span><i class="bi bi-plus-circle text-marigold me-2"></i>إضافة موعد يدوي</span>
+                        </div>
+                        <form id="manualSlotForm">
+                            <div class="row g-3">
+                                <div class="col-md-3">
+                                    <label class="form-label text-espresso fw-bold small">التاريخ</label>
+                                    <input type="date" class="form-control rounded-pill px-4 py-2" id="manualSlotDate" required>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label text-espresso fw-bold small">من الساعة</label>
+                                    <input type="time" class="form-control rounded-pill px-4 py-2" id="manualSlotStart" required>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label text-espresso fw-bold small">إلى الساعة</label>
+                                    <input type="time" class="form-control rounded-pill px-4 py-2" id="manualSlotEnd" required>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label text-espresso fw-bold small">الخدمة</label>
+                                    <select class="form-select rounded-pill px-4 py-2" id="manualSlotService">
+                                        <option value="" selected>أي خدمة</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-outline-mesa rounded-pill px-4 py-2 fw-bold mt-3">
+                                <i class="bi bi-plus-lg me-1"></i>إضافة الموعد
+                            </button>
+                        </form>
+                    </div>
+
+                    <div class="mt-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="fw-bold text-espresso m-0"><i class="bi bi-list-check me-2"></i>المواعيد الحالية</h5>
+                            <div class="d-flex gap-2">
+                                <input type="date" class="form-control form-control-sm rounded-pill px-3" id="filterSlotsDate" style="max-width: 180px;">
+                                <button class="btn btn-sm btn-outline-mesa rounded-pill px-3 fw-bold" onclick="loadCurrentSlots()">تصفية</button>
+                            </div>
+                        </div>
+                        <div class="row g-2" id="currentSlotsList">
+                            <div class="text-center py-4 text-mesa">
+                                <div class="spinner-border text-marigold mb-3" role="status"></div>
+                                <p>جاري تحميل المواعيد...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Panel -->
+            <div class="dash-panel" id="settingsPanel">
+                <div class="dash-page-title">إعدادات العيادة</div>
+                <div class="dash-page-subtitle">تحكم في اسم العيادة، الصورة، مواعيد العمل، التخصص والحالة</div>
+
+                <div class="dashboard-card animate-up">
+                    <div class="dashboard-section-title d-flex justify-content-between align-items-center">
+                        <span id="clinicSettingsTitle"><i class="bi bi-gear me-2"></i>إعدادات العيادة</span>
+                        <span class="badge status-closed rounded-pill px-3 py-2 d-none" id="clinicStatusBadge">
+                            <i class="bi bi-pause-circle me-1"></i>مغلقة
+                        </span>
+                    </div>
+
+                    <form id="clinicForm" enctype="multipart/form-data">
+                        <div class="text-center mb-4">
+                            <div class="d-inline-block position-relative">
+                                <div id="clinicImagePreview" class="shop-image-preview d-flex align-items-center justify-content-center">
+                                    <span class="text-white fs-4" id="clinicInitials">صورة العيادة</span>
+                                </div>
+                                <label for="clinicImage" class="upload-btn position-absolute bottom-0 start-0 translate-middle-y ms-2">
+                                    <i class="bi bi-camera-fill" style="font-size: 0.85rem;"></i>
+                                </label>
+                                <input type="file" id="clinicImage" accept="image/*" class="d-none">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-espresso fw-bold"><i class="bi bi-shop me-1"></i>اسم العيادة</label>
+                                <input type="text" class="form-control rounded-pill px-4 py-2" id="clinicName" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-espresso fw-bold"><i class="bi bi-tag me-1"></i>التخصص</label>
+                                <select class="form-select rounded-pill px-4 py-2" id="clinicSpecialization">
+                                    <option value="">اختر التخصص...</option>
+                                    <option value="قلب">قلب</option>
+                                    <option value="أطفال">أطفال</option>
+                                    <option value="جلدية">جلدية</option>
+                                    <option value="عظام">عظام</option>
+                                    <option value="أسنان">أسنان</option>
+                                    <option value="نساء وتوليد">نساء وتوليد</option>
+                                    <option value="عيون">عيون</option>
+                                    <option value="أنف وأذن">أنف وأذن</option>
+                                    <option value="باطنة">باطنة</option>
+                                    <option value="نفسية">نفسية</option>
+                                    <option value="عام">عام</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-espresso fw-bold"><i class="bi bi-geo-alt me-1"></i>العنوان</label>
+                                <input type="text" class="form-control rounded-pill px-4 py-2" id="clinicAddress">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-espresso fw-bold"><i class="bi bi-telephone me-1"></i>رقم الهاتف</label>
+                                <input type="text" class="form-control rounded-pill px-4 py-2" id="clinicPhone">
+                            </div>
+                        </div>
+
+                        <div class="mb-4 animate-up">
+                            <label class="form-label text-espresso fw-bold"><i class="bi bi-map me-1 text-marigold"></i>حدد موقع العيادة على الخريطة</label>
+                            <div id="clinicMap" style="height: 280px; border-radius: var(--radius-md); border: 2px solid rgba(201, 153, 151, 0.15); box-shadow: var(--shadow-sm); z-index: 10;"></div>
+                            <div class="form-text text-mesa mt-1"><i class="bi bi-info-circle me-1"></i>اضغط في أي مكان على الخريطة لتغيير مكان دبوس العيادة!</div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-espresso fw-bold">خط العرض</label>
+                                <input type="number" step="0.000001" class="form-control rounded-pill px-4 py-2" id="clinicLatitude" placeholder="30.0444">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-espresso fw-bold">خط الطول</label>
+                                <input type="number" step="0.000001" class="form-control rounded-pill px-4 py-2" id="clinicLongitude" placeholder="31.2357">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label text-espresso fw-bold"><i class="bi bi-text-paragraph me-1"></i>وصف العيادة</label>
+                            <textarea class="form-control rounded-4 px-4 py-2" id="clinicDesc" rows="3"></textarea>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6 mb-3 mb-md-0">
+                                <label class="form-label text-espresso fw-bold"><i class="bi bi-clock me-1 text-marigold"></i>ميعاد الفتح</label>
+                                <input type="time" class="form-control rounded-pill px-4 py-2" id="clinicOpeningTime">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-espresso fw-bold"><i class="bi bi-clock-fill me-1 text-marigold"></i>ميعاد الإغلاق</label>
+                                <input type="time" class="form-control rounded-pill px-4 py-2" id="clinicClosingTime">
+                            </div>
+                        </div>
+
+                        <div class="form-check form-switch mb-4">
+                            <input class="form-check-input" type="checkbox" role="switch" id="clinicIsOpen" checked>
+                            <label class="form-check-label text-espresso fw-bold ms-2" for="clinicIsOpen">
+                                <i class="bi bi-door-open me-1"></i>العيادة مفتوحة للحجز
+                            </label>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary rounded-pill w-100 py-2 fw-bold mb-3" id="saveClinicBtn">
+                            <i class="bi bi-check2-circle me-1"></i>حفظ بيانات العيادة
+                        </button>
+                        <div id="clinicStatusMsg" class="text-center fw-bold d-none"></div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Revenue Panel -->
+            <div class="dash-panel" id="revenuePanel">
+                <div class="dash-page-title">💰 سجل أرباح العيادة</div>
+                <div class="dash-page-subtitle">تابع إجمالي الحجوزات المكتملة والأرباح</div>
+
+                <div id="noClinicRevenueState" class="empty-state animate-up" style="display: block;">
+                    <div class="empty-state-icon"><i class="bi bi-heart-pulse text-marigold"></i></div>
+                    <p class="fw-bold fs-5 text-espresso">يا دكتور، لازم تعمل العيادة بتاعتك الأول!</p>
+                    <p class="small text-mesa mb-4">قم بتحديد بيانات العيادة من صفحة "إعدادات العيادة" لتتمكن من تتبع أرباحك.</p>
+                    <button class="btn btn-primary rounded-pill px-4 fw-bold" onclick="switchTab('settings')">
+                        <i class="bi bi-gear-fill me-2"></i>الذهاب لإعدادات العيادة
+                    </button>
+                </div>
+
+                <div id="clinicRevenueSection" style="display: none;">
+                    <div id="clinicRevenueDashboardContainer">
+                        <div class="text-center text-mesa py-5">
+                            <div class="spinner-border text-marigold mb-3" role="status"></div>
+                            <p>جاري تحميل سجل الأرباح...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Add Service Modal -->
+    <div class="modal fade" id="addServiceModal" tabindex="-1" aria-labelledby="addServiceModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 rounded-4" style="background-color: var(--color-dune-light);">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold text-espresso" id="addServiceModalLabel">
+                        <i class="bi bi-plus-circle me-2"></i>إضافة خدمة جديدة
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="serviceForm">
+                        <div class="mb-3">
+                            <label class="form-label text-espresso fw-bold">اسم الخدمة</label>
+                            <input type="text" class="form-control rounded-pill px-4 py-2" id="serviceName" placeholder="مثال: كشف عام" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-espresso fw-bold">السعر (ج.م)</label>
+                            <input type="number" step="0.01" class="form-control rounded-pill px-4 py-2" id="servicePrice" placeholder="0.00" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-espresso fw-bold">المدة (بالدقائق)</label>
+                            <input type="number" class="form-control rounded-pill px-4 py-2" id="serviceDuration" value="30" min="5" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-espresso fw-bold">الوصف</label>
+                            <textarea class="form-control rounded-4 px-4 py-2" id="serviceDesc" rows="2" placeholder="وصف مختصر للخدمة..."></textarea>
+                        </div>
+                        <div class="mb-3 form-check form-switch">
+                            <input class="form-check-input" type="checkbox" role="switch" id="serviceActive" checked>
+                            <label class="form-check-label text-espresso fw-bold ms-2" for="serviceActive">الخدمة متاحة للحجز</label>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 rounded-pill py-2 fw-bold" id="saveServiceBtn">
+                            <i class="bi bi-check2 me-1"></i>حفظ الخدمة
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Service Modal -->
+    <div class="modal fade" id="editServiceModal" tabindex="-1" aria-labelledby="editServiceModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 rounded-4" style="background-color: var(--color-dune-light);">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold text-espresso" id="editServiceModalLabel">
+                        <i class="bi bi-pencil-square me-2"></i>تعديل الخدمة
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="editServiceForm">
+                        <input type="hidden" id="editServiceId">
+                        <div class="mb-3">
+                            <label class="form-label text-espresso fw-bold">اسم الخدمة</label>
+                            <input type="text" class="form-control rounded-pill px-4 py-2" id="editServiceName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-espresso fw-bold">السعر (ج.م)</label>
+                            <input type="number" step="0.01" class="form-control rounded-pill px-4 py-2" id="editServicePrice" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-espresso fw-bold">المدة (بالدقائق)</label>
+                            <input type="number" class="form-control rounded-pill px-4 py-2" id="editServiceDuration" min="5" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-espresso fw-bold">الوصف</label>
+                            <textarea class="form-control rounded-4 px-4 py-2" id="editServiceDesc" rows="2"></textarea>
+                        </div>
+                        <div class="mb-3 form-check form-switch">
+                            <input class="form-check-input" type="checkbox" role="switch" id="editServiceActive" checked>
+                            <label class="form-check-label text-espresso fw-bold ms-2" for="editServiceActive">الخدمة متاحة للحجز</label>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary flex-grow-1 rounded-pill py-2 fw-bold" id="saveEditServiceBtn">
+                                <i class="bi bi-check2 me-1"></i>حفظ التغييرات
+                            </button>
+                            <button type="button" class="btn btn-danger rounded-pill px-4 py-2 fw-bold" id="deleteServiceBtn">
+                                <i class="bi bi-trash3 me-1"></i>حذف
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/main.js"></script>
+    <script src="/js/clinic_profile.js"></script>
+    <script src="/js/clinic_revenue.js"></script>
+
+    <script>
+        window.switchTab = function(tabId) {
+            document.querySelectorAll('.dash-panel').forEach(panel => {
+                panel.classList.remove('active');
+            });
+            const targetPanel = document.getElementById(tabId + 'Panel');
+            if (targetPanel) {
+                targetPanel.classList.add('active');
+            }
+
+            document.querySelectorAll('.dash-nav-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            const clickedLink = document.querySelector(`[onclick="switchTab('${tabId}')"]`);
+            if (clickedLink) {
+                clickedLink.classList.add('active');
+            }
+
+            if (tabId === 'settings' && typeof clinicMapInstance !== 'undefined' && clinicMapInstance) {
+                setTimeout(() => {
+                    clinicMapInstance.invalidateSize();
+                }, 250);
+            }
+
+            if (tabId === 'revenue') {
+                if (typeof currentClinicId === 'undefined' || !currentClinicId) {
+                    document.getElementById('noClinicRevenueState').style.display = 'block';
+                    document.getElementById('clinicRevenueSection').style.display = 'none';
+                } else {
+                    document.getElementById('noClinicRevenueState').style.display = 'none';
+                    document.getElementById('clinicRevenueSection').style.display = 'block';
+                    if (window.loadClinicRevenue) {
+                        window.loadClinicRevenue();
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+</html>

@@ -124,8 +124,16 @@ start_django() {
         --access-logfile "$DJANGO_LOG" \
         --error-logfile "$DJANGO_LOG" \
         >> "$DJANGO_LOG" 2>&1 &
-    echo $! > "$DJANGO_PID"
-    echo -e "  ${GREEN}●${NC} Django/Gunicorn started (PID $!)"
+    local DJPID=$!
+    echo "$DJPID" > "$DJANGO_PID"
+    sleep 1
+    if kill -0 "$DJPID" 2>/dev/null; then
+        echo -e "  ${GREEN}●${NC} Django/Gunicorn started (PID $DJPID)"
+    else
+        print_error "Django/Gunicorn failed to start! Last log lines:"
+        tail -n 10 "$DJANGO_LOG" 2>/dev/null | sed 's/^/    /'
+        rm -f "$DJANGO_PID"
+    fi
 }
 
 start_celery() {
@@ -140,8 +148,16 @@ start_celery() {
         --loglevel=info \
         --logfile="$CELERY_LOG" \
         >> "$CELERY_LOG" 2>&1 &
-    echo $! > "$CELERY_PID"
-    echo -e "  ${GREEN}●${NC} Celery worker started (PID $!)"
+    local CLPID=$!
+    echo "$CLPID" > "$CELERY_PID"
+    sleep 1
+    if kill -0 "$CLPID" 2>/dev/null; then
+        echo -e "  ${GREEN}●${NC} Celery worker started (PID $CLPID)"
+    else
+        print_error "Celery failed to start! Last log lines:"
+        tail -n 10 "$CELERY_LOG" 2>/dev/null | sed 's/^/    /'
+        rm -f "$CELERY_PID"
+    fi
 }
 
 start_ngrok() {
@@ -166,9 +182,21 @@ start_ngrok() {
 }
 
 start_nginx() {
+    if ! command -v nginx &>/dev/null; then
+        print_warn "Nginx is not installed — skipping. (Run: sudo apt-get install -y nginx)"
+        return
+    fi
     print_step "🌐 Starting Nginx..."
-    sudo systemctl start nginx
-    echo -e "  ${GREEN}●${NC} Nginx started"
+    if sudo systemctl start nginx 2>/dev/null; then
+        echo -e "  ${GREEN}●${NC} Nginx started"
+    else
+        print_warn "Nginx failed to start via systemctl. Trying nginx directly..."
+        if sudo nginx 2>/dev/null; then
+            echo -e "  ${GREEN}●${NC} Nginx started (direct)"
+        else
+            print_error "Could not start Nginx. Check: sudo nginx -t"
+        fi
+    fi
 }
 
 start_all() {
@@ -199,8 +227,11 @@ stop_ngrok() {
 }
 
 stop_nginx() {
+    if ! command -v nginx &>/dev/null; then
+        return
+    fi
     echo -e "  ${RED}■${NC} Stopping Nginx..."
-    sudo systemctl stop nginx 2>/dev/null || true
+    sudo systemctl stop nginx 2>/dev/null || sudo nginx -s stop 2>/dev/null || true
     echo -e "  ${RED}■${NC} Nginx stopped"
 }
 
@@ -217,48 +248,67 @@ stop_all() {
 
 # --- Service Status ----------------------------------------------------------
 
+# Returns status label: Running, Stopped, or Crashed (pid file exists but process dead)
+_pid_status() {
+    local pidfile="$1"
+    if [ ! -f "$pidfile" ]; then
+        echo "Stopped"
+    elif kill -0 "$(cat "$pidfile")" 2>/dev/null; then
+        echo "Running"
+    else
+        echo "Crashed"
+    fi
+}
+
 check_status() {
     print_header "Service Status"
 
     # Nginx
-    if systemctl is-active --quiet nginx 2>/dev/null; then
+    if ! command -v nginx &>/dev/null; then
+        echo -e "  ${YELLOW}●${NC} Nginx          — ${YELLOW}Not Installed${NC}"
+    elif systemctl is-active --quiet nginx 2>/dev/null || pgrep -x nginx &>/dev/null; then
         echo -e "  ${GREEN}●${NC} Nginx          — ${GREEN}Running${NC}"
     else
         echo -e "  ${RED}●${NC} Nginx          — ${RED}Stopped${NC}"
     fi
 
     # Django
-    if is_running "$DJANGO_PID"; then
-        echo -e "  ${GREEN}●${NC} Django/Gunicorn — ${GREEN}Running${NC} (PID $(cat "$DJANGO_PID"))"
-    else
-        echo -e "  ${RED}●${NC} Django/Gunicorn — ${RED}Stopped${NC}"
-    fi
+    local djstatus; djstatus=$(_pid_status "$DJANGO_PID")
+    case "$djstatus" in
+        Running) echo -e "  ${GREEN}●${NC} Django/Gunicorn — ${GREEN}Running${NC} (PID $(cat "$DJANGO_PID"))" ;;
+        Crashed) echo -e "  ${YELLOW}●${NC} Django/Gunicorn — ${YELLOW}Crashed${NC} (stale PID) — check: ./deploy_baraka.sh logs django" ;;
+        *)       echo -e "  ${RED}●${NC} Django/Gunicorn — ${RED}Stopped${NC}" ;;
+    esac
 
     # Celery
-    if is_running "$CELERY_PID"; then
-        echo -e "  ${GREEN}●${NC} Celery         — ${GREEN}Running${NC} (PID $(cat "$CELERY_PID"))"
-    else
-        echo -e "  ${RED}●${NC} Celery         — ${RED}Stopped${NC}"
-    fi
+    local clstatus; clstatus=$(_pid_status "$CELERY_PID")
+    case "$clstatus" in
+        Running) echo -e "  ${GREEN}●${NC} Celery         — ${GREEN}Running${NC} (PID $(cat "$CELERY_PID"))" ;;
+        Crashed) echo -e "  ${YELLOW}●${NC} Celery         — ${YELLOW}Crashed${NC} (stale PID) — check: ./deploy_baraka.sh logs celery" ;;
+        *)       echo -e "  ${RED}●${NC} Celery         — ${RED}Stopped${NC}" ;;
+    esac
 
     # Ngrok
-    if is_running "$NGROK_PID"; then
-        local ngrok_url
-        ngrok_url=$(python3 -c "import urllib.request, json; print(json.loads(urllib.request.urlopen('http://127.0.0.1:4040/api/tunnels').read().decode())['tunnels'][0]['public_url'])" 2>/dev/null || echo "N/A")
-        echo -e "  ${GREEN}●${NC} Ngrok          — ${GREEN}Running${NC} (PID $(cat "$NGROK_PID")) → ${BOLD}$ngrok_url${NC}"
-    else
-        echo -e "  ${RED}●${NC} Ngrok          — ${RED}Stopped${NC}"
-    fi
+    local nkstatus; nkstatus=$(_pid_status "$NGROK_PID")
+    case "$nkstatus" in
+        Running)
+            local ngrok_url
+            ngrok_url=$(python3 -c "import urllib.request, json; print(json.loads(urllib.request.urlopen('http://127.0.0.1:4040/api/tunnels').read().decode())['tunnels'][0]['public_url'])" 2>/dev/null || echo "N/A")
+            echo -e "  ${GREEN}●${NC} Ngrok          — ${GREEN}Running${NC} (PID $(cat "$NGROK_PID")) → ${BOLD}$ngrok_url${NC}"
+            ;;
+        Crashed) echo -e "  ${YELLOW}●${NC} Ngrok          — ${YELLOW}Crashed${NC} (stale PID) — check: ./deploy_baraka.sh logs ngrok" ;;
+        *)       echo -e "  ${RED}●${NC} Ngrok          — ${RED}Stopped${NC}" ;;
+    esac
 
     # Redis
-    if systemctl is-active --quiet redis-server 2>/dev/null; then
+    if systemctl is-active --quiet redis-server 2>/dev/null || pgrep -x redis-server &>/dev/null; then
         echo -e "  ${GREEN}●${NC} Redis          — ${GREEN}Running${NC}"
     else
         echo -e "  ${RED}●${NC} Redis          — ${RED}Stopped${NC}"
     fi
 
     # PostgreSQL
-    if systemctl is-active --quiet postgresql 2>/dev/null; then
+    if systemctl is-active --quiet postgresql 2>/dev/null || pgrep -x postgres &>/dev/null; then
         echo -e "  ${GREEN}●${NC} PostgreSQL     — ${GREEN}Running${NC}"
     else
         echo -e "  ${RED}●${NC} PostgreSQL     — ${RED}Stopped${NC}"

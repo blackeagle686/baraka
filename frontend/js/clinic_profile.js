@@ -685,7 +685,7 @@ async function handleManualSlotSubmit() {
     }
 }
 
-async function loadCurrentSlots() {
+window.loadCurrentSlots = async function () {
     if (!currentClinicId) return;
     const filterDate = document.getElementById('filterSlotsDate')?.value || '';
     const container = document.getElementById('currentSlotsList');
@@ -713,7 +713,6 @@ async function loadCurrentSlots() {
         slots.forEach(slot => {
             const dateStr = slot.date || '';
             const timeStr = slot.start_time?.substring(0,5) || '';
-            // Format date: weekday + day/month
             let dateLabel = dateStr;
             try {
                 const d = new Date(dateStr + 'T00:00:00');
@@ -735,7 +734,7 @@ async function loadCurrentSlots() {
         console.error("Error loading slots:", error);
         container.innerHTML = `<div class="col-12 text-center text-danger">خطأ في تحميل المواعيد</div>`;
     }
-}
+};
 
 // ==========================================
 // Leaflet.js Map Integration

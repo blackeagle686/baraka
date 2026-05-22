@@ -675,6 +675,9 @@ const api = {
             return true;
         }
     },
+
+    //  ------------------------------------------ Appointment-related APIs ------------------------------------------
+
     appointments: {
         getAll: async (token) => {
             const res = await fetch(`${API_BASE}/appointments/`, {

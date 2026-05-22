@@ -711,9 +711,9 @@
 
 .rest-floating-cart-btn {
     position: fixed;
-    bottom: 20px;
-    left: 20px;
-    z-index: 1000;
+    bottom: 30px;
+    left: 30px;
+    z-index: 9999;
     border-radius: 100px;
     padding: 0.7rem 1.5rem;
     background: linear-gradient(135deg, var(--restaurant-primary), var(--restaurant-dark));

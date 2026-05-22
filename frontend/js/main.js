@@ -24,6 +24,10 @@ function renderHeader() {
                 <i class="bi bi-compass fs-5 text-mesa"></i>
                 <span>لف في المحلات</span>
             </a>
+            <a class="nav-link d-flex align-items-center gap-2 fw-bold text-espresso me-3" href="/html/clinics/list.html" style="font-size: 0.95rem; color: var(--color-espresso) !important;">
+                <i class="bi bi-heart-pulse fs-5 text-mesa"></i>
+                <span>عيادات القرية</span>
+            </a>
         `;
 
         // Always include Cart Icon with badge

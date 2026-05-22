@@ -692,7 +692,7 @@ async function loadCurrentSlots() {
     if (!container) return;
 
     try {
-        let url = '/api/time-slots/?clinic_id=' + currentClinicId;
+        let url = API_BASE + '/time-slots/?clinic_id=' + currentClinicId;
         if (filterDate) url += '&date=' + filterDate;
 
         const res = await fetch(url);

@@ -423,21 +423,21 @@
 
             if (tabId === 'menu') {
                 if (typeof currentRestaurantId === 'undefined' || !currentRestaurantId) {
-                    document.getElementById('noRestaurantMenuState').style.display = 'block';
-                    document.getElementById('restaurantMenuSection').style.display = 'none';
+                    document.getElementById('noRestaurantMenuState').classList.remove('d-none');
+                    document.getElementById('restaurantMenuSection').classList.add('d-none');
                 } else {
-                    document.getElementById('noRestaurantMenuState').style.display = 'none';
-                    document.getElementById('restaurantMenuSection').style.display = 'block';
+                    document.getElementById('noRestaurantMenuState').classList.add('d-none');
+                    document.getElementById('restaurantMenuSection').classList.remove('d-none');
                 }
             }
 
             if (tabId === 'revenue') {
                 if (typeof currentRestaurantId === 'undefined' || !currentRestaurantId) {
-                    document.getElementById('noRestaurantRevenueState').style.display = 'block';
-                    document.getElementById('restaurantRevenueSection').style.display = 'none';
+                    document.getElementById('noRestaurantRevenueState').classList.remove('d-none');
+                    document.getElementById('restaurantRevenueSection').classList.add('d-none');
                 } else {
-                    document.getElementById('noRestaurantRevenueState').style.display = 'none';
-                    document.getElementById('restaurantRevenueSection').style.display = 'block';
+                    document.getElementById('noRestaurantRevenueState').classList.add('d-none');
+                    document.getElementById('restaurantRevenueSection').classList.remove('d-none');
                     if (window.loadRestaurantRevenue) {
                         window.loadRestaurantRevenue();
                     }
